@@ -1,0 +1,196 @@
+{
+  "nav": {
+    "browse": "Browse",
+    "sell": "Start Selling",
+    "bestsellers": "Top Sellers",
+    "topAccounts": "Top Accounts",
+    "advertise": "Advertise",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "dashboard": "Dashboard",
+    "cart": "Cart"
+  },
+  "home": {
+    "hero": {
+      "badge": "The #1 Gaming Marketplace in MENA",
+      "title": "Buy & Sell",
+      "titleHighlight": "Gaming Accounts",
+      "titleEnd": "with Confidence",
+      "subtitle": "Skins, weapons, accounts, and more — traded safely between real gamers.",
+      "cta": "Start Browsing",
+      "ctaSell": "Start Selling",
+      "stats": {
+        "listings": "Active Listings",
+        "sellers": "Verified Sellers",
+        "trades": "Successful Trades"
+      }
+    },
+    "featured": {
+      "title": "Top Accounts Right Now",
+      "subtitle": "Hand-picked by our community",
+      "viewAll": "View All"
+    },
+    "bestsellers": {
+      "title": "Bestselling Traders",
+      "subtitle": "Trusted by thousands of gamers"
+    },
+    "categories": {
+      "title": "Browse by Game",
+      "subtitle": "Find accounts for your favorite game"
+    },
+    "howItWorks": {
+      "title": "How GearTrad Works",
+      "subtitle": "Safe, fast, and built for gamers",
+      "steps": {
+        "browse": {
+          "title": "Browse Listings",
+          "desc": "Explore thousands of verified gaming accounts and items"
+        },
+        "chat": {
+          "title": "Chat with Seller",
+          "desc": "Ask questions and negotiate directly with the seller"
+        },
+        "pay": {
+          "title": "Pay Securely",
+          "desc": "Protected payment held until you confirm delivery"
+        },
+        "play": {
+          "title": "Start Playing",
+          "desc": "Get your account details and jump right in"
+        }
+      }
+    }
+  },
+  "listing": {
+    "addToCart": "Add to Cart",
+    "buyNow": "Buy Now",
+    "chatSeller": "Chat with Seller",
+    "price": "Price",
+    "game": "Game",
+    "rank": "Account Rank",
+    "description": "Description",
+    "sellerInfo": "Seller Info",
+    "likes": "Likes",
+    "verified": "Verified",
+    "featured": "Featured",
+    "adBoosted": "Ad Boosted"
+  },
+  "browse": {
+    "title": "Browse All Listings",
+    "subtitle": "Find your next gaming upgrade",
+    "filters": {
+      "title": "Filters",
+      "game": "Game",
+      "priceRange": "Price Range",
+      "rank": "Rank",
+      "type": "Type",
+      "allGames": "All Games",
+      "allTypes": "All Types",
+      "sortBy": "Sort By",
+      "newest": "Newest",
+      "priceLow": "Price: Low to High",
+      "priceHigh": "Price: High to Low",
+      "popular": "Most Popular"
+    },
+    "noResults": "No listings found",
+    "loadMore": "Load More"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Create Account",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "username": "Username",
+    "accountType": "I want to",
+    "buyer": "Buy Gaming Items",
+    "seller": "Sell Gaming Items",
+    "buyerDesc": "Browse and purchase accounts, skins, and more",
+    "sellerDesc": "List your items and earn money from gaming",
+    "alreadyHave": "Already have an account?",
+    "dontHave": "Don't have an account?",
+    "forgotPassword": "Forgot Password?",
+    "orContinue": "or continue with",
+    "terms": "By creating an account, you agree to our Terms of Service and Privacy Policy"
+  },
+  "seller": {
+    "newListing": "New Listing",
+    "myListings": "My Listings",
+    "earnings": "Earnings",
+    "boostAd": "Boost Listing",
+    "boostTitle": "Get More Eyes on Your Listing",
+    "boostWeekly": "1 Week Boost",
+    "boostMonthly": "Monthly Boost",
+    "weeklyPrice": "50 EGP",
+    "monthlyPrice": "150 EGP",
+    "save": "Save 25%",
+    "boostDesc": "Your listing appears first in search results and browse pages",
+    "rating": "Seller Rating",
+    "totalSales": "Total Sales",
+    "activeListings": "Active Listings"
+  },
+  "advertise": {
+    "title": "Put Your Brand In Front of Gamers",
+    "subtitle": "Reach thousands of active gamers across Egypt and MENA",
+    "name": "Full Name",
+    "company": "Company Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "message": "Tell us about your campaign",
+    "submit": "Get in Touch",
+    "packages": {
+      "title": "Ad Packages",
+      "banner": {
+        "title": "Homepage Banner",
+        "desc": "Prime placement on the homepage hero carousel"
+      },
+      "featured": {
+        "title": "Featured Section",
+        "desc": "Your brand in the featured accounts section"
+      },
+      "sponsored": {
+        "title": "Sponsored Listings",
+        "desc": "Branded listing cards throughout browse pages"
+      }
+    }
+  },
+  "chat": {
+    "title": "Messages",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "online": "Online",
+    "offline": "Offline",
+    "startChat": "Start a conversation about this listing"
+  },
+  "common": {
+    "egp": "EGP",
+    "viewDetails": "View Details",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try Again",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "share": "Share",
+    "report": "Report",
+    "close": "Close"
+  },
+  "footer": {
+    "tagline": "The gaming marketplace built for MENA.",
+    "links": {
+      "company": "Company",
+      "about": "About",
+      "advertise": "Advertise",
+      "careers": "Careers",
+      "support": "Support",
+      "help": "Help Center",
+      "safety": "Safety Tips",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy"
+    },
+    "rights": "All rights reserved."
+  }
+}

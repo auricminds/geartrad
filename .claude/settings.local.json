@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/osamahussein/Desktop/geartrad/node_modules/next/dist/docs -name *viewport*)",
+      "Bash(grep -n \"Link\\\\|button\\\\|Button\" /Users/osamahussein/Desktop/geartrad/src/app/[locale]/page.tsx)",
+      "Bash(grep -v \"^--$\")",
+      "Bash(node:*)",
+      "Bash(grep -r \"fixed\\\\|backdrop\\\\|compositing\\\\|stacking\" /Users/osamahussein/Desktop/geartrad/node_modules/next/dist/docs/ --include=*.md -l)",
+      "Bash(cat /Users/osamahussein/Desktop/geartrad/src/hooks/*.ts)",
+      "Bash(find /Users/osamahussein/Desktop/geartrad/src -type f \\\\\\(-name *.tsx -o -name *.ts -o -name *.json -o -name *.css \\\\\\))",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(find /Users/osamahussein/Desktop/geartrad/src -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.json \\\\\\))",
+      "Bash(find /Users/osamahussein/Desktop/geartrad -name *.sql -o -name migrations -type d)",
+      "Bash(find /Users/osamahussein/Desktop/geartrad -type f \\\\\\(-name *.env* -o -name supabase.json -o -name migrations \\\\\\))",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__list_tables",
+      "mcp__claude_ai_Supabase__apply_migration",
+      "Bash(grep -n \"<button\" /Users/osamahussein/Desktop/geartrad/src/app/[locale]/browse/page.tsx)",
+      "Bash(grep -n -A1 \"<button\" /Users/osamahussein/Desktop/geartrad/src/app/[locale]/browse/page.tsx)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Bash(__NEW_LINE_f51ce2bb5abaf880__ grep:*)",
+      "Bash(__NEW_LINE_0bb9461ed4829a75__ grep:*)",
+      "Bash(grep -rn \"localhost\" /Users/osamahussein/Desktop/geartrad/.env*)"
+    ]
+  }
+}
