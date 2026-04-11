@@ -45,9 +45,9 @@ export function Footer() {
             <h4 className="text-sm font-semibold text-white mb-3">{t('links.company')}</h4>
             <ul className="space-y-2">
               {[
-                { label: t('links.about'), href: '#' },
+                { label: t('links.about'), href: `/${locale}/about` },
                 { label: t('links.advertise'), href: `/${locale}/advertise` },
-                { label: t('links.careers'), href: '#' },
+                { label: t('links.careers'), href: `/${locale}/careers` },
               ].map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="text-sm text-muted hover:text-white transition-colors">
@@ -63,10 +63,10 @@ export function Footer() {
             <h4 className="text-sm font-semibold text-white mb-3">{t('links.support')}</h4>
             <ul className="space-y-2">
               {[
-                { label: t('links.help'), href: '#' },
-                { label: t('links.safety'), href: '#' },
-                { label: t('links.terms'), href: '#' },
-                { label: t('links.privacy'), href: '#' },
+                { label: t('links.help'), href: `/${locale}/help` },
+                { label: t('links.safety'), href: `/${locale}/safety` },
+                { label: t('links.terms'), href: `/${locale}/terms` },
+                { label: t('links.privacy'), href: `/${locale}/privacy` },
               ].map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="text-sm text-muted hover:text-white transition-colors">

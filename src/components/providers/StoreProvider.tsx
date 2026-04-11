@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { getWishlistIds, addToWishlist, removeFromWishlist, ensureProfile } from '@/lib/api';
+import { getWishlistIds, addToWishlist, removeFromWishlist, ensureProfile, getNotifications, markNotificationRead, markAllNotificationsRead } from '@/lib/api';
 import { Listing, CartItem } from '@/types';
 
 export interface Notification {
@@ -165,8 +165,50 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notifOpen, setNotifOpen]         = useState(false);
 
-  const markOneRead  = (id: string) => setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
-  const markAllRead  = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  // Load from DB + subscribe to real-time inserts
+  useEffect(() => {
+    if (!user) { setNotifications([]); return; }
+    getNotifications(user.id).then((rows) => {
+      setNotifications(rows.map((r: { id: string; type: string; title: string; body: string; created_at: string; is_read: boolean }) => ({
+        id: r.id,
+        type: r.type as Notification['type'],
+        title: r.title,
+        body: r.body,
+        time: r.created_at,
+        read: r.is_read,
+      })));
+    }).catch(() => {});
+
+    const channel = supabase
+      .channel(`notifications:${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const r = payload.new as { id: string; type: string; title: string; body: string; created_at: string; is_read: boolean };
+          setNotifications((prev) => [{
+            id: r.id,
+            type: r.type as Notification['type'],
+            title: r.title,
+            body: r.body,
+            time: r.created_at,
+            read: false,
+          }, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  const markOneRead = (id: string) => {
+    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+    markNotificationRead(id).catch(() => {});
+  };
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    if (user) markAllNotificationsRead(user.id).catch(() => {});
+  };
   const unreadCount  = notifications.filter((n) => !n.read).length;
 
   return (

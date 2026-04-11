@@ -22,7 +22,10 @@
       "Bash(do echo:*)",
       "Bash(__NEW_LINE_f51ce2bb5abaf880__ grep:*)",
       "Bash(__NEW_LINE_0bb9461ed4829a75__ grep:*)",
-      "Bash(grep -rn \"localhost\" /Users/osamahussein/Desktop/geartrad/.env*)"
+      "Bash(grep -rn \"localhost\" /Users/osamahussein/Desktop/geartrad/.env*)",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)"
     ]
   }
 }

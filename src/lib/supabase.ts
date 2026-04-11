@@ -73,3 +73,47 @@ export type DbOrder = {
   status: 'pending' | 'completed' | 'disputed' | 'refunded';
   created_at: string;
 };
+
+export type DbNotification = {
+  id: string;
+  user_id: string;
+  type: 'message' | 'sale' | 'system' | 'mod';
+  title: string;
+  body: string;
+  related_id: string | null;
+  is_read: boolean;
+  created_at: string;
+};
+
+export type DbVerification = {
+  id: string;
+  user_id: string;
+  id_front_url: string;
+  selfie_url: string;
+  status: 'pending' | 'approved' | 'rejected';
+  submitted_at: string;
+  reviewed_at: string | null;
+  reviewer_id: string | null;
+  notes: string | null;
+};
+
+export type DbSupportTicket = {
+  id: string;
+  user_id: string;
+  chat_id: string | null;
+  type: 'general' | 'dispute' | 'scam' | 'chat_mod';
+  title: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  created_at: string;
+  updated_at: string;
+  user?: DbProfile;
+};
+
+export type DbTicketMessage = {
+  id: string;
+  ticket_id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  sender?: DbProfile;
+};

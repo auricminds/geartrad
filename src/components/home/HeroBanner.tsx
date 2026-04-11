@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { AdBanner } from '@/types';
 import { cn } from '@/lib/utils';
+import { useStore } from '@/components/providers/StoreProvider';
 
 interface HeroBannerProps {
   banners: AdBanner[];
@@ -14,6 +15,7 @@ interface HeroBannerProps {
 export function HeroBanner({ banners }: HeroBannerProps) {
   const t = useTranslations('home.hero');
   const locale = useLocale();
+  const { user } = useStore();
   const [current, setCurrent] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
 
@@ -102,7 +104,7 @@ export function HeroBanner({ banners }: HeroBannerProps) {
             {t('cta')}
           </Link>
           <Link
-            href={`/${locale}/auth/sign-up?type=seller`}
+            href={user ? `/${locale}/sell` : `/${locale}/auth/sign-up?type=seller`}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-semibold rounded-xl bg-gold hover:bg-gold-light text-black shadow-lg shadow-gold/25 transition-all duration-200"
           >
             {t('ctaSell')}

@@ -3,13 +3,13 @@
 import { Suspense, useState, useRef, useEffect, useCallback } from 'react';
 import { useLocale } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Send, Search, ArrowLeft, Star, Shield, MessageCircle, Lock } from 'lucide-react';
+import { Send, Search, ArrowLeft, Star, Shield, MessageCircle, Lock, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { cn, formatPrice } from '@/lib/utils';
 import { useStore } from '@/components/providers/StoreProvider';
 import {
   getUserChats, findOrCreateChat, getChatMessages, sendMessage,
-  markMessagesRead, getListing, ChatRow,
+  markMessagesRead, getListing, ChatRow, pingModerator,
 } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 
@@ -62,6 +62,7 @@ function ChatApp() {
   const [input, setInput]         = useState('');
   const [sending, setSending]     = useState(false);
   const [search, setSearch]       = useState('');
+  const [pinging, setPinging]     = useState(false);
   const bottomRef   = useRef<HTMLDivElement>(null);
   const inputRef    = useRef<HTMLInputElement>(null);
   const subRef      = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -355,12 +356,28 @@ function ChatApp() {
                 <p className="text-xs text-muted truncate">{active.listingTitle}</p>
               </div>
 
-              <div className="shrink-0 text-end">
+              <div className="shrink-0 text-end flex flex-col items-end gap-1">
                 <p className="text-sm font-bold text-white">{formatPrice(active.listingPrice, locale)}</p>
-                <div className="flex items-center gap-0.5 justify-end mt-0.5">
+                <div className="flex items-center gap-0.5 justify-end">
                   <Star className="w-3 h-3 fill-gold text-gold" />
                   <span className="text-xs text-muted">{active.otherRating}</span>
                 </div>
+                <button
+                  type="button"
+                  disabled={pinging}
+                  onClick={async () => {
+                    if (!user || pinging) return;
+                    setPinging(true);
+                    const username = user.user_metadata?.username ?? 'User';
+                    await pingModerator(active.chatId, user.id, username);
+                    setPinging(false);
+                    alert(locale === 'ar' ? 'تم تنبيه المشرف، سيتواصل معك قريباً' : 'Moderator has been notified. They will join shortly.');
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-[10px] font-medium transition-all disabled:opacity-50"
+                >
+                  <ShieldAlert className="w-3 h-3" />
+                  {pinging ? '…' : (locale === 'ar' ? 'استدعاء مشرف' : 'Ping Mod')}
+                </button>
               </div>
             </div>
 

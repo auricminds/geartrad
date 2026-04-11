@@ -1,18 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, CheckSquare, Square, ChevronDown, Zap, ArrowLeft, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { AlertTriangle, CheckSquare, Square, ChevronDown, Zap, ArrowLeft, Upload, AlertCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { createListing } from '@/lib/api';
+import { createListing, uploadListingImage } from '@/lib/api';
 import { useStore } from '@/components/providers/StoreProvider';
 
-const GAMES = ['Valorant', 'Fortnite', 'CS2', 'League of Legends', 'PUBG Mobile', 'Apex Legends', 'FIFA', 'Call of Duty', 'Other'];
+const GAMES = ['Valorant', 'Fortnite', 'CS2', 'League of Legends', 'PUBG Mobile', 'Apex Legends', 'FIFA', 'Call of Duty', 'Brawl Stars', 'Other'];
 const TYPES = ['Account', 'Skin', 'Weapon', 'Bundle', 'Ticket'];
-const RANKS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Master', 'Grandmaster', 'Challenger'];
+
+const GAME_RANKS: Record<string, string[]> = {
+  'Valorant': ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Ascendant', 'Immortal', 'Radiant'],
+  'Fortnite': ['Open League', 'Contender League', 'Champion League', 'Unreal'],
+  'CS2': ['Silver I', 'Silver II', 'Silver III', 'Silver IV', 'Silver Elite', 'Silver Elite Master', 'Gold Nova I', 'Gold Nova II', 'Gold Nova III', 'Gold Nova Master', 'Master Guardian I', 'Master Guardian II', 'Master Guardian Elite', 'Distinguished Master Guardian', 'Legendary Eagle', 'Legendary Eagle Master', 'Supreme Master First Class', 'Global Elite'],
+  'League of Legends': ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Emerald', 'Diamond', 'Master', 'Grandmaster', 'Challenger'],
+  'PUBG Mobile': ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Crown', 'Ace', 'Conqueror'],
+  'Apex Legends': ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Master', 'Predator'],
+  'FIFA': ['Division 10', 'Division 9', 'Division 8', 'Division 7', 'Division 6', 'Division 5', 'Division 4', 'Division 3', 'Division 2', 'Division 1', 'Elite'],
+  'Call of Duty': ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Crimson', 'Iridescent', 'Top 250'],
+  'Brawl Stars': ['Bronze', 'Silver', 'Gold', 'Diamond', 'Mythic', 'Legendary', 'Masters'],
+  'Other': [],
+};
 
 type BoostOption = 'none' | 'weekly' | 'monthly';
 
@@ -43,16 +55,32 @@ export default function SellPage() {
   const [title, setTitle]               = useState('');
   const [titleAr, setTitleAr]           = useState('');
   const [game, setGame]                 = useState('');
+  const [customGame, setCustomGame]     = useState('');
   const [type, setType]                 = useState('');
   const [rank, setRank]                 = useState('');
   const [price, setPrice]               = useState('');
   const [description, setDescription]   = useState('');
   const [descriptionAr, setDescriptionAr] = useState('');
-  const [coverImage, setCoverImage]     = useState('');
+  const [imageFile, setImageFile]       = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState('');
   const [level, setLevel]               = useState('');
   const [hoursPlayed, setHoursPlayed]   = useState('');
   const [winRate, setWinRate]           = useState('');
   const [achievements, setAchievements] = useState('');
+  const fileInputRef                    = useRef<HTMLInputElement>(null);
+
+  const availableRanks = game ? (GAME_RANKS[game] ?? []) : [];
+
+  const handleGameChange = (newGame: string) => {
+    setGame(newGame);
+    setRank(''); // reset rank when game changes
+    setCustomGame('');
+  };
+
+  const handleImageFile = (file: File) => {
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
 
   if (authLoading) return null;
 
@@ -124,8 +152,13 @@ export default function SellPage() {
 
     setError('');
 
-    if (!title.trim() || !game || !type || !price || !description.trim()) {
+    const finalGame = game === 'Other' ? customGame.trim() : game;
+    if (!title.trim() || !finalGame || !type || !price || !description.trim()) {
       setError(locale === 'ar' ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill in all required fields');
+      return;
+    }
+    if (game === 'Other' && !customGame.trim()) {
+      setError(locale === 'ar' ? 'يرجى كتابة اسم اللعبة' : 'Please enter the game name');
       return;
     }
 
@@ -137,6 +170,13 @@ export default function SellPage() {
 
     setLoading(true);
     try {
+      // Upload image if a file was chosen
+      let coverImageUrl = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&q=80';
+      if (imageFile) {
+        const uploaded = await uploadListingImage(imageFile, user.id);
+        if (uploaded) coverImageUrl = uploaded;
+      }
+
       const result = await createListing(
         {
           title: title.trim(),
@@ -144,9 +184,9 @@ export default function SellPage() {
           description: description.trim(),
           description_ar: descriptionAr.trim() || undefined,
           price: priceNum,
-          game,
+          game: finalGame,
           type,
-          cover_image: coverImage.trim() || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&q=80',
+          cover_image: coverImageUrl,
           rank: rank || undefined,
           boost_type: boostType,
           level: level ? parseInt(level, 10) : null,
@@ -258,12 +298,23 @@ export default function SellPage() {
           <div className="grid grid-cols-2 gap-4">
             <Field label={locale === 'ar' ? 'اللعبة *' : 'Game *'}>
               <div className="relative">
-                <select required value={game} onChange={(e) => setGame(e.target.value)} className={cn(inputCls, 'appearance-none')}>
+                <select required value={game} onChange={(e) => handleGameChange(e.target.value)} className={cn(inputCls, 'appearance-none')}>
                   <option value="">{locale === 'ar' ? 'اختر...' : 'Select...'}</option>
                   {GAMES.map((g) => <option key={g} value={g}>{g}</option>)}
                 </select>
                 <ChevronDown className="absolute end-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
               </div>
+              {game === 'Other' && (
+                <input
+                  type="text"
+                  required
+                  value={customGame}
+                  onChange={(e) => setCustomGame(e.target.value)}
+                  placeholder={locale === 'ar' ? 'اكتب اسم اللعبة...' : 'Type the game name...'}
+                  className={cn(inputCls, 'mt-2')}
+                  maxLength={60}
+                />
+              )}
             </Field>
             <Field label={locale === 'ar' ? 'النوع *' : 'Type *'}>
               <div className="relative">
@@ -278,13 +329,19 @@ export default function SellPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <Field label={locale === 'ar' ? 'التصنيف (اختياري)' : 'Rank (optional)'}>
-              <div className="relative">
-                <select value={rank} onChange={(e) => setRank(e.target.value)} className={cn(inputCls, 'appearance-none')}>
-                  <option value="">{locale === 'ar' ? 'لا يوجد' : 'None'}</option>
-                  {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
-                <ChevronDown className="absolute end-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-              </div>
+              {availableRanks.length > 0 ? (
+                <div className="relative">
+                  <select value={rank} onChange={(e) => setRank(e.target.value)} className={cn(inputCls, 'appearance-none')}>
+                    <option value="">{locale === 'ar' ? 'لا يوجد' : 'None'}</option>
+                    {availableRanks.map((r) => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                  <ChevronDown className="absolute end-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+                </div>
+              ) : (
+                <div className={cn(inputCls, 'text-muted/50 cursor-not-allowed select-none')}>
+                  {game ? (locale === 'ar' ? 'لا يوجد تصنيف لهذه اللعبة' : 'No ranks for this game') : (locale === 'ar' ? 'اختر لعبة أولاً' : 'Select a game first')}
+                </div>
+              )}
             </Field>
             <Field label={locale === 'ar' ? 'السعر (جنيه مصري) *' : 'Price (EGP) *'}>
               <input type="number" required min={1} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className={inputCls} />
@@ -303,13 +360,39 @@ export default function SellPage() {
               className={cn(inputCls, 'resize-none')} maxLength={2000} dir="rtl" />
           </Field>
 
-          <Field label={locale === 'ar' ? 'رابط صورة الغلاف (URL)' : 'Cover Image URL'}>
-            <div className="relative">
-              <ImageIcon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-              <input type="url" value={coverImage} onChange={(e) => setCoverImage(e.target.value)}
-                placeholder="https://..."
-                className={cn(inputCls, 'ps-10')} />
-            </div>
+          <Field label={locale === 'ar' ? 'صورة الغلاف (اختياري)' : 'Cover Image (optional)'}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImageFile(file);
+              }}
+            />
+            {imagePreview ? (
+              <div className="relative w-full h-40 rounded-xl overflow-hidden border border-border">
+                <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => { setImageFile(null); setImagePreview(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                  className="absolute top-2 end-2 w-7 h-7 rounded-full bg-black/70 flex items-center justify-center text-white hover:bg-black transition-all"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full h-32 rounded-xl border-2 border-dashed border-border hover:border-purple/50 hover:bg-purple/5 flex flex-col items-center justify-center gap-2 text-muted hover:text-white transition-all"
+              >
+                <Upload className="w-6 h-6" />
+                <span className="text-sm">{locale === 'ar' ? 'انقر لاختيار صورة من جهازك' : 'Click to choose an image from your device'}</span>
+                <span className="text-xs text-muted/50">JPG, PNG, WEBP — max 5MB</span>
+              </button>
+            )}
             <p className="text-[11px] text-muted">{locale === 'ar' ? 'اتركه فارغاً لاستخدام صورة افتراضية' : 'Leave empty to use a default image'}</p>
           </Field>
         </div>

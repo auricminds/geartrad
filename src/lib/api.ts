@@ -322,6 +322,29 @@ export async function sendMessage(
     .single();
 
   if (error) { console.error('sendMessage error:', error); return null; }
+
+  // Notify the other party (seller if sender is buyer, buyer if sender is seller)
+  try {
+    const { data: chat } = await supabase
+      .from('chats')
+      .select('buyer_id, seller_id, listing:listings(title)')
+      .eq('id', chatId)
+      .single();
+    if (chat) {
+      const recipientId = chat.buyer_id === senderId ? chat.seller_id : chat.buyer_id;
+      const listingTitle = (chat.listing as { title?: string } | null)?.title ?? 'a listing';
+      const { data: senderProfile } = await supabase.from('profiles').select('username').eq('id', senderId).single();
+      const senderName = senderProfile?.username ?? 'Someone';
+      await supabase.from('notifications').insert({
+        user_id: recipientId,
+        type: 'message',
+        title: `New message from ${senderName}`,
+        body: `"${content.trim().slice(0, 60)}${content.trim().length > 60 ? '…' : ''}" — re: ${listingTitle}`,
+        related_id: chatId,
+      });
+    }
+  } catch { /* non-critical */ }
+
   return data;
 }
 
@@ -409,6 +432,199 @@ export async function getSellerOrders(sellerId: string): Promise<OrderRow[]> {
     .order('created_at', { ascending: false });
 
   return (data as OrderRow[] | null) ?? [];
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+
+export async function getNotifications(userId: string) {
+  const { data } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  return data ?? [];
+}
+
+export async function createNotification(n: {
+  user_id: string;
+  type: 'message' | 'sale' | 'system' | 'mod';
+  title: string;
+  body: string;
+  related_id?: string;
+}): Promise<void> {
+  await supabase.from('notifications').insert({
+    user_id: n.user_id,
+    type: n.type,
+    title: n.title,
+    body: n.body,
+    related_id: n.related_id ?? null,
+  });
+}
+
+export async function markNotificationRead(notifId: string): Promise<void> {
+  await supabase.from('notifications').update({ is_read: true }).eq('id', notifId);
+}
+
+export async function markAllNotificationsRead(userId: string): Promise<void> {
+  await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId).eq('is_read', false);
+}
+
+// ── Image upload ──────────────────────────────────────────────────────────────
+
+export async function uploadListingImage(file: File, userId: string): Promise<string | null> {
+  const ext = file.name.split('.').pop() ?? 'jpg';
+  const path = `${userId}/${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from('listing-images').upload(path, file, { upsert: false });
+  if (error) { console.error('uploadListingImage error:', error); return null; }
+  const { data } = supabase.storage.from('listing-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// ── Verifications ─────────────────────────────────────────────────────────────
+
+export async function submitVerification(userId: string, idFrontFile: File, selfieFile: File): Promise<boolean> {
+  const idUrl = await uploadListingImage(idFrontFile, `verif/${userId}`);
+  const selfieUrl = await uploadListingImage(selfieFile, `verif/${userId}`);
+  if (!idUrl || !selfieUrl) return false;
+  const { error } = await supabase.from('verifications').insert({
+    user_id: userId,
+    id_front_url: idUrl,
+    selfie_url: selfieUrl,
+  });
+  return !error;
+}
+
+export async function getMyVerification(userId: string) {
+  const { data } = await supabase
+    .from('verifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('submitted_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data;
+}
+
+export async function getAllVerifications() {
+  const { data } = await supabase
+    .from('verifications')
+    .select('*, user:profiles!verifications_user_id_fkey(id, username, avatar_url)')
+    .order('submitted_at', { ascending: false });
+  return data ?? [];
+}
+
+export async function reviewVerification(id: string, reviewerId: string, status: 'approved' | 'rejected', notes?: string): Promise<void> {
+  await supabase.from('verifications').update({
+    status,
+    reviewer_id: reviewerId,
+    reviewed_at: new Date().toISOString(),
+    notes: notes ?? null,
+  }).eq('id', id);
+  if (status === 'approved') {
+    const { data: verif } = await supabase.from('verifications').select('user_id').eq('id', id).single();
+    if (verif) {
+      await supabase.from('profiles').update({ is_verified: true }).eq('id', verif.user_id);
+    }
+  }
+}
+
+// ── Support Tickets ───────────────────────────────────────────────────────────
+
+export async function createSupportTicket(t: {
+  user_id: string;
+  chat_id?: string;
+  type: 'general' | 'dispute' | 'scam' | 'chat_mod';
+  title: string;
+}): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('support_tickets')
+    .insert({ user_id: t.user_id, chat_id: t.chat_id ?? null, type: t.type, title: t.title })
+    .select('id')
+    .single();
+  if (error) { console.error('createSupportTicket error:', error); return null; }
+  return data.id;
+}
+
+export async function getMyTickets(userId: string) {
+  const { data } = await supabase
+    .from('support_tickets')
+    .select('*, user:profiles!support_tickets_user_id_fkey(id, username)')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  return data ?? [];
+}
+
+export async function getAllTickets() {
+  const { data } = await supabase
+    .from('support_tickets')
+    .select('*, user:profiles!support_tickets_user_id_fkey(id, username)')
+    .order('created_at', { ascending: false });
+  return data ?? [];
+}
+
+export async function getTicketMessages(ticketId: string) {
+  const { data } = await supabase
+    .from('ticket_messages')
+    .select('*, sender:profiles!ticket_messages_sender_id_fkey(id, username, role)')
+    .eq('ticket_id', ticketId)
+    .order('created_at', { ascending: true });
+  return data ?? [];
+}
+
+export async function sendTicketMessage(ticketId: string, senderId: string, content: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('ticket_messages')
+    .insert({ ticket_id: ticketId, sender_id: senderId, content: content.trim() });
+  if (!error) {
+    await supabase.from('support_tickets').update({ updated_at: new Date().toISOString() }).eq('id', ticketId);
+  }
+  return !error;
+}
+
+export async function updateTicketStatus(ticketId: string, status: 'open' | 'in_progress' | 'resolved' | 'closed'): Promise<void> {
+  await supabase.from('support_tickets').update({ status, updated_at: new Date().toISOString() }).eq('id', ticketId);
+}
+
+// ── Chat Moderators ───────────────────────────────────────────────────────────
+
+export async function pingModerator(chatId: string, userId: string, username: string): Promise<string | null> {
+  // Create a ticket of type chat_mod
+  const ticketId = await createSupportTicket({
+    user_id: userId,
+    chat_id: chatId,
+    type: 'chat_mod',
+    title: `Moderator requested in chat by ${username}`,
+  });
+  if (!ticketId) return null;
+  // Notify all moderators
+  const { data: mods } = await supabase.from('profiles').select('id').in('role', ['moderator', 'admin']);
+  if (mods && mods.length > 0) {
+    await supabase.from('notifications').insert(
+      mods.map((m: { id: string }) => ({
+        user_id: m.id,
+        type: 'mod',
+        title: 'Moderator Requested',
+        body: `${username} is requesting a moderator in a chat.`,
+        related_id: ticketId,
+      }))
+    );
+  }
+  return ticketId;
+}
+
+export async function joinChatAsModerator(chatId: string, moderatorId: string): Promise<void> {
+  await supabase.from('chat_moderators').upsert({ chat_id: chatId, moderator_id: moderatorId }, { onConflict: 'chat_id,moderator_id' });
+}
+
+export async function getChatModerators(chatId: string): Promise<string[]> {
+  const { data } = await supabase.from('chat_moderators').select('moderator_id').eq('chat_id', chatId);
+  return (data ?? []).map((r: { moderator_id: string }) => r.moderator_id);
+}
+
+export async function getMyRole(userId: string): Promise<string> {
+  const { data } = await supabase.from('profiles').select('role').eq('id', userId).single();
+  return data?.role ?? 'user';
 }
 
 // ── Ad inquiries ──────────────────────────────────────────────────────────────
