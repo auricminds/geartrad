@@ -183,10 +183,21 @@ function ChatApp() {
     return () => { supabase.removeChannel(channel); };
   }, [activeId, user]);
 
-  // Scroll to bottom when messages update
+  // Scroll to bottom only when a new message is added to the active chat
+  const activeMessageCount = convs.find((c) => c.chatId === activeId)?.messages.length ?? 0;
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [activeId, convs]);
+    if (activeMessageCount > 0) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeMessageCount]);
+
+  // Scroll to bottom when switching to a different chat
+  useEffect(() => {
+    if (activeId) {
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' });
+    }
+  }, [activeId]);
 
   const sendMsg = useCallback(async () => {
     const text = input.trim();
@@ -196,15 +207,10 @@ function ChatApp() {
     setInput('');
 
     try {
-      const msg = await sendMessage(activeId, user.id, text);
-      if (msg) {
-        setConvs((prev) => prev.map((c) =>
-          c.chatId === activeId
-            ? { ...c, messages: [...c.messages, msg as LocalMessage], lastMessage: text, lastTime: 'Just now' }
-            : c
-        ));
-      } else {
-        // Failed to send — restore input text
+      const ok = await sendMessage(activeId, user.id, text);
+      // Do NOT add the message to state here — the realtime subscription
+      // is the single source of truth and will add it when the INSERT fires.
+      if (!ok) {
         setInput(text);
       }
     } catch {
