@@ -87,14 +87,11 @@ export function ListingCard({ listing, size = 'md' }: ListingCardProps) {
 
   return (
     <Link href={`/${locale}/listing/${listing.id}`} onClick={handleClick}>
-      <motion.div
-        whileHover={{ y: -4, scale: 1.01 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      <div
         className={cn(
           'group relative bg-surface border border-border rounded-2xl overflow-hidden',
-          'hover:border-purple/40 transition-colors duration-300',
-          'hover:shadow-xl',
+          'hover:border-purple/40 hover:-translate-y-1 hover:shadow-xl',
+          'transition-all duration-200 ease-out',
           listing.rank && rankGlows[listing.rank] && `hover:shadow-${rankGlows[listing.rank]}`,
           listing.isBoosted && 'border-purple/30 shadow-lg shadow-purple/10'
         )}
@@ -188,7 +185,13 @@ export function ListingCard({ listing, size = 'md' }: ListingCardProps) {
             <div className="w-5 h-5 rounded-full bg-purple/20 flex items-center justify-center text-xs font-bold text-purple">
               {listing.seller.username.charAt(0)}
             </div>
-            <span className="text-xs text-muted truncate">{listing.seller.username}</span>
+            <span
+              className="text-xs text-muted truncate hover:text-purple transition-colors cursor-pointer"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/${locale}/seller/${listing.seller.id}`; }}
+            >
+              {listing.seller.username}
+            </span>
             <div className="flex items-center gap-0.5 ms-auto">
               <Star className="w-3 h-3 fill-gold text-gold" />
               <span className="text-xs font-medium text-white">{listing.seller.rating}</span>
@@ -241,7 +244,7 @@ export function ListingCard({ listing, size = 'md' }: ListingCardProps) {
             </motion.button>
           </div>
         </div>
-      </motion.div>
+      </div>
     </Link>
   );
 }

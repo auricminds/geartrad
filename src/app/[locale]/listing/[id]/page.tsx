@@ -127,12 +127,12 @@ export default async function ListingPage({ params }: ListingPageProps) {
           {/* Seller card */}
           <div className="bg-surface border border-border rounded-2xl p-5">
             <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">{t('sellerInfo')}</h3>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-purple/20 flex items-center justify-center text-xl font-bold text-purple">
+            <a href={`/${locale}/seller/${listing.seller.id}`} className="flex items-center gap-3 mb-4 group/seller">
+              <div className="w-12 h-12 rounded-2xl bg-purple/20 flex items-center justify-center text-xl font-bold text-purple group-hover/seller:bg-purple/30 transition-colors">
                 {listing.seller.username.charAt(0)}
               </div>
               <div>
-                <p className="font-semibold text-white">{listing.seller.username}</p>
+                <p className="font-semibold text-white group-hover/seller:text-purple transition-colors">{listing.seller.username}</p>
                 <div className="flex items-center gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star key={i} className={`w-3 h-3 ${i < Math.floor(listing.seller.rating) ? 'fill-gold text-gold' : 'text-muted'}`} />
@@ -140,7 +140,8 @@ export default async function ListingPage({ params }: ListingPageProps) {
                   <span className="text-xs text-muted ms-1">({listing.seller.totalSales} {locale === 'ar' ? 'بيعة' : 'sales'})</span>
                 </div>
               </div>
-            </div>
+              <span className="ms-auto text-xs text-muted/50 group-hover/seller:text-purple transition-colors">View profile →</span>
+            </a>
 
             {/* Seller badges */}
             <div className="flex flex-wrap gap-2 mb-4">

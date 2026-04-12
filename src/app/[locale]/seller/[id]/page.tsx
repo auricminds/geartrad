@@ -1,0 +1,169 @@
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { Star, Shield, BadgeCheck, Timer, Package, ArrowLeft, MessageCircle } from 'lucide-react';
+import { getProfile, getSellerListings } from '@/lib/api';
+import { ListingCard } from '@/components/listing/ListingCard';
+import { SellerAnalytics } from '@/components/listing/SellerAnalytics';
+import { cn } from '@/lib/utils';
+
+interface Props {
+  params: Promise<{ id: string; locale: string }>;
+}
+
+export default async function SellerProfilePage({ params }: Props) {
+  const { id, locale } = await params;
+  const isAr = locale === 'ar';
+
+  const [profile, listings] = await Promise.all([
+    getProfile(id),
+    getSellerListings(id),
+  ]);
+
+  if (!profile) notFound();
+
+  const isTrusted = Number(profile.rating) >= 4.5 && profile.total_sales >= 5;
+  const initials  = profile.username.slice(0, 2).toUpperCase();
+  const stars     = Math.floor(Number(profile.rating));
+  const activeListings = listings.filter((l) => l.isAvailable);
+
+  // Rank distribution across listings
+  const rankCounts: Record<string, number> = {};
+  listings.forEach((l) => { if (l.rank) rankCounts[l.rank] = (rankCounts[l.rank] ?? 0) + 1; });
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <Link
+        href={`/${locale}/browse`}
+        className="inline-flex items-center gap-1.5 text-muted hover:text-white transition-colors text-sm mb-8"
+      >
+        <ArrowLeft className={cn('w-4 h-4', isAr && 'rotate-180')} />
+        {isAr ? 'رجوع' : 'Back'}
+      </Link>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        {/* Profile card */}
+        <div className="lg:col-span-1 space-y-4">
+          <div className="bg-surface border border-border rounded-2xl p-6 text-center">
+            {/* Avatar */}
+            <div className="relative inline-block mb-4">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple to-purple-light flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-purple/30 mx-auto">
+                {initials}
+              </div>
+              {profile.is_verified && (
+                <span className="absolute -bottom-1 -end-1 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-background">
+                  <Shield className="w-3 h-3 text-white" />
+                </span>
+              )}
+            </div>
+
+            <h1 className="text-xl font-bold text-white mb-1">{profile.username}</h1>
+
+            {/* Badges */}
+            <div className="flex flex-wrap gap-2 justify-center mb-4">
+              {profile.is_verified && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+                  <Shield className="w-3 h-3" />
+                  {isAr ? 'موثق' : 'Verified'}
+                </span>
+              )}
+              {isTrusted && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gold/10 border border-gold/20 text-gold text-xs font-medium">
+                  <BadgeCheck className="w-3 h-3" />
+                  {isAr ? 'بائع موثوق' : 'Trusted Seller'}
+                </span>
+              )}
+            </div>
+
+            {/* Star rating */}
+            <div className="flex items-center justify-center gap-1 mb-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className={cn('w-4 h-4', i < stars ? 'fill-gold text-gold' : 'text-muted/30')} />
+              ))}
+            </div>
+            <p className="text-white font-bold text-lg">{Number(profile.rating).toFixed(1)}</p>
+            <p className="text-muted text-xs mb-4">{isAr ? 'التقييم' : 'Rating'}</p>
+
+            {/* Stats grid */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-background rounded-xl p-3 text-center">
+                <p className="text-lg font-bold text-white">{profile.total_sales}</p>
+                <p className="text-xs text-muted">{isAr ? 'إجمالي المبيعات' : 'Total Sales'}</p>
+              </div>
+              <div className="bg-background rounded-xl p-3 text-center">
+                <p className="text-lg font-bold text-white">{activeListings.length}</p>
+                <p className="text-xs text-muted">{isAr ? 'إعلانات نشطة' : 'Active Listings'}</p>
+              </div>
+            </div>
+
+            {/* Message seller */}
+            {profile.account_type === 'seller' && (
+              <Link
+                href={`/${locale}/browse?seller=${id}`}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-purple hover:bg-purple-light text-white text-sm font-medium transition-all"
+              >
+                <Package className="w-4 h-4" />
+                {isAr ? 'عرض جميع الإعلانات' : 'View All Listings'}
+              </Link>
+            )}
+          </div>
+
+          {/* Rank distribution */}
+          {Object.keys(rankCounts).length > 0 && (
+            <div className="bg-surface border border-border rounded-2xl p-5">
+              <h3 className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">
+                {isAr ? 'توزيع التصنيفات' : 'Rank Distribution'}
+              </h3>
+              <div className="space-y-2">
+                {Object.entries(rankCounts)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([rank, count]) => (
+                    <div key={rank} className="flex items-center justify-between text-sm">
+                      <span className="text-muted">{rank}</span>
+                      <span className="text-white font-medium">{count} {isAr ? 'إعلان' : 'listings'}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Seller analytics */}
+          <div className="bg-surface border border-border rounded-2xl p-5">
+            <SellerAnalytics sellerId={id} locale={locale} />
+          </div>
+        </div>
+
+        {/* Listings */}
+        <div className="lg:col-span-2">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-bold text-white">
+              {isAr ? 'إعلانات البائع' : "Seller's Listings"}
+              <span className="text-muted font-normal text-sm ms-2">({activeListings.length})</span>
+            </h2>
+          </div>
+
+          {activeListings.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
+              <Package className="w-10 h-10 text-muted/20" />
+              <p className="text-muted text-sm">
+                {isAr ? 'لا توجد إعلانات نشطة' : 'No active listings'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {activeListings.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          )}
+
+          {/* Sold / unavailable count */}
+          {listings.length > activeListings.length && (
+            <p className="text-center text-muted text-xs mt-6">
+              +{listings.length - activeListings.length} {isAr ? 'إعلانات تم بيعها' : 'listings already sold'}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
