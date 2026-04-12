@@ -1,12 +1,15 @@
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { Heart, Star, Shield, Trophy, Zap, Clock } from 'lucide-react';
+import { Heart, Star, Shield, Trophy, Zap, Clock, BadgeCheck, Timer } from 'lucide-react';
 import { getListing, getListings } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { formatPrice } from '@/lib/utils';
 import { ListingCard } from '@/components/listing/ListingCard';
 import { ListingActions } from '@/components/listing/ListingActions';
 import { ListingMobileBar } from '@/components/listing/ListingMobileBar';
+import { ListingViewers } from '@/components/listing/ListingViewers';
+import { SellerAnalytics } from '@/components/listing/SellerAnalytics';
+import { ActivityTracker } from '@/components/listing/ActivityTracker';
 
 interface ListingPageProps {
   params: Promise<{ id: string; locale: string }>;
@@ -22,13 +25,17 @@ export default async function ListingPage({ params }: ListingPageProps) {
   const displayTitle = locale === 'ar' && listing.titleAr ? listing.titleAr : listing.title;
   const displayDesc  = locale === 'ar' && listing.descriptionAr ? listing.descriptionAr : listing.description;
 
-  // Fetch related listings from same game
   const related = (await getListings({ game: listing.game, limit: 4 }))
     .filter((l) => l.id !== id)
     .slice(0, 3);
 
+  const isTrusted = listing.seller.rating >= 4.5 && listing.seller.totalSales >= 5;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-28 lg:pb-8">
+      {/* Track game activity for recommendations */}
+      <ActivityTracker game={listing.game} />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left: Image + Info */}
         <div className="lg:col-span-2 space-y-6">
@@ -54,9 +61,11 @@ export default async function ListingPage({ params }: ListingPageProps) {
           </div>
 
           <div>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <Badge variant="purple">{listing.game}</Badge>
               <Badge variant="default">{listing.type}</Badge>
+              {/* Live viewer count */}
+              <ListingViewers listingId={id} />
             </div>
             <h1 className="text-2xl font-bold text-white leading-tight mb-2">{displayTitle}</h1>
             <div className="flex items-center gap-4 text-sm text-muted">
@@ -115,6 +124,7 @@ export default async function ListingPage({ params }: ListingPageProps) {
             <ListingActions listing={listing} />
           </div>
 
+          {/* Seller card */}
           <div className="bg-surface border border-border rounded-2xl p-5">
             <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">{t('sellerInfo')}</h3>
             <div className="flex items-center gap-3 mb-4">
@@ -131,12 +141,25 @@ export default async function ListingPage({ params }: ListingPageProps) {
                 </div>
               </div>
             </div>
-            {listing.seller.isVerified && (
-              <Badge variant="green" className="w-full justify-center">
-                <Shield className="w-3 h-3" />
-                {locale === 'ar' ? 'بائع موثق' : 'Verified Seller'}
-              </Badge>
-            )}
+
+            {/* Seller badges */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {listing.seller.isVerified && (
+                <Badge variant="green" className="text-xs">
+                  <Shield className="w-3 h-3" />
+                  {locale === 'ar' ? 'بائع موثق' : 'Verified Seller'}
+                </Badge>
+              )}
+              {isTrusted && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gold/10 border border-gold/20 text-gold text-xs font-medium">
+                  <BadgeCheck className="w-3 h-3" />
+                  {locale === 'ar' ? 'بائع موثوق' : 'Trusted Seller'}
+                </span>
+              )}
+            </div>
+
+            {/* Seller analytics (client-fetched) */}
+            <SellerAnalytics sellerId={listing.seller.id} locale={locale} />
           </div>
         </div>
       </div>

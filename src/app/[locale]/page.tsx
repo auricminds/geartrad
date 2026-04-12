@@ -5,6 +5,7 @@ import { HeroBanner } from '@/components/home/HeroBanner';
 import { StatsBar } from '@/components/home/StatsBar';
 import { BestsellerStrip } from '@/components/home/BestsellerStrip';
 import { HowItWorks } from '@/components/home/HowItWorks';
+import { RecommendationsSection } from '@/components/home/RecommendationsSection';
 import { ListingCard } from '@/components/listing/ListingCard';
 import { getListings, getTopSellers } from '@/lib/api';
 import type { AdBanner } from '@/types';
@@ -78,6 +79,7 @@ export default async function HomePage() {
       )}
 
       <BestsellerStrip sellers={topSellers} />
+      <RecommendationsSection />
       <HowItWorks />
 
       {/* All Top Accounts */}
