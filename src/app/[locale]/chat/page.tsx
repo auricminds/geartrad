@@ -63,7 +63,7 @@ function ChatApp() {
   const [sending, setSending]     = useState(false);
   const [search, setSearch]       = useState('');
   const [pinging, setPinging]     = useState(false);
-  const bottomRef   = useRef<HTMLDivElement>(null);
+  const msgsRef     = useRef<HTMLDivElement>(null);
   const inputRef    = useRef<HTMLInputElement>(null);
   const subRef      = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
@@ -183,20 +183,29 @@ function ChatApp() {
     return () => { supabase.removeChannel(channel); };
   }, [activeId, user]);
 
-  // Scroll to bottom only when a new message is added to the active chat
+  // Scroll only the messages container — never the whole page
+  const scrollToBottom = (smooth = false) => {
+    const el = msgsRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
+  };
+
+  // Scroll when a new message arrives in the active chat
   const activeMessageCount = convs.find((c) => c.chatId === activeId)?.messages.length ?? 0;
+  const prevMsgCountRef = useRef(0);
   useEffect(() => {
-    if (activeMessageCount > 0) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (activeMessageCount > prevMsgCountRef.current) {
+      scrollToBottom(true);
     }
+    prevMsgCountRef.current = activeMessageCount;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeMessageCount]);
 
-  // Scroll to bottom when switching to a different chat
+  // Jump to bottom instantly when switching chats
   useEffect(() => {
-    if (activeId) {
-      bottomRef.current?.scrollIntoView({ behavior: 'instant' });
-    }
+    prevMsgCountRef.current = 0;
+    scrollToBottom(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId]);
 
   const sendMsg = useCallback(async () => {
@@ -388,7 +397,7 @@ function ChatApp() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-5 space-y-3 bg-background/30">
+            <div ref={msgsRef} className="flex-1 overflow-y-auto px-4 py-5 space-y-3 bg-background/30">
               {active.messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center gap-3 text-center">
                   <MessageCircle className="w-10 h-10 text-muted/20" />
@@ -414,7 +423,6 @@ function ChatApp() {
                   );
                 })
               )}
-              <div ref={bottomRef} />
             </div>
 
             {/* Input */}
