@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { CartDrawer } from '@/components/layout/CartDrawer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { StoreProvider } from '@/components/providers/StoreProvider';
+import { PageTransition } from '@/components/ui/PageTransition';
 import { getDir } from '@/lib/utils';
 import type { Metadata } from 'next';
 
@@ -42,7 +43,9 @@ export default async function LocaleLayout({
           <StoreProvider>
             <Navbar />
             <CartDrawer />
-            <main className="min-h-screen pb-14 md:pb-0">{children}</main>
+            <main className="min-h-screen pb-14 md:pb-0">
+              <PageTransition>{children}</PageTransition>
+            </main>
             <MobileBottomNav />
             <Footer />
           </StoreProvider>
