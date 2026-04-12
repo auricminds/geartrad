@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Home, Search, ShoppingCart, MessageCircle, User } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useStore } from '@/components/providers/StoreProvider';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +18,42 @@ export function MobileBottomNav() {
 
   const active = (path: string, exact = false) =>
     exact ? pathname === path : pathname === path || pathname.startsWith(path + '/');
+
+  const iconVariants = {
+    active: { scale: 1.15, y: -2, transition: { type: 'spring' as const, stiffness: 500, damping: 18 } },
+    inactive: { scale: 1, y: 0, transition: { duration: 0.15 } },
+  };
+
+  const tabItems = [
+    {
+      href: `/${locale}`,
+      icon: Home,
+      label: locale === 'ar' ? 'الرئيسية' : 'Home',
+      isActive: active(`/${locale}`, true),
+      isLink: true,
+    },
+    {
+      href: `/${locale}/browse`,
+      icon: Search,
+      label: locale === 'ar' ? 'تصفح' : 'Browse',
+      isActive: active(`/${locale}/browse`),
+      isLink: true,
+    },
+    {
+      href: `/${locale}/chat`,
+      icon: MessageCircle,
+      label: locale === 'ar' ? 'رسائل' : 'Chat',
+      isActive: active(`/${locale}/chat`),
+      isLink: true,
+    },
+    {
+      href: `/${locale}/profile`,
+      icon: User,
+      label: locale === 'ar' ? 'حسابي' : 'Profile',
+      isActive: active(`/${locale}/profile`) || active(`/${locale}/auth`),
+      isLink: true,
+    },
+  ];
 
   return (
     <nav
@@ -33,9 +70,18 @@ export function MobileBottomNav() {
           )}
         >
           {active(`/${locale}`, true) && (
-            <span className="absolute top-0 inset-x-0 h-0.5 bg-purple rounded-b-full" />
+            <motion.span
+              layoutId="nav-indicator"
+              className="absolute top-0 inset-x-0 h-0.5 bg-purple rounded-b-full"
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            />
           )}
-          <Home className="w-[22px] h-[22px]" />
+          <motion.div
+            variants={iconVariants}
+            animate={active(`/${locale}`, true) ? 'active' : 'inactive'}
+          >
+            <Home className="w-[22px] h-[22px]" />
+          </motion.div>
           <span className="text-[9px] font-medium leading-none">
             {locale === 'ar' ? 'الرئيسية' : 'Home'}
           </span>
@@ -50,32 +96,47 @@ export function MobileBottomNav() {
           )}
         >
           {active(`/${locale}/browse`) && (
-            <span className="absolute top-0 inset-x-0 h-0.5 bg-purple rounded-b-full" />
+            <motion.span
+              layoutId="nav-indicator"
+              className="absolute top-0 inset-x-0 h-0.5 bg-purple rounded-b-full"
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            />
           )}
-          <Search className="w-[22px] h-[22px]" />
+          <motion.div
+            variants={iconVariants}
+            animate={active(`/${locale}/browse`) ? 'active' : 'inactive'}
+          >
+            <Search className="w-[22px] h-[22px]" />
+          </motion.div>
           <span className="text-[9px] font-medium leading-none">
             {locale === 'ar' ? 'تصفح' : 'Browse'}
           </span>
         </Link>
 
         {/* Cart — opens drawer */}
-        <button
+        <motion.button
           type="button"
+          whileTap={{ scale: 0.88 }}
           onClick={() => { setCartOpen(true); setNotifOpen(false); }}
           className="flex-1 flex flex-col items-center justify-center gap-0.5 text-muted relative"
         >
           <div className="relative">
             <ShoppingCart className="w-[22px] h-[22px]" />
             {cartItems.length > 0 && (
-              <span className="absolute -top-1.5 -end-1.5 min-w-[15px] h-[15px] px-0.5 bg-purple rounded-full text-white text-[8px] flex items-center justify-center font-bold leading-none border border-surface">
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                className="absolute -top-1.5 -end-1.5 min-w-[15px] h-[15px] px-0.5 bg-purple rounded-full text-white text-[8px] flex items-center justify-center font-bold leading-none border border-surface"
+              >
                 {cartItems.length > 9 ? '9+' : cartItems.length}
-              </span>
+              </motion.span>
             )}
           </div>
           <span className="text-[9px] font-medium leading-none">
             {locale === 'ar' ? 'السلة' : 'Cart'}
           </span>
-        </button>
+        </motion.button>
 
         {/* Chat */}
         <Link
@@ -86,9 +147,18 @@ export function MobileBottomNav() {
           )}
         >
           {active(`/${locale}/chat`) && (
-            <span className="absolute top-0 inset-x-0 h-0.5 bg-purple rounded-b-full" />
+            <motion.span
+              layoutId="nav-indicator"
+              className="absolute top-0 inset-x-0 h-0.5 bg-purple rounded-b-full"
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            />
           )}
-          <MessageCircle className="w-[22px] h-[22px]" />
+          <motion.div
+            variants={iconVariants}
+            animate={active(`/${locale}/chat`) ? 'active' : 'inactive'}
+          >
+            <MessageCircle className="w-[22px] h-[22px]" />
+          </motion.div>
           <span className="text-[9px] font-medium leading-none">
             {locale === 'ar' ? 'رسائل' : 'Chat'}
           </span>
@@ -103,9 +173,18 @@ export function MobileBottomNav() {
           )}
         >
           {(active(`/${locale}/profile`) || active(`/${locale}/auth`)) && (
-            <span className="absolute top-0 inset-x-0 h-0.5 bg-purple rounded-b-full" />
+            <motion.span
+              layoutId="nav-indicator"
+              className="absolute top-0 inset-x-0 h-0.5 bg-purple rounded-b-full"
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            />
           )}
-          <User className="w-[22px] h-[22px]" />
+          <motion.div
+            variants={iconVariants}
+            animate={(active(`/${locale}/profile`) || active(`/${locale}/auth`)) ? 'active' : 'inactive'}
+          >
+            <User className="w-[22px] h-[22px]" />
+          </motion.div>
           <span className="text-[9px] font-medium leading-none">
             {locale === 'ar' ? 'حسابي' : 'Profile'}
           </span>

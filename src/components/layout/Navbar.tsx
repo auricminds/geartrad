@@ -9,6 +9,7 @@ import {
   ShoppingCart, Bell, Menu, X, Globe,
   Heart, MessageCircle, LogOut, LayoutDashboard, Store, UserCircle, User,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { NotificationsPanel } from '@/components/layout/NotificationsPanel';
 import { useStore } from '@/components/providers/StoreProvider';
 import { cn } from '@/lib/utils';
@@ -83,16 +84,18 @@ export function Navbar() {
         <nav className="relative max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
           {/* Logo */}
-          <Link href={`/${locale}`} onClick={closeMobileMenu} className="flex items-center gap-2 shrink-0">
-            <Image
-              src="/logo.png"
-              alt="GearTrad"
-              width={40}
-              height={40}
-              className="w-10 h-10 rounded-lg object-contain"
-              priority
-            />
-            <span className="font-bold text-lg tracking-tight">
+          <Link href={`/${locale}`} onClick={closeMobileMenu} className="flex items-center gap-2 shrink-0 group">
+            <motion.div whileHover={{ rotate: [0, -8, 8, -4, 0], scale: 1.05 }} transition={{ duration: 0.4 }}>
+              <Image
+                src="/logo.png"
+                alt="GearTrad"
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-lg object-contain"
+                priority
+              />
+            </motion.div>
+            <span className="font-bold text-lg tracking-tight group-hover:text-white transition-colors">
               Gear<span className="text-gold">Trad</span>
             </span>
           </Link>
@@ -164,19 +167,27 @@ export function Navbar() {
 
             {/* Notifications */}
             <div className="relative" ref={notifRef}>
-              <button
+              <motion.button
                 type="button"
                 onClick={toggleNotif}
+                whileTap={{ scale: 0.9 }}
+                animate={unreadCount > 0 ? { rotate: [0, -15, 15, -10, 10, 0] } : {}}
+                transition={unreadCount > 0 ? { duration: 0.5, delay: 0.3 } : {}}
                 className="relative p-2.5 rounded-xl text-muted hover:text-white hover:bg-white/5 transition-all"
                 aria-label="Notifications"
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 bg-purple rounded-full text-white text-[9px] flex items-center justify-center font-bold border-2 border-background leading-none">
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                    className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 bg-purple rounded-full text-white text-[9px] flex items-center justify-center font-bold border-2 border-background leading-none"
+                  >
                     {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
+                  </motion.span>
                 )}
-              </button>
+              </motion.button>
               <NotificationsPanel />
             </div>
 
@@ -199,8 +210,14 @@ export function Navbar() {
                   <span className="hidden sm:block text-sm font-medium text-white max-w-[100px] truncate">{displayName}</span>
                 </button>
 
+                <AnimatePresence>
                 {userMenuOpen && (
-                  <div className="absolute top-full mt-2 end-0 w-52 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden z-50">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -8 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                    className="absolute top-full mt-2 end-0 w-52 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden z-50">
                     <div className="px-4 py-3 border-b border-border">
                       <p className="text-xs font-semibold text-white truncate">{displayName}</p>
                       <p className="text-xs text-muted truncate mt-0.5">{user.email}</p>
@@ -226,8 +243,9 @@ export function Navbar() {
                         {locale === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}
                       </button>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
+                </AnimatePresence>
               </div>
             ) : (
               <>
@@ -267,22 +285,41 @@ export function Navbar() {
             )}
 
             {/* Burger — mobile only */}
-            <button
+            <motion.button
               type="button"
               aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={mobileOpen}
+              whileTap={{ scale: 0.88 }}
               className="md:hidden p-2.5 rounded-xl text-muted hover:text-white hover:bg-white/5 transition-all"
               onClick={() => setMobileOpen((prev) => !prev)}
             >
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={mobileOpen ? 'x' : 'menu'}
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </motion.div>
+              </AnimatePresence>
+            </motion.button>
           </div>
         </nav>
       </header>
 
       {/* ── Mobile menu overlay — rendered outside <header> ── */}
+      <AnimatePresence>
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-40" style={{ top: '64px' }}>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="md:hidden fixed inset-0 z-40"
+          style={{ top: '64px' }}
+        >
           {/* Tap backdrop to close */}
           <button
             type="button"
@@ -292,7 +329,11 @@ export function Navbar() {
           />
 
           {/* Scrollable menu panel */}
-          <div
+          <motion.div
+            initial={{ y: -16, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -16, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="relative bg-background border-t border-border/50 overflow-y-auto"
             style={{ maxHeight: 'calc(100dvh - 64px - 56px)' }}
           >
@@ -389,9 +430,10 @@ export function Navbar() {
               </Link>
 
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </>
   );
 }

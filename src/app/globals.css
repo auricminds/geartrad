@@ -94,14 +94,103 @@ body {
   50%       { box-shadow: 0 0 40px rgba(124, 58, 237, 0.5); }
 }
 
+@keyframes float {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-14px) scale(1.04); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) scale(1) rotate(0deg); }
+  33%       { transform: translateY(-10px) scale(1.03) rotate(1deg); }
+  66%       { transform: translateY(-6px) scale(0.98) rotate(-1deg); }
+}
+
+@keyframes scanline {
+  0%   { transform: translateX(-100%) skewX(-20deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateX(200%) skewX(-20deg); opacity: 0; }
+}
+
+@keyframes neon-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1; }
+}
+
+@keyframes glitch {
+  0%   { clip-path: inset(0 0 100% 0); transform: translate(0); }
+  10%  { clip-path: inset(10% 0 80% 0); transform: translate(-2px, 1px); }
+  20%  { clip-path: inset(40% 0 50% 0); transform: translate(2px, -1px); }
+  30%  { clip-path: inset(70% 0 20% 0); transform: translate(-1px, 2px); }
+  40%  { clip-path: inset(90% 0 5% 0);  transform: translate(1px, -2px); }
+  50%  { clip-path: inset(0 0 0 0);     transform: translate(0); }
+  100% { clip-path: inset(0 0 0 0);     transform: translate(0); }
+}
+
+@keyframes border-beam {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 2.5s ease-in-out infinite;
 }
 
 .shimmer {
   background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-surface-light) 50%, var(--color-surface) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+/* Card scan-line effect on hover */
+.card-scan {
+  position: relative;
+  overflow: hidden;
+}
+.card-scan::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(124, 58, 237, 0.12) 50%,
+    transparent 60%
+  );
+  transform: translateX(-100%) skewX(-20deg);
+  pointer-events: none;
+  transition: none;
+}
+.card-scan:hover::after {
+  animation: scanline 0.6s ease-out forwards;
+}
+
+/* Neon border glow for boosted/active cards */
+.neon-border {
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.4), 0 0 16px rgba(124, 58, 237, 0.2), inset 0 0 16px rgba(124, 58, 237, 0.03);
+}
+
+/* Animated gradient text */
+.gradient-text-animated {
+  background: linear-gradient(90deg, #7c3aed, #d4af37, #9d6bf0, #e8c84a, #7c3aed);
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: border-beam 4s linear infinite;
 }
 
 /* ─── Glass Effect ─── */

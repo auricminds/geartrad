@@ -89,11 +89,11 @@ export function ListingCard({ listing, size = 'md' }: ListingCardProps) {
     <Link href={`/${locale}/listing/${listing.id}`} onClick={handleClick}>
       <div
         className={cn(
-          'group relative bg-surface border border-border rounded-2xl overflow-hidden',
+          'group relative bg-surface border border-border rounded-2xl overflow-hidden card-scan',
           'hover:border-purple/40 hover:-translate-y-1 hover:shadow-xl',
           'transition-all duration-200 ease-out',
           listing.rank && rankGlows[listing.rank] && `hover:shadow-${rankGlows[listing.rank]}`,
-          listing.isBoosted && 'border-purple/30 shadow-lg shadow-purple/10'
+          listing.isBoosted && 'neon-border border-purple/30'
         )}
       >
         {/* Cover Image */}
