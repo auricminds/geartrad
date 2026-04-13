@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CreditCard, Smartphone, Building2, CheckCircle2, ArrowLeft, Wallet, Copy, Check, AlertCircle } from 'lucide-react';
+import {
+  CreditCard, Smartphone, Building2, CheckCircle2, ArrowLeft,
+  Wallet, Copy, Check, AlertCircle, Lock, ExternalLink,
+} from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { createOrder } from '@/lib/api';
 import { useStore } from '@/components/providers/StoreProvider';
 
 interface CheckoutClientProps {
@@ -19,20 +21,40 @@ interface CheckoutClientProps {
 
 type PaymentMethod = 'card' | 'vodafone' | 'instapay' | 'btc' | 'usdt' | 'eth';
 
-const PAYMENT_METHODS: { id: PaymentMethod; icon: React.ElementType; labelEn: string; labelAr: string; group: 'local' | 'crypto' }[] = [
-  { id: 'card',     icon: CreditCard, labelEn: 'Credit / Debit Card', labelAr: 'بطاقة ائتمان / خصم', group: 'local'  },
-  { id: 'vodafone', icon: Smartphone, labelEn: 'Vodafone Cash',       labelAr: 'فودافون كاش',         group: 'local'  },
-  { id: 'instapay', icon: Building2,  labelEn: 'InstaPay',            labelAr: 'إنستاباي',            group: 'local'  },
-  { id: 'btc',      icon: Wallet,     labelEn: 'Bitcoin (BTC)',       labelAr: 'بيتكوين (BTC)',       group: 'crypto' },
-  { id: 'usdt',     icon: Wallet,     labelEn: 'USDT (TRC20)',        labelAr: 'USDT (TRC20)',         group: 'crypto' },
-  { id: 'eth',      icon: Wallet,     labelEn: 'Ethereum (ETH)',      labelAr: 'إيثيريوم (ETH)',      group: 'crypto' },
+const PAYMENT_METHODS: {
+  id: PaymentMethod;
+  icon: React.ElementType;
+  labelEn: string;
+  labelAr: string;
+  group: 'local' | 'crypto';
+  badgeEn?: string;
+  badgeAr?: string;
+}[] = [
+  {
+    id: 'card', icon: CreditCard,
+    labelEn: 'Credit / Debit Card', labelAr: 'بطاقة ائتمان / خصم',
+    group: 'local',
+    badgeEn: 'Visa · Mastercard · International', badgeAr: 'فيزا · ماستركارد · دولي',
+  },
+  {
+    id: 'vodafone', icon: Smartphone,
+    labelEn: 'Vodafone Cash', labelAr: 'فودافون كاش',
+    group: 'local',
+  },
+  {
+    id: 'instapay', icon: Building2,
+    labelEn: 'InstaPay', labelAr: 'إنستاباي',
+    group: 'local',
+  },
+  { id: 'btc',  icon: Wallet, labelEn: 'Bitcoin (BTC)',    labelAr: 'بيتكوين (BTC)',   group: 'crypto' },
+  { id: 'usdt', icon: Wallet, labelEn: 'USDT (TRC20)',     labelAr: 'USDT (TRC20)',      group: 'crypto' },
+  { id: 'eth',  icon: Wallet, labelEn: 'Ethereum (ETH)',   labelAr: 'إيثيريوم (ETH)',   group: 'crypto' },
 ];
 
-// Replace with your actual wallet addresses
 const CRYPTO_ADDRESSES: Record<string, string> = {
-  btc:  'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-  usdt: 'TRx7NnHwk3AeBhXZ9u9fWvNkTKkS9bTzXX',
-  eth:  '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+  btc:  process.env.NEXT_PUBLIC_WALLET_BTC  ?? 'bc1qYOURBITCOINADDRESS',
+  usdt: process.env.NEXT_PUBLIC_WALLET_USDT ?? 'TYOURUSDTTRC20ADDRESS',
+  eth:  process.env.NEXT_PUBLIC_WALLET_ETH  ?? '0xYOUREthereumAddress',
 };
 
 const CRYPTO_LABELS: Record<string, string> = { btc: 'BTC', usdt: 'USDT (TRC20)', eth: 'ETH' };
@@ -41,12 +63,16 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
   const router = useRouter();
   const { user } = useStore();
 
-  const [method, setMethod]   = useState<PaymentMethod>('card');
-  const [loading, setLoading] = useState(false);
-  const [done, setDone]       = useState(false);
-  const [copied, setCopied]   = useState(false);
-  const [error, setError]     = useState('');
-  const isRTL = locale === 'ar';
+  const [method, setMethod]         = useState<PaymentMethod>('card');
+  const [loading, setLoading]       = useState(false);
+  const [done, setDone]             = useState(false);
+  const [copied, setCopied]         = useState(false);
+  const [error, setError]           = useState('');
+  const [phone, setPhone]           = useState('');
+  const [redirecting, setRedirecting] = useState(false);
+
+  const isAr    = locale === 'ar';
+  const isCrypto = ['btc', 'usdt', 'eth'].includes(method);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -64,23 +90,64 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
     setLoading(true);
 
     try {
-      const result = await createOrder({
-        listing_id:     listingId,
-        buyer_id:       user.id,
-        seller_id:      sellerId,
-        amount:         total,
-        platform_fee:   platformFee,
-        payment_method: method,
-      });
-
-      if (!result) {
-        setError(locale === 'ar' ? 'حدث خطأ أثناء معالجة الطلب. حاول مرة أخرى.' : 'Order failed. Please try again.');
+      // ── Crypto: just show the address (already visible), mark order ───────
+      if (isCrypto) {
+        const res = await fetch('/api/payment/paymob/init', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            listingId,
+            buyerId: user.id,
+            paymentMethod: method,
+            amount: total,
+            platformFee,
+            buyerEmail: user.email ?? '',
+          }),
+        });
+        if (!res.ok) throw new Error('order_failed');
+        setDone(true);
         return;
       }
 
-      setDone(true);
+      // ── InstaPay: manual confirmation ─────────────────────────────────────
+      if (method === 'instapay') {
+        setDone(true);
+        return;
+      }
+
+      // ── Paymob (card or vodafone) ─────────────────────────────────────────
+      if (method === 'vodafone' && !phone.trim()) {
+        setError(isAr ? 'أدخل رقم الهاتف أولاً' : 'Enter your phone number first');
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch('/api/payment/paymob/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          listingId,
+          buyerId: user.id,
+          paymentMethod: method === 'vodafone' ? 'vodafone' : 'card',
+          amount: total,
+          platformFee,
+          buyerEmail: user.email ?? '',
+          buyerPhone: phone || undefined,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? (isAr ? 'فشل الدفع، حاول مرة أخرى' : 'Payment failed. Try again.'));
+        return;
+      }
+
+      // Redirect to Paymob's secure hosted checkout page
+      setRedirecting(true);
+      window.location.href = data.checkoutUrl;
     } catch {
-      setError(locale === 'ar' ? 'خطأ في الشبكة، تحقق من اتصالك وحاول مرة أخرى' : 'Network error. Check your connection and try again.');
+      setError(isAr ? 'خطأ في الشبكة، تحقق من اتصالك وحاول مرة أخرى' : 'Network error. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -94,12 +161,12 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
         </div>
         <div>
           <h2 className="text-xl font-bold text-white mb-2">
-            {locale === 'ar' ? 'تم الشراء بنجاح!' : 'Purchase Successful!'}
+            {isAr ? 'تم تسجيل طلبك!' : 'Order Registered!'}
           </h2>
           <p className="text-muted text-sm leading-relaxed max-w-sm">
-            {locale === 'ar'
-              ? 'سيتواصل معك البائع خلال 24 ساعة لنقل بيانات الحساب. المبلغ محمي حتى تؤكد الاستلام.'
-              : 'The seller will contact you within 24 hours to transfer account details. Your payment is held securely until you confirm delivery.'}
+            {isCrypto
+              ? (isAr ? 'أرسل المبلغ إلى العنوان أدناه وأرسل لنا إثبات الدفع عبر الدردشة.' : 'Send the amount to the address shown and send us payment proof via chat.')
+              : (isAr ? 'سيتواصل معك البائع خلال 24 ساعة. المبلغ محمي حتى تؤكد الاستلام.' : 'The seller will contact you within 24 hours. Your payment is held securely until you confirm delivery.')}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full mt-2">
@@ -107,13 +174,13 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
             href={`/${locale}/chat?listing=${listingId}`}
             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-xl bg-surface hover:bg-surface-light text-white border border-border transition-all"
           >
-            {locale === 'ar' ? 'تواصل مع البائع' : 'Message Seller'}
+            {isAr ? 'تواصل مع البائع' : 'Message Seller'}
           </Link>
           <Link
             href={`/${locale}/browse`}
             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-xl bg-purple hover:bg-purple-light text-white shadow-lg shadow-purple/25 transition-all"
           >
-            {locale === 'ar' ? 'متابعة التسوق' : 'Continue Browsing'}
+            {isAr ? 'متابعة التسوق' : 'Continue Browsing'}
           </Link>
         </div>
       </div>
@@ -122,7 +189,6 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
 
   const localMethods  = PAYMENT_METHODS.filter((p) => p.group === 'local');
   const cryptoMethods = PAYMENT_METHODS.filter((p) => p.group === 'crypto');
-  const isCrypto      = ['btc', 'usdt', 'eth'].includes(method);
 
   return (
     <div className="space-y-5">
@@ -130,18 +196,17 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
         href={`/${locale}/listing/${listingId}`}
         className="inline-flex items-center gap-1.5 text-muted hover:text-white transition-colors text-sm"
       >
-        <ArrowLeft className={cn('w-4 h-4', isRTL && 'rotate-180')} />
-        {locale === 'ar' ? 'رجوع للإعلان' : 'Back to listing'}
+        <ArrowLeft className={cn('w-4 h-4', isAr && 'rotate-180')} />
+        {isAr ? 'رجوع للإعلان' : 'Back to listing'}
       </Link>
 
-      {/* Must be logged in */}
       {!user && (
         <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>
-            {locale === 'ar' ? 'يجب تسجيل الدخول أولاً للإتمام الشراء. ' : 'You must sign in before completing your purchase. '}
+            {isAr ? 'يجب تسجيل الدخول أولاً للإتمام الشراء. ' : 'You must sign in before completing your purchase. '}
             <Link href={`/${locale}/auth/sign-in`} className="underline font-medium">
-              {locale === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
+              {isAr ? 'تسجيل الدخول' : 'Sign In'}
             </Link>
           </span>
         </div>
@@ -156,11 +221,17 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
 
       {/* Payment method */}
       <div className="bg-surface border border-border rounded-2xl p-5 space-y-4">
-        <h2 className="text-sm font-semibold text-white uppercase tracking-wider">
-          {locale === 'ar' ? 'طريقة الدفع' : 'Payment Method'}
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-white uppercase tracking-wider">
+            {isAr ? 'طريقة الدفع' : 'Payment Method'}
+          </h2>
+          <div className="flex items-center gap-1 text-emerald-400 text-xs">
+            <Lock className="w-3 h-3" />
+            <span>{isAr ? 'آمن ومشفر' : 'Secure & Encrypted'}</span>
+          </div>
+        </div>
         <div>
-          <p className="text-xs text-muted mb-2 uppercase tracking-wider">{locale === 'ar' ? 'دفع محلي' : 'Local Payments'}</p>
+          <p className="text-xs text-muted mb-2 uppercase tracking-wider">{isAr ? 'دفع محلي' : 'Local Payments'}</p>
           <div className="space-y-2">
             {localMethods.map((pm) => (
               <MethodRow key={pm.id} pm={pm} selected={method === pm.id} locale={locale} onSelect={() => setMethod(pm.id)} />
@@ -168,7 +239,7 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
           </div>
         </div>
         <div>
-          <p className="text-xs text-muted mb-2 uppercase tracking-wider">{locale === 'ar' ? 'عملات رقمية' : 'Crypto'}</p>
+          <p className="text-xs text-muted mb-2 uppercase tracking-wider">{isAr ? 'عملات رقمية' : 'Crypto'}</p>
           <div className="space-y-2">
             {cryptoMethods.map((pm) => (
               <MethodRow key={pm.id} pm={pm} selected={method === pm.id} locale={locale} onSelect={() => setMethod(pm.id)} />
@@ -177,39 +248,31 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
         </div>
       </div>
 
-      {/* Card details */}
-      {method === 'card' && (
-        <div className="bg-surface border border-border rounded-2xl p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-white uppercase tracking-wider">
-            {locale === 'ar' ? 'تفاصيل البطاقة' : 'Card Details'}
-          </h2>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-muted">{locale === 'ar' ? 'رقم البطاقة' : 'Card Number'}</label>
-            <input type="text" maxLength={19} placeholder="1234 5678 9012 3456"
-              className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-purple/40 focus:border-purple transition-all" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-muted">{locale === 'ar' ? 'تاريخ الانتهاء' : 'Expiry'}</label>
-              <input type="text" placeholder="MM / YY" maxLength={7}
-                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-purple/40 focus:border-purple transition-all" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-muted">CVV</label>
-              <input type="text" placeholder="•••" maxLength={4}
-                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-purple/40 focus:border-purple transition-all" />
-            </div>
-          </div>
+      {/* Vodafone phone input */}
+      {method === 'vodafone' && (
+        <div className="bg-surface border border-border rounded-2xl p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-white">{isAr ? 'رقم فودافون كاش' : 'Vodafone Cash Number'}</h2>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="01XXXXXXXXX"
+            maxLength={11}
+            className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-purple/40 focus:border-purple transition-all"
+          />
+          <p className="text-xs text-muted">
+            {isAr ? 'سيتم إرسال طلب الدفع لهذا الرقم عبر Paymob.' : 'A payment request will be sent to this number via Paymob.'}
+          </p>
         </div>
       )}
 
-      {/* Vodafone / InstaPay */}
-      {(method === 'vodafone' || method === 'instapay') && (
+      {/* InstaPay instructions */}
+      {method === 'instapay' && (
         <div className="bg-surface border border-border rounded-2xl p-5">
           <p className="text-sm text-muted leading-relaxed">
-            {method === 'vodafone'
-              ? (locale === 'ar' ? 'أرسل المبلغ إلى رقم فودافون كاش الخاص بنا، ثم أرسل لنا لقطة شاشة تأكيداً للدفع.' : 'Send the amount to our Vodafone Cash number, then send us a screenshot as payment confirmation.')
-              : (locale === 'ar' ? 'اضغط تأكيد وسيُرسل طلب InstaPay إلى رقمك المسجل.' : 'Press confirm and an InstaPay request will be sent to your registered number.')}
+            {isAr
+              ? 'اضغط تأكيد ثم أرسل المبلغ عبر InstaPay إلى حساب GearTrad وأرسل لقطة شاشة تأكيداً عبر الدردشة.'
+              : 'Press confirm, then send the amount via InstaPay to GearTrad\'s account and send a screenshot as confirmation via chat.'}
           </p>
         </div>
       )}
@@ -218,19 +281,19 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
       {isCrypto && (
         <div className="bg-surface border border-border rounded-2xl p-5 space-y-4">
           <h2 className="text-sm font-semibold text-white uppercase tracking-wider">
-            {locale === 'ar' ? `عنوان المحفظة — ${CRYPTO_LABELS[method]}` : `${CRYPTO_LABELS[method]} Wallet Address`}
+            {isAr ? `عنوان المحفظة — ${CRYPTO_LABELS[method]}` : `${CRYPTO_LABELS[method]} Wallet Address`}
           </h2>
           <div className="flex gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
             <span className="text-amber-400 text-base shrink-0 mt-0.5">⚠</span>
             <p className="text-xs text-amber-300 leading-relaxed">
-              {locale === 'ar'
-                ? `تأكد من إرسال ${CRYPTO_LABELS[method]} فقط إلى هذا العنوان.`
+              {isAr
+                ? `تأكد من إرسال ${CRYPTO_LABELS[method]} فقط إلى هذا العنوان. إرسال عملة مختلفة قد يؤدي لضياع الأموال نهائياً.`
                 : `Send only ${CRYPTO_LABELS[method]} to this address. Sending a different coin may result in permanent loss of funds.`}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex-1 px-3 py-2.5 rounded-xl bg-background border border-border">
-              <p className="text-xs text-muted mb-1">{locale === 'ar' ? 'العنوان' : 'Address'}</p>
+              <p className="text-xs text-muted mb-1">{isAr ? 'العنوان' : 'Address'}</p>
               <p className="text-xs text-white font-mono break-all leading-relaxed">{CRYPTO_ADDRESSES[method]}</p>
             </div>
             <button
@@ -238,7 +301,9 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
               onClick={() => handleCopy(CRYPTO_ADDRESSES[method])}
               className={cn(
                 'shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all border',
-                copied ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-white/5 border-border text-muted hover:text-white hover:bg-white/10'
+                copied
+                  ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                  : 'bg-white/5 border-border text-muted hover:text-white hover:bg-white/10'
               )}
             >
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -247,16 +312,51 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
         </div>
       )}
 
-      <Button className="w-full" size="lg" onClick={handleConfirm} loading={loading} disabled={loading}>
-        {loading
-          ? (locale === 'ar' ? 'جاري المعالجة...' : 'Processing...')
-          : (locale === 'ar' ? `تأكيد الدفع — ${formatPrice(total, locale)}` : `Confirm Payment — ${formatPrice(total, locale)}`)}
+      {/* Card redirect note */}
+      {method === 'card' && (
+        <div className="flex items-center gap-2 text-xs text-muted px-1">
+          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+          <span>
+            {isAr
+              ? 'سيتم تحويلك لصفحة Paymob الآمنة لإدخال بيانات البطاقة.'
+              : "You'll be redirected to Paymob's secure page to enter your card details."}
+          </span>
+        </div>
+      )}
+
+      <Button
+        className="w-full"
+        size="lg"
+        onClick={handleConfirm}
+        loading={loading || redirecting}
+        disabled={loading || redirecting || !user}
+      >
+        {redirecting
+          ? (isAr ? 'جاري التحويل...' : 'Redirecting to Paymob...')
+          : loading
+            ? (isAr ? 'جاري المعالجة...' : 'Processing...')
+            : (isAr ? `تأكيد الدفع — ${formatPrice(total, locale)}` : `Confirm Payment — ${formatPrice(total, locale)}`)}
       </Button>
+
+      {/* Paymob powered by badge */}
+      <p className="text-center text-xs text-muted/60">
+        {isAr ? 'المدفوعات المحلية مدعومة من' : 'Local payments powered by'}{' '}
+        <span className="text-white/40 font-medium">Paymob</span>
+        {' '}· {isAr ? 'مرخص من البنك المركزي المصري' : 'Licensed by the Central Bank of Egypt'}
+      </p>
     </div>
   );
 }
 
-function MethodRow({ pm, selected, locale, onSelect }: { pm: (typeof PAYMENT_METHODS)[number]; selected: boolean; locale: string; onSelect: () => void }) {
+function MethodRow({
+  pm, selected, locale, onSelect,
+}: {
+  pm: (typeof PAYMENT_METHODS)[number];
+  selected: boolean;
+  locale: string;
+  onSelect: () => void;
+}) {
+  const isAr = locale === 'ar';
   return (
     <button
       type="button"
@@ -267,7 +367,12 @@ function MethodRow({ pm, selected, locale, onSelect }: { pm: (typeof PAYMENT_MET
       )}
     >
       <pm.icon className="w-4 h-4 shrink-0" />
-      <span className="text-sm font-medium flex-1">{locale === 'ar' ? pm.labelAr : pm.labelEn}</span>
+      <div className="flex-1 min-w-0">
+        <span className="text-sm font-medium block">{isAr ? pm.labelAr : pm.labelEn}</span>
+        {pm.badgeEn && (
+          <span className="text-[10px] text-muted block mt-0.5">{isAr ? pm.badgeAr : pm.badgeEn}</span>
+        )}
+      </div>
       <span className={cn('w-4 h-4 rounded-full border-2 shrink-0 transition-all', selected ? 'border-purple bg-purple' : 'border-border')} />
     </button>
   );

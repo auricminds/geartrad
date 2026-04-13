@@ -2,40 +2,59 @@ export default function PrivacyPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
       <h1 className="text-3xl font-bold text-white mb-2">Privacy Policy</h1>
-      <p className="text-muted text-sm mb-10">Last updated: April 2026</p>
+      <p className="text-muted text-sm mb-1">Last updated: April 2026</p>
+      <p className="text-muted text-sm mb-10">
+        GearTrad (operated by AuricMinds Group) is committed to protecting your privacy. This policy explains what data we collect, why, and how we keep it safe.
+      </p>
 
       {[
         {
-          title: 'Information We Collect',
-          body: 'We collect information you provide when creating an account (email, username), when posting listings (listing details, images), and when making transactions. We also collect usage data such as pages visited and features used.',
+          title: '1. Data We Collect',
+          body: 'Account data: email address, username, password hash (stored encrypted — we never see your plain password), account type (buyer/seller), and profile information you choose to provide. Transaction data: listing details, order history, payment method type (not card numbers — those go directly to Paymob), and escrow status. Verification data (optional): government-issued ID image and selfie, collected only when you apply for a Verified badge. Usage data: pages visited, features used, listings clicked — collected anonymously to improve the platform. Device/session data: IP address, browser type, and session tokens for security and fraud detection.',
         },
         {
-          title: 'How We Use Your Information',
-          body: 'We use your information to operate the platform, process transactions, send notifications, provide customer support, prevent fraud, and improve our services. We do not sell your personal data to third parties.',
+          title: '2. What We Do NOT Collect',
+          body: 'We do not collect or store card numbers, CVVs, or full banking credentials — those are handled exclusively by Paymob\'s PCI-DSS compliant infrastructure. We do not collect your physical location beyond country level. We do not sell, rent, or trade your personal data to any third party for marketing purposes, ever.',
         },
         {
-          title: 'Verification Data',
-          body: 'If you submit identity verification documents (ID and selfie), this data is stored securely and reviewed only by authorized GearTrad moderators. It is used solely to verify your identity and is not shared with third parties.',
+          title: '3. How We Use Your Data',
+          body: 'To operate the platform: process transactions, manage escrow, deliver notifications, and enable chat. To verify identity: review submitted ID documents for Verified badge applications. To prevent fraud: detect suspicious activity, enforce bans, and protect users from scams. To improve the platform: analyze anonymous usage patterns. To communicate: send transactional emails (purchase confirmations, dispute updates) and important account notices. We do not send marketing emails without your explicit opt-in.',
         },
         {
-          title: 'Cookies & Analytics',
-          body: 'We use cookies to maintain your session and preferences. We may use anonymous analytics to understand how the platform is used. You can disable cookies in your browser settings, though some features may not function properly.',
+          title: '4. Data Sharing',
+          body: 'We share data with: (a) Paymob — payment data required to process transactions (amount, currency, buyer email); (b) Supabase — our database and authentication provider, hosted on secure EU/US infrastructure; (c) Law enforcement — only when legally required by a valid court order or Egyptian law. We do not share data with advertisers, data brokers, or any other third parties.',
         },
         {
-          title: 'Data Retention',
-          body: 'We retain your account data for as long as your account is active. Verification documents are retained for legal compliance purposes. You may request deletion of your account by contacting support.',
+          title: '5. Identity Verification Data',
+          body: 'Government ID images and selfies submitted for verification are stored in encrypted Supabase Storage. They are accessible only to authorized GearTrad moderators. They are used solely to verify your identity, are never shared externally, and are retained for as long as your account is active or as required by applicable law.',
         },
         {
-          title: 'Security',
-          body: 'We use industry-standard security measures including encrypted connections (HTTPS) and Supabase\'s managed authentication infrastructure. No system is 100% secure, and we cannot guarantee absolute security.',
+          title: '6. Cookies & Local Storage',
+          body: 'We use session cookies to keep you logged in and preference cookies (locale, theme). We use browser localStorage to store anonymous activity data for personalized recommendations — this data never leaves your device and is not transmitted to our servers. You can clear localStorage at any time via your browser settings. We do not use third-party tracking cookies or advertising pixels.',
         },
         {
-          title: 'Your Rights',
-          body: 'You have the right to access, correct, or request deletion of your personal data. Contact us through the Help Center to exercise these rights.',
+          title: '7. Data Security',
+          body: 'All data is transmitted over HTTPS (TLS 1.2+). Passwords are hashed with bcrypt via Supabase Auth. Database access is protected by Row Level Security (RLS) — users can only access their own data. Our infrastructure uses Supabase\'s managed security, which includes encryption at rest and regular security audits. We apply security headers (CSP, HSTS, X-Frame-Options) to protect against common web attacks.',
         },
         {
-          title: 'Changes to This Policy',
-          body: 'We may update this policy periodically. We will notify users of significant changes via email or an in-app notice.',
+          title: '8. Data Retention',
+          body: 'Active account data is retained for as long as your account exists. After account deletion, personal data is removed within 30 days, except data we are legally required to retain (transaction records for financial compliance — typically 5 years). Verification documents are deleted within 90 days of account deletion.',
+        },
+        {
+          title: '9. Your Rights',
+          body: 'You have the right to: (a) access a copy of your personal data; (b) correct inaccurate data; (c) request deletion of your account and data; (d) object to processing of your data; (e) data portability (receive your data in a machine-readable format). To exercise any of these rights, contact us via the Help Center. We will respond within 14 days.',
+        },
+        {
+          title: '10. Children\'s Privacy',
+          body: 'GearTrad is not directed at users under 16. We do not knowingly collect personal data from children under 16. If we discover such data has been collected, we will delete it immediately. If you believe a minor has created an account, contact us immediately.',
+        },
+        {
+          title: '11. Changes to This Policy',
+          body: 'We will notify users of significant changes to this policy via email or an in-app notice at least 7 days before changes take effect. The "Last updated" date at the top of this page reflects the most recent revision.',
+        },
+        {
+          title: '12. Contact',
+          body: 'For privacy-related questions or to exercise your data rights, contact us through the Help Center. For data deletion requests, include "Data Deletion Request" in your message.',
         },
       ].map(({ title, body }) => (
         <section key={title} className="mb-8">
@@ -43,6 +62,10 @@ export default function PrivacyPage() {
           <p className="text-muted text-sm leading-relaxed">{body}</p>
         </section>
       ))}
+
+      <p className="text-muted text-sm border-t border-border pt-6 mt-6">
+        © {new Date().getFullYear()} AuricMinds Group — GearTrad.
+      </p>
     </div>
   );
 }

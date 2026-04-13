@@ -2,48 +2,67 @@ export default function TermsPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
       <h1 className="text-3xl font-bold text-white mb-2">Terms of Service</h1>
-      <p className="text-muted text-sm mb-10">Last updated: April 2026</p>
+      <p className="text-muted text-sm mb-1">Last updated: April 2026</p>
+      <p className="text-muted text-sm mb-10">
+        By using GearTrad you agree to these terms. Read them carefully — they are a binding legal agreement.
+      </p>
 
       {[
         {
           title: '1. Acceptance of Terms',
-          body: 'By accessing or using GearTrad, you agree to be bound by these Terms of Service. If you do not agree, do not use the platform.',
+          body: 'By accessing, registering on, or using GearTrad ("Platform", "we", "us"), you confirm that you have read, understood, and agree to be legally bound by these Terms of Service and our Privacy Policy. If you do not agree, you must immediately stop using the Platform.',
         },
         {
           title: '2. Eligibility',
-          body: 'You must be at least 16 years old to create an account. By registering, you confirm you meet this requirement.',
+          body: 'You must be at least 16 years old to use GearTrad. Users between 16 and 18 must have parental or guardian consent. By registering, you represent and warrant that you meet this requirement and that all information you provide is accurate and complete.',
         },
         {
-          title: '3. Account Responsibility',
-          body: 'You are responsible for maintaining the confidentiality of your account credentials. You are liable for all activity that occurs under your account.',
+          title: '3. Account Security',
+          body: 'You are solely responsible for maintaining the confidentiality of your login credentials. You must immediately notify GearTrad of any unauthorized access to your account. GearTrad will never ask for your password via chat or email. You are liable for all activity conducted under your account.',
         },
         {
-          title: '4. Listings & Sales',
-          body: 'Sellers confirm that all items listed are legitimately owned and available for sale. Fraudulent listings, false information, or items obtained illegally are strictly prohibited and will result in immediate account termination.',
+          title: '4. Listings & Prohibited Items',
+          body: 'Sellers represent and warrant that: (a) they are the legitimate owner of the item listed; (b) the item is accurately described with no material omissions; (c) the item does not violate any game publisher\'s terms of service to a degree that makes transfer impossible. Prohibited listings include: stolen or hacked accounts, boosted-by-third-party accounts misrepresented as earned, items involving real-money gambling, and any content violating Egyptian or international law. Violations result in immediate permanent ban and potential legal action.',
         },
         {
-          title: '5. Escrow & Payments',
-          body: 'GearTrad holds buyer payment in escrow until the buyer confirms successful delivery. A 5% platform fee is deducted from all transactions. GearTrad is not responsible for losses resulting from account bans, suspensions, or changes made by game publishers after a sale.',
+          title: '5. Escrow & Payment',
+          body: 'All transactions on GearTrad are processed through an escrow system. Buyer funds are held by GearTrad (via Paymob) and are not released to the seller until the buyer explicitly confirms delivery. A platform fee of 5% is deducted from the seller\'s payout. GearTrad is not liable for account bans, suspensions, or item loss caused by game publishers after a completed and confirmed transaction. Crypto payments are irreversible by nature; buyers should only confirm receipt after verifying delivery.',
         },
         {
-          title: '6. Prohibited Conduct',
-          body: 'Users may not: attempt to conduct transactions outside the platform, harass other users, post spam or misleading content, attempt to defraud buyers or sellers, or use automated tools to manipulate the platform.',
+          title: '6. Buyer Protection & Refunds',
+          body: 'If a seller fails to deliver, the buyer must NOT confirm delivery and must open a support ticket within 72 hours of payment. GearTrad moderators will review evidence from both parties. If the seller is found to be at fault, a full refund will be issued within 3–7 business days depending on the payment method. GearTrad\'s decision is final. Chargebacks initiated directly with card issuers without first contacting GearTrad support will result in immediate account suspension.',
         },
         {
-          title: '7. Dispute Resolution',
-          body: 'In the event of a dispute, GearTrad moderators will review evidence from both parties. GearTrad\'s decision is final in all disputes. Chargebacks initiated outside the platform will result in account suspension.',
+          title: '7. Prohibited Conduct',
+          body: 'Users must not: (a) conduct transactions outside the platform to circumvent escrow; (b) harass, threaten, or abuse other users; (c) use automated bots, scrapers, or tools to manipulate the platform; (d) create fake accounts or misrepresent identity; (e) post spam, misleading content, or false reviews; (f) attempt to hack, reverse-engineer, or disrupt the platform; (g) use the platform for money laundering or any illegal financial activity.',
         },
         {
-          title: '8. Termination',
-          body: 'GearTrad reserves the right to suspend or permanently terminate any account that violates these terms, at our sole discretion and without prior notice.',
+          title: '8. Identity Verification',
+          body: 'GearTrad offers optional identity verification (Verified badge). By submitting verification documents, you consent to GearTrad storing and reviewing your government-issued ID and selfie for the sole purpose of identity verification. This data is stored securely and never shared with third parties except as required by law.',
         },
         {
-          title: '9. Limitation of Liability',
-          body: 'GearTrad is a marketplace platform and is not a party to transactions between buyers and sellers. We are not liable for any direct, indirect, incidental, or consequential damages arising from use of the platform.',
+          title: '9. Dispute Resolution',
+          body: 'In the event of a dispute, both parties must submit evidence to GearTrad support. GearTrad moderators will review the evidence and make a final, binding decision within 5 business days. GearTrad\'s decision is not subject to appeal. Any legal disputes arising from these terms shall be governed by Egyptian law and resolved in Egyptian courts.',
         },
         {
-          title: '10. Changes to Terms',
-          body: 'We may update these terms at any time. Continued use of the platform after changes constitutes acceptance of the new terms.',
+          title: '10. Termination',
+          body: 'GearTrad reserves the right to suspend or permanently terminate any account at its sole discretion, with or without notice, for any violation of these terms or for any conduct deemed harmful to the platform or its users. Upon termination, any pending escrow funds will be handled according to the current transaction status and applicable refund policy.',
+        },
+        {
+          title: '11. Limitation of Liability',
+          body: 'GearTrad is a marketplace platform and is not a party to transactions between buyers and sellers. To the maximum extent permitted by law, GearTrad is not liable for any direct, indirect, incidental, special, or consequential damages arising from use of the platform, including but not limited to loss of account value, game publisher bans, or fraudulent conduct by third parties. Our total liability to you for any claim shall not exceed the total fees paid to GearTrad in the 30 days preceding the claim.',
+        },
+        {
+          title: '12. Intellectual Property',
+          body: 'GearTrad and its logo, branding, and content are the intellectual property of AuricMinds Group. Users retain ownership of content they post (listings, profile info) but grant GearTrad a non-exclusive license to display, reproduce, and promote this content on the platform.',
+        },
+        {
+          title: '13. Changes to Terms',
+          body: 'We may update these terms at any time. We will notify users of material changes via email or an in-app notice at least 7 days before the change takes effect. Continued use of the platform after changes constitutes acceptance of the revised terms.',
+        },
+        {
+          title: '14. Contact',
+          body: 'For questions about these terms, contact us through the Help Center. For legal notices, include "Legal Notice" in your subject line.',
         },
       ].map(({ title, body }) => (
         <section key={title} className="mb-8">
@@ -53,7 +72,7 @@ export default function TermsPage() {
       ))}
 
       <p className="text-muted text-sm border-t border-border pt-6 mt-6">
-        Questions? Contact us via the Help Center.
+        © {new Date().getFullYear()} AuricMinds Group — GearTrad. All rights reserved.
       </p>
     </div>
   );

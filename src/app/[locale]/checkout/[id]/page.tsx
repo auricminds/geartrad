@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getListing } from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
 import { CheckoutClient } from '@/components/checkout/CheckoutClient';
-import { Shield, Star } from 'lucide-react';
+import { Shield, Star, Lock, RefreshCw, HeadphonesIcon } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 interface CheckoutPageProps {
@@ -91,17 +91,74 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-            <Shield className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs font-semibold text-emerald-400 mb-0.5">
-                {locale === 'ar' ? 'دفع محمي' : 'Protected Payment'}
-              </p>
-              <p className="text-xs text-muted leading-relaxed">
-                {locale === 'ar'
-                  ? 'لن يتلقى البائع المبلغ حتى تؤكد استلام الحساب بشكل صحيح'
-                  : "The seller won't receive payment until you confirm the account was delivered correctly"}
-              </p>
+          {/* Trust signals */}
+          <div className="space-y-2">
+            {[
+              {
+                icon: Shield,
+                color: 'text-emerald-400',
+                bg: 'bg-emerald-500/5 border-emerald-500/20',
+                titleEn: 'Escrow Protection',
+                titleAr: 'حماية الضمان',
+                descEn: "Seller receives payment ONLY after you confirm delivery.",
+                descAr: 'البائع يتلقى المبلغ فقط بعد تأكيدك الاستلام.',
+              },
+              {
+                icon: Lock,
+                color: 'text-blue-400',
+                bg: 'bg-blue-500/5 border-blue-500/20',
+                titleEn: 'Secure Checkout',
+                titleAr: 'دفع آمن ومشفر',
+                descEn: 'Payments processed by Paymob — licensed by the Central Bank of Egypt.',
+                descAr: 'مدفوعات معالجة بواسطة Paymob، مرخص من البنك المركزي المصري.',
+              },
+              {
+                icon: RefreshCw,
+                color: 'text-amber-400',
+                bg: 'bg-amber-500/5 border-amber-500/20',
+                titleEn: 'Dispute Protection',
+                titleAr: 'حماية النزاعات',
+                descEn: "If the seller doesn't deliver, open a ticket and we'll refund you.",
+                descAr: 'إذا لم يسلّم البائع، افتح تذكرة وسنعيد لك المبلغ.',
+              },
+              {
+                icon: HeadphonesIcon,
+                color: 'text-purple',
+                bg: 'bg-purple/5 border-purple/20',
+                titleEn: '24/7 Support',
+                titleAr: 'دعم على مدار الساعة',
+                descEn: 'Our moderation team is always available to resolve issues.',
+                descAr: 'فريق الإشراف متاح دائماً لحل المشكلات.',
+              },
+            ].map(({ icon: Icon, color, bg, titleEn, titleAr, descEn, descAr }) => (
+              <div key={titleEn} className={`flex items-start gap-3 p-3.5 rounded-xl border ${bg}`}>
+                <Icon className={`w-4 h-4 ${color} shrink-0 mt-0.5`} />
+                <div>
+                  <p className={`text-xs font-semibold ${color} mb-0.5`}>
+                    {locale === 'ar' ? titleAr : titleEn}
+                  </p>
+                  <p className="text-xs text-muted leading-relaxed">
+                    {locale === 'ar' ? descAr : descEn}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Payment method logos */}
+          <div className="p-4 rounded-xl border border-border bg-surface/50">
+            <p className="text-xs text-muted mb-3 text-center uppercase tracking-wider">
+              {locale === 'ar' ? 'وسائل الدفع المقبولة' : 'Accepted Payment Methods'}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {['Visa', 'Mastercard', 'Vodafone Cash', 'InstaPay', 'BTC', 'USDT', 'ETH'].map((label) => (
+                <span
+                  key={label}
+                  className="px-2.5 py-1 rounded-lg bg-white/5 border border-border text-xs text-white/60 font-medium"
+                >
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
         </div>
