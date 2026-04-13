@@ -17,9 +17,9 @@ export function Footer() {
               <Image
                 src="/logo.png"
                 alt="GearTrad"
-                width={36}
-                height={36}
-                className="w-9 h-9 rounded-lg object-contain"
+                width={44}
+                height={44}
+                className="w-11 h-11 rounded-xl object-contain"
               />
               <span className="font-bold text-lg">
                 Gear<span className="text-gold">Trad</span>

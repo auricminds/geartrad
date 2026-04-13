@@ -89,9 +89,9 @@ export function Navbar() {
               <Image
                 src="/logo.png"
                 alt="GearTrad"
-                width={40}
-                height={40}
-                className="w-10 h-10 rounded-lg object-contain"
+                width={52}
+                height={52}
+                className="w-12 h-12 rounded-xl object-contain"
                 priority
               />
             </motion.div>
