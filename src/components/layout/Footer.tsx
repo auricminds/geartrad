@@ -20,6 +20,7 @@ export function Footer() {
                 width={44}
                 height={44}
                 className="w-11 h-11 rounded-xl object-contain"
+                unoptimized
               />
               <span className="font-bold text-lg">
                 Gear<span className="text-gold">Trad</span>

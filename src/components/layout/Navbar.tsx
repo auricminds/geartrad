@@ -93,6 +93,7 @@ export function Navbar() {
                 height={52}
                 className="w-12 h-12 rounded-xl object-contain"
                 priority
+                unoptimized
               />
             </motion.div>
             <span className="font-bold text-lg tracking-tight group-hover:text-white transition-colors">
