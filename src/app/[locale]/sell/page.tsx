@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, CheckSquare, Square, ChevronDown, Zap, ArrowLeft, Upload, AlertCircle, X } from 'lucide-react';
+import { AlertTriangle, CheckSquare, Square, ChevronDown, Zap, ArrowLeft, Upload, AlertCircle, X, Lock, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -50,6 +50,7 @@ export default function SellPage() {
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState('');
   const [submitted, setSubmitted]     = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Form state
   const [title, setTitle]               = useState('');
@@ -68,6 +69,13 @@ export default function SellPage() {
   const [winRate, setWinRate]           = useState('');
   const [achievements, setAchievements] = useState('');
   const fileInputRef                    = useRef<HTMLInputElement>(null);
+
+  // Account credentials — required when type === 'Account'
+  const [credEmail, setCredEmail]       = useState('');
+  const [credPassword, setCredPassword] = useState('');
+  const [credExtra, setCredExtra]       = useState('');
+
+  const isAccountType = type === 'Account';
 
   const availableRanks = game ? (GAME_RANKS[game] ?? []) : [];
 
@@ -161,6 +169,10 @@ export default function SellPage() {
       setError(locale === 'ar' ? 'يرجى كتابة اسم اللعبة' : 'Please enter the game name');
       return;
     }
+    if (isAccountType && (!credEmail.trim() || !credPassword.trim())) {
+      setError(locale === 'ar' ? 'يجب إدخال بريد الحساب وكلمة المرور — هذه بيانات إلزامية لبيع الحسابات' : 'Account email and password are required when selling an account');
+      return;
+    }
 
     const priceNum = parseInt(price, 10);
     if (isNaN(priceNum) || priceNum <= 0) {
@@ -193,6 +205,9 @@ export default function SellPage() {
           hours_played: hoursPlayed ? parseInt(hoursPlayed, 10) : null,
           win_rate: winRate ? parseInt(winRate, 10) : null,
           achievements: achievements ? parseInt(achievements, 10) : null,
+          account_email: isAccountType ? credEmail.trim() : undefined,
+          account_password: isAccountType ? credPassword : undefined,
+          account_extra_info: isAccountType && credExtra.trim() ? credExtra.trim() : undefined,
         },
         user.id
       );
@@ -359,6 +374,87 @@ export default function SellPage() {
               placeholder="اكتب الوصف بالعربية هنا..."
               className={cn(inputCls, 'resize-none')} maxLength={2000} dir="rtl" />
           </Field>
+
+        {/* ── Account Credentials — required for Account type ───────────── */}
+        {isAccountType && (
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/5 overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-red-500/20">
+              <Lock className="w-4 h-4 text-red-400 shrink-0" />
+              <h3 className="text-sm font-bold text-red-300 uppercase tracking-wider">
+                {locale === 'ar' ? 'بيانات الدخول للحساب — إلزامي' : 'Account Login Credentials — Required'}
+              </h3>
+            </div>
+
+            <div className="px-5 py-4 space-y-4">
+              {/* Privacy notice */}
+              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-muted leading-relaxed">
+                <ShieldAlert className="w-4 h-4 text-purple shrink-0 mt-0.5" />
+                <span>
+                  {locale === 'ar'
+                    ? 'هذه البيانات مشفرة ومحمية ولن تظهر للعامة. يتم الكشف عنها للمشتري فقط بعد تأكيد الدفع، وللمشرفين في حالة النزاعات فقط. أي بيانات مزيفة تعني حظراً فورياً واسترداد المبلغ للمشتري.'
+                    : 'These credentials are encrypted and never shown publicly. They are revealed to the buyer only after payment is confirmed, and to moderators in disputes only. Providing fake credentials = immediate ban + full refund to buyer.'}
+                </span>
+              </div>
+
+              <Field label={locale === 'ar' ? 'البريد الإلكتروني للحساب *' : 'Account Email *'}>
+                <input
+                  type="email"
+                  required
+                  value={credEmail}
+                  onChange={(e) => setCredEmail(e.target.value)}
+                  placeholder={locale === 'ar' ? 'البريد المسجل على الحساب' : 'Email registered on the account'}
+                  className={inputCls}
+                  autoComplete="off"
+                />
+              </Field>
+
+              <Field label={locale === 'ar' ? 'كلمة المرور *' : 'Password *'}>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={credPassword}
+                    onChange={(e) => setCredPassword(e.target.value)}
+                    placeholder={locale === 'ar' ? 'كلمة مرور الحساب' : 'Account password'}
+                    className={cn(inputCls, 'pe-11')}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute end-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </Field>
+
+              <Field label={locale === 'ar' ? 'معلومات إضافية للدخول (اختياري)' : 'Additional Login Info (optional)'}>
+                <textarea
+                  rows={3}
+                  value={credExtra}
+                  onChange={(e) => setCredExtra(e.target.value)}
+                  placeholder={locale === 'ar'
+                    ? 'مثال: رقم الهاتف المرتبط، رمز 2FA الاحتياطي، حساب Steam، أي بيانات إضافية يحتاجها المشتري للدخول...'
+                    : 'e.g. Linked phone number, 2FA backup code, linked Steam account, recovery email, or any other info the buyer needs to access the account...'}
+                  className={cn(inputCls, 'resize-none')}
+                  maxLength={1000}
+                />
+              </Field>
+
+              {/* Violation warning */}
+              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 leading-relaxed">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>
+                  {locale === 'ar'
+                    ? 'تحذير: إذا قدمت بيانات خاطئة أو تصرفت بسوء نية، سيتدخل فريق الإشراف لدينا، وفي 99% من الحالات يسترد المشتري ماله كاملاً. هذا انتهاك مباشر للشروط وقد يؤدي لإجراءات قانونية.'
+                    : 'Warning: If you provide false credentials or act in bad faith, our moderation team steps in. In 99% of cases the buyer gets a full refund. This is a direct Terms violation and may result in legal action.'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
           <Field label={locale === 'ar' ? 'صورة الغلاف (اختياري)' : 'Cover Image (optional)'}>
             <input

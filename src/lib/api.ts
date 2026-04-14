@@ -156,6 +156,10 @@ export async function createListing(payload: {
   hours_played?: number | null;
   win_rate?: number | null;
   achievements?: number | null;
+  // Sensitive — stored encrypted, never returned in public queries
+  account_email?: string;
+  account_password?: string;
+  account_extra_info?: string;
 }, sellerId: string): Promise<{ id: string } | null> {
   const boost = payload.boost_type && payload.boost_type !== 'none' ? payload.boost_type : null;
   const now = Date.now();
@@ -185,6 +189,9 @@ export async function createListing(payload: {
       hours_played: payload.hours_played || null,
       win_rate: payload.win_rate || null,
       achievements: payload.achievements || null,
+      account_email: payload.account_email || null,
+      account_password: payload.account_password || null,
+      account_extra_info: payload.account_extra_info || null,
     })
     .select('id')
     .single();
