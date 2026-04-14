@@ -1,0 +1,109 @@
+GEARTRAD — FULL COST BREAKDOWN,,,,,,
+Generated: April 2026,,,,,,
+,,,,,,
+═══════════════════════════════════════════════,,,,,,
+SHEET 1 — INFRASTRUCTURE & HOSTING,,,,,,
+═══════════════════════════════════════════════,,,,,,
+,,,,,,
+Service,Plan,Monthly Cost (USD),Annual Cost (USD),What You Get,Can it handle 10k users?,Notes
+,,,,,,
+VERCEL (Frontend Host),Hobby (Free),$0,$0,"100GB bandwidth · 6000 build min/month · 10s function timeout · 1 team member",YES — serverless auto-scales,Pauses projects inactive 30+ days. No SLA.
+VERCEL (Frontend Host),Pro (Recommended),$20,$240,"1TB bandwidth · unlimited build minutes · 60s function timeout · Analytics · Team members · SLA 99.99%",YES — easily handles 50k+ users,Upgrade when you start getting real traffic or need the analytics
+,,,,,,
+SUPABASE (Database + Auth + Storage),Free,$0,$0,"500MB database · 50k rows · 1GB file storage · PAUSES after 7 days inactivity · No backups",NO — will pause and lose data,Do NOT launch publicly on free tier
+SUPABASE (Pro — REQUIRED before launch),$25/month,$25,$300,"8GB database · 100GB file storage · No pausing · Daily backups · Email support · Point-in-time recovery",YES — handles 50k–100k active users comfortably,Upgrade this FIRST before anything else
+SUPABASE (Team — when you scale),$599/month,$599,$7188,"500GB database · SSO · Priority support · Advanced security",For 500k+ users,Skip this until you have serious revenue
+,,,,,,
+CLOUDFLARE (Domain + DNS + DDoS),Domain Registration,~$11/year,~$11,"geartrad.com domain · Free DDoS protection · Free SSL · Fast DNS",N/A — DNS only,Buy once per year. Renew annually.
+CLOUDFLARE,Free CDN Plan,$0,$0,"Unlimited DDoS protection · CDN · SSL certificate · Basic analytics",YES,Keep on free plan — more than enough
+,,,,,,
+PAYMOB (Payment Processing),No monthly fee,$0,$0,No monthly subscription — pay per transaction only,N/A — per transaction,No fixed cost
+PAYMOB,Card Transaction Fee,2.75% + 1 EGP per transaction,varies,Domestic Visa/Mastercard,N/A,"On a 500 EGP sale: fee = 500 × 2.75% + 1 = 14.75 EGP paid by GearTrad (you keep 5% platform fee = 25 EGP → net 10.25 EGP per trade)"
+PAYMOB,International Card Fee,3.5% per transaction,varies,Non-Egyptian cards,N/A,Slightly higher for international buyers
+PAYMOB,Vodafone Cash Fee,~2% per transaction,varies,Mobile wallet payments,N/A,Confirm exact rate with your Paymob account manager
+PAYMOB,InstaPay Fee,~1% per transaction,varies,Bank instant transfer,N/A,Usually cheapest option
+,,,,,,
+TOTAL INFRASTRUCTURE (Minimum — Launch Ready),,,$36/month,$432/year,"Supabase Pro + Vercel Hobby + Domain",,
+TOTAL INFRASTRUCTURE (Recommended — Production),,,$56/month,$672/year,"Supabase Pro + Vercel Pro + Domain",,
+,,,,,,
+,,,,,,
+═══════════════════════════════════════════════,,,,,,
+SHEET 2 — CLAUDE AI PLANS (For Building GearTrad),,,,,,
+═══════════════════════════════════════════════,,,,,,
+,,,,,,
+Plan,Monthly Cost (USD),Annual Cost (USD),What You Get,Claude Code Included?,Best For
+,,,,,,
+Claude.ai Free,$0,$0,"Limited messages · Claude Sonnet only · No Projects",NO,Just trying it out
+Claude.ai Pro,$20/month,$240/year,"5x more messages than free · Claude Sonnet + some Opus · Projects · Priority access · Claude Code (limited)",YES (limited),Casual use — building a few features per week
+Claude.ai Max 5x,$100/month,$1200/year,"5× Pro usage limits · Full Claude Opus access · Claude Code (heavy usage) · Priority queue",YES (heavy),Daily active development — building GearTrad seriously
+Claude.ai Max 20x,$200/month,$2400/year,"20× Pro usage limits · Unlimited-feel Claude Code sessions · Top priority queue · Best for full-time dev",YES (very heavy),Full-time co-founder mode — coding all day every day
+Claude API (pay per token),~$15–$75/month,varies,"Direct API access · No usage cap · Pay exactly for what you use",Via API key,If you want no subscription and just pay per use
+,,,,,,
+PRO vs MAX — KEY DIFFERENCES,,,,,,
+,,,,,,
+Feature,Pro ($20),Max 5x ($100),Max 20x ($200)
+Claude Sonnet access,✅ Full,✅ Full,✅ Full
+Claude Opus 4.6 access,Limited,✅ Full,✅ Full
+Claude Code sessions per day,~3–5 sessions,~25 sessions,~100 sessions
+Context window,200k tokens,200k tokens,200k tokens
+Priority access (no queue),❌,✅,✅
+Best for GearTrad dev speed,Slow — will hit limits,Good — recommended,Best — no limits
+Cost per feature built (est.),~$4–6 per session,~$4 per session,$2 per session
+,,,,,,
+RECOMMENDATION FOR YOU,,,,,,
+If you're building GearTrad part-time (a few hours/week): Pro ($20/month),,,,,,
+If you're building GearTrad as your main project (daily): Max 5x ($100/month),,,,,,
+If you have a co-founder/developer also using Claude: Two Max 5x accounts ($200/month total),,,,,,
+,,,,,,
+,,,,,,
+═══════════════════════════════════════════════,,,,,,
+SHEET 3 — TOTAL MONTHLY BUDGET SCENARIOS,,,,,,
+═══════════════════════════════════════════════,,,,,,
+,,,,,,
+Scenario,Supabase,Vercel,Domain,Claude,Total/Month,Total/Year,Best For
+,,,,,,
+Pre-launch (testing only),$0 Free,$0 Free,$0.92/mo avg,$20 Pro,$20.92,$251,Just testing — do NOT keep DB on free tier long
+Launch Ready (solo founder),$25 Pro,$0 Hobby,$0.92/mo avg,$100 Max 5x,$125.92,$1511,"Recommended for launch — real DB, active development"
+Production (growing),$25 Pro,$20 Pro,$0.92/mo avg,$100 Max 5x,$145.92,$1751,"After 1k+ users — Vercel Pro for analytics & SLA"
+Scaling (5k+ users),$25 Pro,$20 Pro,$0.92/mo avg,$200 Max 20x,$245.92,$2951,Heavy daily development + scaling traffic
+,,,,,,
+,,,,,,
+═══════════════════════════════════════════════,,,,,,
+SHEET 4 — CAPACITY: WHAT EACH PLAN HANDLES,,,,,,
+═══════════════════════════════════════════════,,,,,,
+,,,,,,
+Service,Plan,Concurrent Users,Monthly Active Users,Database Rows,Storage,Bandwidth
+,,,,,,
+Vercel Hobby,Free,Unlimited (serverless),~50k MAU,N/A,N/A,100GB
+Vercel Pro,Pro,Unlimited (serverless),500k+ MAU,N/A,N/A,1TB
+Supabase Free,Free,~100 concurrent,~1k MAU before pausing,500MB (~2–5M rows),1GB,2GB
+Supabase Pro,Pro,~500 concurrent,50k–100k MAU comfortably,8GB (~40–80M rows),100GB,250GB
+,,,,,,
+WHEN TO UPGRADE,,,,,,
+,,,,,,
+Trigger,Action,Cost Change
+Supabase DB hits 400MB,"Upgrade to Pro immediately",+$25/month
+Site starts pausing (free Supabase),Upgrade to Pro immediately,+$25/month
+Build minutes running out on Vercel,Upgrade to Pro,$20/month
+You start building every day,Upgrade Claude to Max 5x,$80/month more
+Traffic exceeds 100GB/month bandwidth,Upgrade Vercel to Pro,$20/month
+,,,,,,
+,,,,,,
+═══════════════════════════════════════════════,,,,,,
+SHEET 5 — REVENUE VS COST BREAKEVEN,,,,,,
+═══════════════════════════════════════════════,,,,,,
+,,,,,,
+GearTrad earns 5% on every transaction.,,,,,,
+,,,,,,
+Monthly GMV (Total Sales Volume),GearTrad Revenue (5%),Infrastructure Cost,Claude Max 5x,Net Profit,Break Even?
+,,,,,,
+10000 EGP (~$200 USD),$10,~$46,~$100,-$136,❌ Not yet
+50000 EGP (~$1000 USD),$50,~$46,~$100,-$96,❌ Not yet
+100000 EGP (~$2000 USD),$100,~$46,~$100,-$46,❌ Close
+150000 EGP (~$3000 USD),$150,~$46,~$100,$4,✅ Break even
+500000 EGP (~$10000 USD),$500,~$66,~$100,$334,✅ Profitable
+1000000 EGP (~$20000 USD),$1000,~$66,~$100,$834,✅ Growing
+,,,,,,
+NOTE: GMV = Gross Merchandise Value (total EGP traded on platform per month),,,,,,
+Break even point: ~150000 EGP/month in trades (~75 transactions at 2000 EGP avg),,,,,,
+That is roughly 2-3 real sellers doing decent volume.,,,,,,
