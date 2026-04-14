@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import {
   ShoppingCart, Bell, Menu, X, Globe,
-  Heart, MessageCircle, LogOut, LayoutDashboard, Store, UserCircle, User,
+  Heart, MessageCircle, LogOut, LayoutDashboard, Store, UserCircle, User, ShoppingBag,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NotificationsPanel } from '@/components/layout/NotificationsPanel';
@@ -225,6 +225,7 @@ export function Navbar() {
                     </div>
                     <div className="py-1.5">
                       <DropdownLink href={`/${locale}/profile`} icon={UserCircle} label={locale === 'ar' ? 'ملفي الشخصي' : 'My Profile'} onClick={() => setUserMenuOpen(false)} />
+                      <DropdownLink href={`/${locale}/orders`}  icon={ShoppingBag} label={locale === 'ar' ? 'مشترياتي' : 'My Orders'} onClick={() => setUserMenuOpen(false)} />
                       <DropdownLink href={`/${locale}/wishlist`} icon={Heart} label={locale === 'ar' ? 'المفضلة' : 'Wishlist'} onClick={() => setUserMenuOpen(false)} />
                       <DropdownLink href={`/${locale}/chat`}    icon={MessageCircle} label={locale === 'ar' ? 'الرسائل' : 'Messages'} onClick={() => setUserMenuOpen(false)} />
                       {isSeller && (
@@ -372,6 +373,7 @@ export function Navbar() {
                   </div>
 
                   <MobileMenuLink href={`/${locale}/profile`}    icon={UserCircle}    label={locale === 'ar' ? 'ملفي الشخصي' : 'My Profile'}    onClick={closeMobileMenu} />
+                  <MobileMenuLink href={`/${locale}/orders`}     icon={ShoppingBag}   label={locale === 'ar' ? 'مشترياتي' : 'My Orders'}           onClick={closeMobileMenu} />
                   <MobileMenuLink href={`/${locale}/wishlist`}   icon={Heart}         label={locale === 'ar' ? 'المفضلة' : 'Wishlist'}            onClick={closeMobileMenu} />
                   {isSeller && (
                     <>
