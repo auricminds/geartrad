@@ -4,6 +4,153 @@ Last updated: April 2026
 
 ---
 
+## STEP 0 — Before You Start: What Paymob Will Ask For
+
+> Read this entire section before creating your Paymob account.
+> Gather everything listed here first — the application is much smoother when you have it all ready.
+
+Paymob is licensed by the Central Bank of Egypt. They are legally required to verify who they're giving a payment terminal to. This is a one-time process and usually takes 1–5 business days.
+
+---
+
+### 0A — Choose Your Registration Type
+
+**Option 1: Individual / Sole Trader (أفراد)**
+Use this if you don't have a company registered yet. Most common for startups at this stage.
+
+**Option 2: Company (شركة)**
+Use this if you have a registered LLC or S.A.E. in Egypt. Looks more professional and allows higher transaction limits.
+
+> Recommendation: Start as Individual if you don't have a company yet. You can upgrade later.
+
+---
+
+### 0B — Documents You Must Have Ready (Individual)
+
+Gather these before starting the Paymob application:
+
+| # | What | Details |
+|---|---|---|
+| 1 | **National ID (الرقم القومي)** | Front + back photo, clear and unblurred. Must be valid (not expired). |
+| 2 | **National ID Number** | The 14-digit number on the front of the card. |
+| 3 | **Personal Phone Number** | Must be registered in your name (Vodafone/Etisalat/Orange/We). This is used for OTP verification. |
+| 4 | **Personal Email Address** | Must be one you actively use — Paymob sends all payment notifications here. |
+| 5 | **Bank Account IBAN** | See Section 0D below — this is where Paymob sends your money. |
+| 6 | **Bank Account Holder Name** | Must exactly match the name on your National ID. |
+| 7 | **Website URL** | `https://geartrad.com` (or your Vercel URL if domain not ready yet). |
+| 8 | **Business Description** | Short paragraph explaining what GearTrad does (see template below). |
+| 9 | **Expected Monthly Volume** | Estimate conservatively — e.g. "Under 50,000 EGP/month initially". |
+
+---
+
+### 0C — Documents You Must Have Ready (Company — if applicable)
+
+If you have or will register a company, Paymob needs all of the above PLUS:
+
+| # | What | Details |
+|---|---|---|
+| 1 | **Commercial Registration (سجل تجاري)** | Official document from GAFI or Shahr El-Aqari. Photo or scan of all pages. |
+| 2 | **Tax Card (البطاقة الضريبية)** | Issued by Egyptian Tax Authority. Both sides. |
+| 3 | **Company Bank Account** | Must be in the company name, not personal. |
+| 4 | **Company Bank Account IBAN** | See Section 0D. |
+| 5 | **Authorized Signatory National ID** | Your ID as the person signing on behalf of the company. |
+| 6 | **Articles of Association (عقد تأسيس الشركة)** | May be requested for higher-volume merchants. |
+
+---
+
+### 0D — How to Get Your Bank IBAN (Required for Payouts)
+
+Your IBAN is your Egyptian bank account number in international format. Paymob will wire your earnings here.
+
+**How to find your IBAN:**
+
+**Option 1 — Mobile App (fastest)**
+- Open your bank's app (CIB, NBE, Banque Misr, QNB, Alex Bank, etc.)
+- Go to: My Accounts → Account Details → IBAN
+- It starts with `EG` followed by 27 numbers. Example: `EG380019000500000012345180002`
+
+**Option 2 — ATM**
+- Insert card → Account Services → Account Details → IBAN
+
+**Option 3 — Bank Branch**
+- Walk into any branch of your bank
+- Say: "أنا عايز رقم الـ IBAN بتاع حسابي"
+- They'll print it for you immediately
+
+**Important rules about your bank account:**
+- Must be an Egyptian Pound (EGP) account
+- Must be in YOUR name (matching your National ID exactly)
+- Can be any Egyptian bank — CIB, NBE, Banque Misr, Faisal, QNB, HSBC Egypt, etc.
+- Savings account OR current account both work
+- Vodafone Cash alone is NOT enough — you need an actual bank account
+
+**Other bank info Paymob may ask for:**
+- Bank Name (e.g. "Commercial International Bank — CIB")
+- Branch Name/Address (the branch where your account is registered)
+- Account Number (the shorter number, usually 10–16 digits — different from IBAN)
+- Swift Code (for your bank, e.g. CIB Egypt Swift: `CIBEEGCX`)
+
+**Common Egyptian Bank Swift Codes:**
+| Bank | Swift Code |
+|---|---|
+| CIB (Commercial International Bank) | `CIBEEGCX` |
+| NBE (National Bank of Egypt) | `NBEGEGCX` |
+| Banque Misr | `BMISEGCX` |
+| QNB Al Ahli | `QNBAEGCX` |
+| Alex Bank (Alexandria) | `ALEXEGCX` |
+| HSBC Egypt | `BARCEGCX` |
+| Faisal Islamic Bank | `FAIBEGCA` |
+| Arab African International Bank | `ARAIEGCX` |
+
+---
+
+### 0E — Business Description Template
+
+When Paymob asks "What does your business do?", use this:
+
+> "GearTrad is an online peer-to-peer marketplace for buying and selling gaming accounts, in-game items, skins, and digital assets. We serve the Egyptian and MENA gaming community. All transactions are protected by an escrow system — buyer funds are held until delivery is confirmed. We process payments between buyers and sellers and take a 5% platform commission. Monthly volume is expected to be under [X] EGP initially."
+
+---
+
+### 0F — What Paymob Does With This Information
+
+- **National ID**: KYC (Know Your Customer) verification — legally required by CBE
+- **Bank account**: Where your earnings are deposited (after deducting their fees)
+- **Website**: They verify your business is real and your website is live
+- **Business description**: They classify your merchant category (MCC code) — affects transaction limits
+
+**After approval you receive:**
+- Your API Key
+- Integration IDs for each payment method
+- A Paymob account manager contact (very useful — save their number)
+- Access to the full merchant dashboard
+
+---
+
+### 0G — Paymob Transaction Limits (Know These)
+
+| Category | Individual Merchant | Company Merchant |
+|---|---|---|
+| Single transaction max | 30,000 EGP | 100,000 EGP |
+| Daily limit | 150,000 EGP | Negotiable |
+| Monthly limit | Negotiable | Negotiable |
+
+> If any of your gaming accounts sell for more than 30,000 EGP as an Individual merchant, you'll need to register as a Company or request a limit increase from your Paymob account manager.
+
+---
+
+### 0H — Timeline Expectations
+
+| Step | Expected Time |
+|---|---|
+| Create Paymob account | 5 minutes |
+| Submit documents | 10–15 minutes |
+| Paymob reviews application | 1–5 business days |
+| Get API keys and go live | Same day as approval |
+| First payout to your bank | 3–7 business days after transaction |
+
+---
+
 ## STEP 1 — Supabase: Run the SQL Migrations
 
 > Go to: supabase.com → your project → SQL Editor → New Query
