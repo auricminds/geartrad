@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   // Fallback: if service role key is missing, use regular signup
   if (!serviceKey || !supabaseUrl) {
     const anonClient = createClient(supabaseUrl!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.vercel.app';
     const { error } = await anonClient.auth.signUp({
       email: normalizedEmail,
       password,
