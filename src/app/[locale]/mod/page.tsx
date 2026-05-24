@@ -155,10 +155,19 @@ export default function ModPage() {
   if (authLoading) return null;
   if (!user || !isMod) {
     return (
-      <div className="max-w-lg mx-auto px-4 py-20 text-center">
-        <Shield className="w-10 h-10 text-muted/20 mx-auto mb-4" />
-        <p className="text-white font-semibold text-lg">Access Denied</p>
-        <p className="text-muted text-sm mt-2">This area is for moderators only.</p>
+      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4">
+        <div className="text-center">
+          <Shield className="w-10 h-10 text-muted/20 mx-auto mb-4" />
+          <p className="text-white font-semibold text-lg mb-2">Access Denied</p>
+          <p className="text-muted text-sm mb-6">This area is for moderators only.</p>
+          <Link
+            href={`/${locale}/mod/sign-in`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple hover:bg-purple-light text-white text-sm font-semibold transition-all shadow-lg shadow-purple/25"
+          >
+            <Shield className="w-4 h-4" />
+            Moderator Sign In
+          </Link>
+        </div>
       </div>
     );
   }

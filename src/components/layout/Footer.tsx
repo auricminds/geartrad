@@ -87,7 +87,7 @@ export function Footer() {
             <p className="text-xs text-muted/50">
               Built by AuricMinds Group
             </p>
-            <Link href={`/${locale}/mod`} className="text-xs text-muted/60 hover:text-white transition-colors">
+            <Link href={`/${locale}/mod/sign-in`} className="text-xs text-muted/60 hover:text-white transition-colors">
               Admin
             </Link>
           </div>
