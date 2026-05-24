@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const ADMIN_EMAILS = ['varefunds@gmail.com', 'auricminds@gmail.com'];
+const ADMIN_EMAILS = ['slaxltc@gmail.com', 'auricminds@gmail.com'];
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
