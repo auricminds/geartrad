@@ -9,13 +9,21 @@ import {
   Search, ChevronDown, CheckCheck, Timer, Eye,
 } from 'lucide-react';
 import { useStore } from '@/components/providers/StoreProvider';
-import {
-  getAllTickets, getAllVerifications, reviewVerification,
-  updateTicketStatus, getAllOrders, getAllUsers, getAllListingsAdmin,
-  setUserRole, setBanStatus, setUserTimeout, cancelOrderAsMod, deleteListingAsMod,
-} from '@/lib/api';
+import { getAllTickets, getAllVerifications, getAllOrders, getAllUsers, getAllListingsAdmin } from '@/lib/api';
 import { cn, formatPrice } from '@/lib/utils';
-import { supabase } from '@/lib/supabase';
+
+async function modAction(body: Record<string, unknown>): Promise<boolean> {
+  try {
+    const res = await fetch('/api/mod/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
 
 type Tab = 'orders' | 'users' | 'listings' | 'verifications' | 'tickets';
 
@@ -292,9 +300,8 @@ export default function ModPage() {
                           <button
                             onClick={async () => {
                               if (!confirm('Cancel this trade and re-list the item?')) return;
-                              await cancelOrderAsMod(order.id, order.listing?.id ?? '');
-                              setOrders((prev) => prev.map((o) => o.id === order.id
-                                ? { ...o, status: 'cancelled', payment_status: 'cancelled' } : o));
+                              const ok = await modAction({ type: 'cancel-order', requesterId: user.id, orderId: order.id, listingId: order.listing?.id ?? '' });
+                              if (ok) setOrders((prev) => prev.map((o) => o.id === order.id ? { ...o, status: 'cancelled', payment_status: 'cancelled' } : o));
                             }}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 border border-red-500/20 text-red-300 text-xs font-medium hover:bg-red-500/25 transition-all"
                           >
@@ -307,9 +314,8 @@ export default function ModPage() {
                               <button
                                 onClick={async () => {
                                   if (!confirm('Mark as completed — releases to seller?')) return;
-                                  await supabase.from('orders').update({ status: 'completed', payment_status: 'paid' }).eq('id', order.id);
-                                  setOrders((prev) => prev.map((o) => o.id === order.id
-                                    ? { ...o, status: 'completed', payment_status: 'paid' } : o));
+                                  const ok = await modAction({ type: 'resolve-order', requesterId: user.id, orderId: order.id, resolution: 'complete' });
+                                  if (ok) setOrders((prev) => prev.map((o) => o.id === order.id ? { ...o, status: 'completed', payment_status: 'paid' } : o));
                                 }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/20 text-emerald-300 text-xs font-medium hover:bg-emerald-500/25 transition-all"
                               >
@@ -319,9 +325,8 @@ export default function ModPage() {
                               <button
                                 onClick={async () => {
                                   if (!confirm('Mark as refunded?')) return;
-                                  await supabase.from('orders').update({ status: 'refunded', payment_status: 'refunded' }).eq('id', order.id);
-                                  setOrders((prev) => prev.map((o) => o.id === order.id
-                                    ? { ...o, status: 'refunded', payment_status: 'refunded' } : o));
+                                  const ok = await modAction({ type: 'resolve-order', requesterId: user.id, orderId: order.id, resolution: 'refund' });
+                                  if (ok) setOrders((prev) => prev.map((o) => o.id === order.id ? { ...o, status: 'refunded', payment_status: 'refunded' } : o));
                                 }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500/15 border border-orange-500/20 text-orange-300 text-xs font-medium hover:bg-orange-500/25 transition-all"
                               >
@@ -437,8 +442,8 @@ export default function ModPage() {
                                 defaultValue={u.role}
                                 onChange={async (e) => {
                                   const r = e.target.value as 'user' | 'moderator' | 'admin';
-                                  await setUserRole(u.id, r);
-                                  setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, role: r } : x));
+                                  const ok = await modAction({ type: 'role', requesterId: user.id, userId: u.id, role: r });
+                                  if (ok) setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, role: r } : x));
                                 }}
                                 className="appearance-none pl-3 pr-7 py-2 rounded-lg bg-white/5 border border-border text-white text-xs font-medium cursor-pointer focus:outline-none focus:border-purple/50"
                               >
@@ -466,9 +471,11 @@ export default function ModPage() {
                                 ].map(({ label, hours }) => (
                                   <button key={hours}
                                     onClick={async () => {
-                                      await setUserTimeout(u.id, hours);
-                                      const bannedUntil = new Date(Date.now() + hours * 3600000).toISOString();
-                                      setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, is_banned: true, banned_until: bannedUntil } : x));
+                                      const ok = await modAction({ type: 'timeout', requesterId: user.id, userId: u.id, hours });
+                                      if (ok) {
+                                        const bannedUntil = new Date(Date.now() + hours * 3600000).toISOString();
+                                        setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, is_banned: true, banned_until: bannedUntil } : x));
+                                      }
                                     }}
                                     className="px-3 py-2 text-xs text-left text-muted hover:text-white hover:bg-white/5 transition-all">
                                     {label}
@@ -483,8 +490,8 @@ export default function ModPage() {
                             onClick={async () => {
                               const action = u.is_banned ? 'Unban' : 'Ban';
                               if (!confirm(`${action} ${u.username}?`)) return;
-                              await setBanStatus(u.id, !u.is_banned);
-                              setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, is_banned: !u.is_banned, banned_until: null } : x));
+                              const ok = await modAction({ type: 'ban', requesterId: user.id, userId: u.id, banned: !u.is_banned });
+                              if (ok) setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, is_banned: !u.is_banned, banned_until: null } : x));
                             }}
                             className={cn(
                               'flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all',
@@ -562,8 +569,8 @@ export default function ModPage() {
                         <button
                           onClick={async () => {
                             if (!confirm('Take down this listing?')) return;
-                            await deleteListingAsMod(listing.id);
-                            setListings((prev) => prev.map((l) => l.id === listing.id ? { ...l, is_available: false } : l));
+                            const ok = await modAction({ type: 'takedown-listing', requesterId: user.id, listingId: listing.id });
+                            if (ok) setListings((prev) => prev.map((l) => l.id === listing.id ? { ...l, is_available: false } : l));
                           }}
                           className="p-1.5 rounded-lg bg-red-500/15 border border-red-500/20 text-red-300 hover:bg-red-500/25 transition-all"
                         >
@@ -597,19 +604,19 @@ export default function ModPage() {
                     {v.status === 'pending' && (
                       <>
                         <button
-                          onClick={() => reviewVerification(v.id, user.id, 'approved').then(() =>
-                            setVerifs((prev) => prev.map((x) => x.id === v.id ? { ...x, status: 'approved' } : x))
-                          )}
+                          onClick={async () => {
+                            const ok = await modAction({ type: 'review-verification', requesterId: user.id, verifId: v.id, status: 'approved' });
+                            if (ok) setVerifs((prev) => prev.map((x) => x.id === v.id ? { ...x, status: 'approved' } : x));
+                          }}
                           className="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/20 text-emerald-300 text-xs font-medium hover:bg-emerald-500/25 transition-all"
                         >
                           Approve
                         </button>
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             const notes = prompt('Rejection reason (optional):');
-                            reviewVerification(v.id, user.id, 'rejected', notes ?? undefined).then(() =>
-                              setVerifs((prev) => prev.map((x) => x.id === v.id ? { ...x, status: 'rejected' } : x))
-                            );
+                            const ok = await modAction({ type: 'review-verification', requesterId: user.id, verifId: v.id, status: 'rejected', notes });
+                            if (ok) setVerifs((prev) => prev.map((x) => x.id === v.id ? { ...x, status: 'rejected' } : x));
                           }}
                           className="px-2.5 py-1.5 rounded-lg bg-red-500/15 border border-red-500/20 text-red-300 text-xs font-medium hover:bg-red-500/25 transition-all"
                         >
@@ -663,10 +670,9 @@ export default function ModPage() {
                           </button>
                           <div className="absolute right-0 top-full mt-1 z-10 hidden group-hover:flex group-focus-within:flex flex-col min-w-[140px] bg-surface border border-border rounded-xl shadow-xl overflow-hidden">
                             {(['in_progress', 'resolved', 'closed'] as const).map((s) => (
-                              <button key={s} onClick={() => {
-                                updateTicketStatus(t.id, s).then(() =>
-                                  setTickets((prev) => prev.map((x) => x.id === t.id ? { ...x, status: s } : x))
-                                );
+                              <button key={s} onClick={async () => {
+                                const ok = await modAction({ type: 'ticket-status', requesterId: user.id, ticketId: t.id, status: s });
+                                if (ok) setTickets((prev) => prev.map((x) => x.id === t.id ? { ...x, status: s } : x));
                               }}
                                 className="px-3 py-2 text-xs text-left text-muted hover:text-white hover:bg-white/5 transition-all capitalize">
                                 → {s.replace('_', ' ')}
