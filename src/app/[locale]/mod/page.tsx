@@ -77,11 +77,12 @@ export default function ModPage() {
   const [tab, setTab]       = useState<Tab>('orders');
   const [loading, setLoading] = useState(true);
 
-  const [orders,   setOrders]   = useState<OrderRow[]>([]);
-  const [users,    setUsers]    = useState<UserRow[]>([]);
-  const [listings, setListings] = useState<ListingRow[]>([]);
-  const [tickets,  setTickets]  = useState<TicketRow[]>([]);
-  const [verifs,   setVerifs]   = useState<VerifRow[]>([]);
+  const [orders,    setOrders]    = useState<OrderRow[]>([]);
+  const [users,     setUsers]     = useState<UserRow[]>([]);
+  const [emailMap,  setEmailMap]  = useState<Record<string, string>>({});
+  const [listings,  setListings]  = useState<ListingRow[]>([]);
+  const [tickets,   setTickets]   = useState<TicketRow[]>([]);
+  const [verifs,    setVerifs]    = useState<VerifRow[]>([]);
 
   // Filters / search
   const [orderFilter,   setOrderFilter]   = useState('all');
@@ -104,12 +105,14 @@ export default function ModPage() {
       getAllListingsAdmin(),
       getAllTickets(),
       getAllVerifications(),
-    ]).then(([o, u, l, t, v]) => {
+      fetch('/api/mod/users').then((r) => r.json()).catch(() => ({})),
+    ]).then(([o, u, l, t, v, emails]) => {
       setOrders(o as OrderRow[]);
       setUsers(u as UserRow[]);
       setListings(l as ListingRow[]);
       setTickets(t as TicketRow[]);
       setVerifs(v as VerifRow[]);
+      setEmailMap(emails as Record<string, string>);
     }).finally(() => setLoading(false));
   }, [isMod]);
 
@@ -407,6 +410,7 @@ export default function ModPage() {
                         {/* Account info */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           {[
+                            { label: 'Email',        value: emailMap[u.id] || '—' },
                             { label: 'Account Type', value: u.account_type },
                             { label: 'Role',         value: u.role },
                             { label: 'Total Sales',  value: u.total_sales },
@@ -414,9 +418,12 @@ export default function ModPage() {
                             { label: 'Verified',     value: u.is_verified ? 'Yes' : 'No' },
                             { label: 'Joined',       value: new Date(u.created_at).toLocaleDateString() },
                           ].map(({ label, value }) => (
-                            <div key={label} className="bg-white/5 rounded-xl p-2.5">
+                            <div key={label} className={cn(
+                              'bg-white/5 rounded-xl p-2.5',
+                              label === 'Email' ? 'col-span-2 sm:col-span-4' : ''
+                            )}>
                               <p className="text-[10px] text-muted uppercase tracking-wider">{label}</p>
-                              <p className="text-xs text-white font-medium mt-0.5">{value}</p>
+                              <p className="text-xs text-white font-medium mt-0.5 break-all">{value}</p>
                             </div>
                           ))}
                         </div>
