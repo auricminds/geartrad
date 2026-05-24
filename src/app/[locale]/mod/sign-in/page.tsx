@@ -54,7 +54,11 @@ export default function AdminSignInPage() {
       return;
     }
 
-    setSuccess('Account created. You can now sign in.');
+    if (data.needsConfirmation) {
+      setSuccess('Account created! Check your email and click the confirmation link, then come back to sign in.');
+    } else {
+      setSuccess('Account created. You can now sign in.');
+    }
     setMode('sign-in');
     setPassword('');
     setConfirm('');

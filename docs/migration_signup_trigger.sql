@@ -24,15 +24,23 @@ BEGIN
 END $$;
 
 -- 1. Function that auto-creates a profile row when a new auth user is created
+--    Admin emails are automatically granted the admin role
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
+DECLARE
+  admin_emails TEXT[] := ARRAY['varefunds@gmail.com', 'ussamahusseinn@gmail.com'];
+  assigned_role TEXT := 'user';
 BEGIN
+  IF NEW.email = ANY(admin_emails) THEN
+    assigned_role := 'admin';
+  END IF;
+
   INSERT INTO public.profiles (id, username, account_type, role, rating, total_sales, is_verified, is_banned)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'username', 'user_' || LEFT(NEW.id::text, 8)),
     COALESCE(NEW.raw_user_meta_data->>'account_type', 'buyer'),
-    'user',
+    assigned_role,
     0,
     0,
     false,

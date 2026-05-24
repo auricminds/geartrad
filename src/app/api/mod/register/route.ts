@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Only these emails are allowed to create admin accounts
 const ADMIN_EMAILS = ['varefunds@gmail.com', 'ussamahusseinn@gmail.com'];
 
 export async function POST(req: NextRequest) {
@@ -11,35 +10,49 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 });
   }
 
-  if (!ADMIN_EMAILS.includes(email.toLowerCase().trim())) {
+  const normalizedEmail = email.toLowerCase().trim();
+
+  if (!ADMIN_EMAILS.includes(normalizedEmail)) {
     return NextResponse.json({ error: 'This email is not authorized for admin access.' }, { status: 403 });
   }
 
-  const serviceClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-  // Create the user (email auto-confirmed via admin API)
+  // Fallback: if service role key is missing, use regular signup
+  // The DB trigger will automatically set admin role for whitelisted emails
+  if (!serviceKey || !supabaseUrl) {
+    const anonClient = createClient(supabaseUrl!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+    const { error } = await anonClient.auth.signUp({ email: normalizedEmail, password });
+    if (error) {
+      if (error.message.toLowerCase().includes('already registered')) {
+        return NextResponse.json({ error: 'Account already exists. Sign in instead.' }, { status: 409 });
+      }
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ success: true, needsConfirmation: true });
+  }
+
+  // With service role key: create user with email auto-confirmed
+  const serviceClient = createClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
   const { data, error } = await serviceClient.auth.admin.createUser({
-    email,
+    email: normalizedEmail,
     password,
     email_confirm: true,
   });
 
   if (error) {
-    if (error.message.includes('already registered') || error.message.includes('already been registered')) {
-      return NextResponse.json({ error: 'This email already has an account. Sign in instead.' }, { status: 409 });
+    if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('already been registered')) {
+      return NextResponse.json({ error: 'Account already exists. Sign in instead.' }, { status: 409 });
     }
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  // Set role to admin
-  await serviceClient
-    .from('profiles')
-    .update({ role: 'admin' })
-    .eq('id', data.user.id);
+  // Set role to admin immediately
+  await serviceClient.from('profiles').update({ role: 'admin' }).eq('id', data.user.id);
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, needsConfirmation: false });
 }
