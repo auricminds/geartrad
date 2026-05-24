@@ -57,6 +57,7 @@ export default function SignUpPage() {
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/${locale}`,
           data: {
             username,
             account_type: accountType,

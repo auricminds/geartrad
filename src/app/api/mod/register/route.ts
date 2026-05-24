@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const ADMIN_EMAILS = ['varefunds@gmail.com', 'ussamahusseinn@gmail.com'];
+const ADMIN_EMAILS = ['varefunds@gmail.com', 'auricminds@gmail.com'];
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
@@ -20,10 +20,14 @@ export async function POST(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
   // Fallback: if service role key is missing, use regular signup
-  // The DB trigger will automatically set admin role for whitelisted emails
   if (!serviceKey || !supabaseUrl) {
     const anonClient = createClient(supabaseUrl!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-    const { error } = await anonClient.auth.signUp({ email: normalizedEmail, password });
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+    const { error } = await anonClient.auth.signUp({
+      email: normalizedEmail,
+      password,
+      options: { emailRedirectTo: `${siteUrl}/en/mod/sign-in` },
+    });
     if (error) {
       if (error.message.toLowerCase().includes('already registered')) {
         return NextResponse.json({ error: 'Account already exists. Sign in instead.' }, { status: 409 });

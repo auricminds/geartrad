@@ -28,7 +28,7 @@ END $$;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 DECLARE
-  admin_emails TEXT[] := ARRAY['varefunds@gmail.com', 'ussamahusseinn@gmail.com'];
+  admin_emails TEXT[] := ARRAY['varefunds@gmail.com', 'auricminds@gmail.com'];
   assigned_role TEXT := 'user';
 BEGIN
   IF NEW.email = ANY(admin_emails) THEN
