@@ -9,6 +9,7 @@ export interface User {
   email: string;
   avatar?: string;
   type: UserType;
+  role?: 'user' | 'moderator' | 'admin';
   rating: number;
   totalSales: number;
   joinedAt: Date;

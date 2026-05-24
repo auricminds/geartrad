@@ -8,7 +8,7 @@ import type { Listing, User, ListingType, AccountRank, BoostType } from '@/types
 
 // ── Type Conversion ──────────────────────────────────────────────────────────
 
-const PROFILE_COLS = 'id, username, account_type, avatar_url, rating, total_sales, is_verified, created_at';
+const PROFILE_COLS = 'id, username, account_type, role, avatar_url, rating, total_sales, is_verified, created_at';
 const PAYMENT_COLS = 'instapay_id, vodafone_number, orange_number, crypto_wallet_usdt, crypto_wallet_btc, crypto_wallet_eth';
 const LISTING_COLS = `
   id, seller_id, title, title_ar, description, description_ar,
@@ -25,6 +25,7 @@ export function dbProfileToUser(p: DbProfile): User {
     email: '',
     avatar: p.avatar_url ?? undefined,
     type: p.account_type,
+    role: p.role ?? 'user',
     rating: Number(p.rating) || 0,
     totalSales: p.total_sales,
     joinedAt: new Date(p.created_at),

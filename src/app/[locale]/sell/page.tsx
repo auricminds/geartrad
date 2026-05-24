@@ -42,7 +42,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export default function SellPage() {
   const locale  = useLocale();
   const router  = useRouter();
-  const { user, authLoading } = useStore();
+  const { user, userRole, authLoading } = useStore();
   const isRTL = locale === 'ar';
 
   const [agreed, setAgreed]           = useState(false);
@@ -109,7 +109,9 @@ export default function SellPage() {
     );
   }
 
-  if (user.user_metadata?.account_type !== 'seller') {
+  const isAdmin = userRole === 'admin' || userRole === 'moderator';
+
+  if (user.user_metadata?.account_type !== 'seller' && !isAdmin) {
     return (
       <div className="max-w-lg mx-auto px-4 py-16 text-center">
         <p className="text-white font-semibold text-lg mb-2">

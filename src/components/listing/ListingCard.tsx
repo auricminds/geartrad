@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
-import { Heart, ShoppingCart, Star, Shield, Zap, Trophy, Check, Timer, BadgeCheck } from 'lucide-react';
+import { Heart, ShoppingCart, Star, Shield, Zap, Trophy, Check, Timer, BadgeCheck, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Listing } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -89,9 +89,12 @@ export function ListingCard({ listing, size = 'md' }: ListingCardProps) {
     <Link href={`/${locale}/listing/${listing.id}`} onClick={handleClick}>
       <div
         className={cn(
-          'group relative bg-surface border border-border rounded-2xl overflow-hidden card-scan',
-          'hover:border-purple/40 hover:-translate-y-1 hover:shadow-xl',
+          'group relative bg-surface border rounded-2xl overflow-hidden card-scan',
+          'hover:-translate-y-1 hover:shadow-xl',
           'transition-all duration-200 ease-out',
+          listing.seller.role === 'admin'
+            ? 'border-gold/40 hover:border-gold/70 shadow-gold/10'
+            : 'border-border hover:border-purple/40',
           listing.rank && rankGlows[listing.rank] && `hover:shadow-${rankGlows[listing.rank]}`,
           listing.isBoosted && 'neon-border border-purple/30'
         )}
@@ -107,13 +110,19 @@ export function ListingCard({ listing, size = 'md' }: ListingCardProps) {
 
           {/* Top badges */}
           <div className="absolute top-3 start-3 flex items-center gap-1.5 flex-wrap">
+            {listing.seller.role === 'admin' && (
+              <Badge variant="gold">
+                <Crown className="w-3 h-3" />
+                {locale === 'ar' ? 'إدارة' : 'Official'}
+              </Badge>
+            )}
             {listing.isBoosted && (
               <Badge variant="purple">
                 <Zap className="w-3 h-3" />
                 {t('adBoosted')}
               </Badge>
             )}
-            {listing.seller.isVerified && (
+            {listing.seller.isVerified && !listing.seller.role && (
               <Badge variant="green">
                 <Shield className="w-3 h-3" />
                 {t('verified')}
@@ -182,15 +191,24 @@ export function ListingCard({ listing, size = 'md' }: ListingCardProps) {
 
           {/* Seller info */}
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-5 h-5 rounded-full bg-purple/20 flex items-center justify-center text-xs font-bold text-purple">
-              {listing.seller.username.charAt(0)}
+            <div className={cn(
+              'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold',
+              listing.seller.role === 'admin' ? 'bg-gold/20 text-gold' : 'bg-purple/20 text-purple'
+            )}>
+              {listing.seller.role === 'admin' ? <Crown className="w-3 h-3" /> : listing.seller.username.charAt(0)}
             </div>
             <span
-              className="text-xs text-muted truncate hover:text-purple transition-colors cursor-pointer"
+              className={cn(
+                'text-xs truncate transition-colors cursor-pointer',
+                listing.seller.role === 'admin' ? 'text-gold hover:text-gold/80 font-medium' : 'text-muted hover:text-purple'
+              )}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/${locale}/seller/${listing.seller.id}`; }}
             >
               {listing.seller.username}
+              {listing.seller.role === 'admin' && (
+                <span className="ms-1 text-[10px] text-gold/70">• Official</span>
+              )}
             </span>
             <div className="flex items-center gap-0.5 ms-auto">
               <Star className="w-3 h-3 fill-gold text-gold" />
