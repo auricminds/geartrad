@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import {
   ShoppingCart, Bell, Menu, X, Globe,
-  Heart, MessageCircle, LogOut, LayoutDashboard, Store, UserCircle, User, ShoppingBag,
+  Heart, MessageCircle, LogOut, LayoutDashboard, Store, UserCircle, User, ShoppingBag, Shield,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NotificationsPanel } from '@/components/layout/NotificationsPanel';
@@ -20,7 +20,7 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const { cartItems, cartOpen, setCartOpen, notifOpen, setNotifOpen, unreadCount, likedIds, user, authLoading, signOut } = useStore();
+  const { cartItems, cartOpen, setCartOpen, notifOpen, setNotifOpen, unreadCount, likedIds, user, userRole, authLoading, signOut } = useStore();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -77,6 +77,7 @@ export function Navbar() {
   const displayName = user?.user_metadata?.username ?? user?.email?.split('@')[0] ?? 'User';
   const initials = displayName.charAt(0).toUpperCase();
   const isSeller = user?.user_metadata?.account_type === 'seller';
+  const isMod    = userRole === 'moderator' || userRole === 'admin';
 
   return (
     <>
@@ -234,6 +235,9 @@ export function Navbar() {
                           <DropdownLink href={`/${locale}/dashboard`} icon={LayoutDashboard} label={locale === 'ar' ? 'لوحة التحكم' : 'Dashboard'} onClick={() => setUserMenuOpen(false)} />
                         </>
                       )}
+                      {isMod && (
+                        <DropdownLink href={`/${locale}/mod`} icon={Shield} label={locale === 'ar' ? 'لوحة الإدارة' : 'Admin Panel'} onClick={() => setUserMenuOpen(false)} />
+                      )}
                     </div>
                     <div className="border-t border-border py-1.5">
                       <button
@@ -380,6 +384,9 @@ export function Navbar() {
                       <MobileMenuLink href={`/${locale}/sell`}      icon={Store}          label={locale === 'ar' ? 'إضافة إعلان' : 'New Listing'} onClick={closeMobileMenu} />
                       <MobileMenuLink href={`/${locale}/dashboard`} icon={LayoutDashboard} label={locale === 'ar' ? 'لوحة التحكم' : 'Dashboard'}  onClick={closeMobileMenu} />
                     </>
+                  )}
+                  {isMod && (
+                    <MobileMenuLink href={`/${locale}/mod`} icon={Shield} label={locale === 'ar' ? 'لوحة الإدارة' : 'Admin Panel'} onClick={closeMobileMenu} />
                   )}
 
                   <div className="pt-1">

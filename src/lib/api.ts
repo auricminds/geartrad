@@ -697,6 +697,73 @@ export async function getMyRole(userId: string): Promise<string> {
   return data?.role ?? 'user';
 }
 
+// ── Admin / Moderator ─────────────────────────────────────────────────────────
+
+export async function getAllOrders() {
+  const { data } = await supabase
+    .from('orders')
+    .select('*, listing:listings(id, title, game, cover_image), buyer:profiles!orders_buyer_id_fkey(id, username), seller:profiles!orders_seller_id_fkey(id, username)')
+    .order('created_at', { ascending: false });
+  return data ?? [];
+}
+
+export async function getAllUsers() {
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, username, account_type, role, rating, total_sales, is_verified, created_at, is_banned')
+    .order('created_at', { ascending: false });
+  return data ?? [];
+}
+
+export async function getAllListingsAdmin() {
+  const { data } = await supabase
+    .from('listings')
+    .select('*, seller:profiles!listings_seller_id_fkey(id, username)')
+    .order('created_at', { ascending: false });
+  return data ?? [];
+}
+
+export async function setUserRole(userId: string, role: 'user' | 'moderator' | 'admin'): Promise<void> {
+  await supabase.from('profiles').update({ role }).eq('id', userId);
+}
+
+export async function setBanStatus(userId: string, banned: boolean): Promise<void> {
+  await supabase.from('profiles').update({ is_banned: banned, banned_until: null }).eq('id', userId);
+}
+
+export async function setUserTimeout(userId: string, hours: number): Promise<void> {
+  const bannedUntil = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+  await supabase.from('profiles').update({ is_banned: true, banned_until: bannedUntil }).eq('id', userId);
+}
+
+export async function cancelOrderAsMod(orderId: string, listingId: string): Promise<void> {
+  await supabase.from('orders').update({ status: 'cancelled', payment_status: 'cancelled' }).eq('id', orderId);
+  await supabase.from('listings').update({ is_available: true }).eq('id', listingId);
+}
+
+export async function deleteListingAsMod(listingId: string): Promise<void> {
+  await supabase.from('listings').update({ is_available: false }).eq('id', listingId);
+}
+
+export async function getPlatformStats() {
+  const [ordersRes, usersRes, listingsRes, disputesRes] = await Promise.all([
+    supabase.from('orders').select('id, status, payment_status', { count: 'exact' }),
+    supabase.from('profiles').select('id, account_type', { count: 'exact' }),
+    supabase.from('listings').select('id, is_available', { count: 'exact' }),
+    supabase.from('orders').select('id').eq('status', 'disputed'),
+  ]);
+  return {
+    totalOrders: ordersRes.count ?? 0,
+    completedOrders: (ordersRes.data ?? []).filter((o: { status: string }) => o.status === 'completed').length,
+    pendingOrders: (ordersRes.data ?? []).filter((o: { payment_status: string }) => o.payment_status === 'proof_submitted').length,
+    totalUsers: usersRes.count ?? 0,
+    sellers: (usersRes.data ?? []).filter((u: { account_type: string }) => u.account_type === 'seller').length,
+    totalListings: listingsRes.count ?? 0,
+    activeListings: (listingsRes.data ?? []).filter((l: { is_available: boolean }) => l.is_available).length,
+    openDisputes: (disputesRes.data ?? []).length,
+  };
+}
+
 // ── Ad inquiries ──────────────────────────────────────────────────────────────
 
 export async function submitAdInquiry(inquiry: {

@@ -83,9 +83,14 @@ export function Footer() {
           <p className="text-xs text-muted">
             © {new Date().getFullYear()} GearTrad. {t('rights')}
           </p>
-          <p className="text-xs text-muted/50">
-            Built by AuricMinds Group
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-xs text-muted/50">
+              Built by AuricMinds Group
+            </p>
+            <Link href={`/${locale}/mod`} className="text-xs text-muted/60 hover:text-white transition-colors">
+              Admin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

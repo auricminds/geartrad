@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { getWishlistIds, addToWishlist, removeFromWishlist, ensureProfile, getNotifications, markNotificationRead, markAllNotificationsRead } from '@/lib/api';
+import { getWishlistIds, addToWishlist, removeFromWishlist, ensureProfile, getNotifications, markNotificationRead, markAllNotificationsRead, getMyRole } from '@/lib/api';
 import { Listing, CartItem } from '@/types';
 
 export interface Notification {
@@ -18,6 +18,7 @@ export interface Notification {
 interface StoreContextType {
   // Auth
   user: User | null;
+  userRole: string;
   authLoading: boolean;
   signOut: () => Promise<void>;
   // Cart
@@ -51,6 +52,7 @@ export function useStore() {
 export function StoreProvider({ children }: { children: ReactNode }) {
   // ── Auth ───────────────────────────────────────────────────
   const [user, setUser]               = useState<User | null>(null);
+  const [userRole, setUserRole]       = useState<string>('user');
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
@@ -103,9 +105,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [user]);
 
+  // Fetch role when user changes
+  useEffect(() => {
+    if (!user) { setUserRole('user'); return; }
+    getMyRole(user.id).then(setUserRole).catch(() => {});
+  }, [user]);
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setUserRole('user');
     setLikedIds([]);
   };
 
@@ -213,7 +222,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   return (
     <StoreContext.Provider value={{
-      user, authLoading, signOut,
+      user, userRole, authLoading, signOut,
       cartItems, addToCart, removeFromCart, isInCart, cartOpen, setCartOpen,
       likedIds, toggleLike, isLiked,
       notifications, notifOpen, setNotifOpen, markOneRead, markAllRead, unreadCount,

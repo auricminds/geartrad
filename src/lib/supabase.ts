@@ -12,10 +12,12 @@ export type DbProfile = {
   id: string;
   username: string;
   account_type: 'buyer' | 'seller';
+  role: 'user' | 'moderator' | 'admin';
   avatar_url: string | null;
   rating: number;
   total_sales: number;
   is_verified: boolean;
+  is_banned: boolean;
   created_at: string;
   // Payment details (sellers only)
   instapay_id: string | null;

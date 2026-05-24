@@ -12,37 +12,37 @@ ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS crypto_wallet_btc     TEXT,
   ADD COLUMN IF NOT EXISTS crypto_wallet_eth     TEXT;
 
--- 2. Add proof tracking to orders
+-- 2. Add all missing columns to orders
 ALTER TABLE orders
-  ADD COLUMN IF NOT EXISTS payment_proof_url     TEXT,
-  ADD COLUMN IF NOT EXISTS payment_reference     TEXT,
-  ADD COLUMN IF NOT EXISTS proof_submitted_at    TIMESTAMPTZ;
+  ADD COLUMN IF NOT EXISTS status              TEXT        NOT NULL DEFAULT 'pending',
+  ADD COLUMN IF NOT EXISTS payment_status      TEXT        NOT NULL DEFAULT 'pending',
+  ADD COLUMN IF NOT EXISTS total               NUMERIC     NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS platform_fee        NUMERIC     NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS payment_method      TEXT,
+  ADD COLUMN IF NOT EXISTS payment_proof_url   TEXT,
+  ADD COLUMN IF NOT EXISTS payment_reference   TEXT,
+  ADD COLUMN IF NOT EXISTS proof_submitted_at  TIMESTAMPTZ;
 
--- 3. Update payment_status to include new values
--- First check if there's an existing check constraint and drop it
+-- 3. Drop old check constraints if they exist, then re-add with correct values
 DO $$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.table_constraints
-    WHERE table_name = 'orders'
-    AND constraint_name = 'orders_payment_status_check'
+    WHERE table_name = 'orders' AND constraint_name = 'orders_payment_status_check'
   ) THEN
     ALTER TABLE orders DROP CONSTRAINT orders_payment_status_check;
   END IF;
 END $$;
 
--- Add new check constraint with proof_submitted and cancelled
 ALTER TABLE orders
   ADD CONSTRAINT orders_payment_status_check
   CHECK (payment_status IN ('pending', 'proof_submitted', 'paid', 'delivered', 'refunded', 'failed', 'cancelled'));
 
--- Update status check constraint too
 DO $$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.table_constraints
-    WHERE table_name = 'orders'
-    AND constraint_name = 'orders_status_check'
+    WHERE table_name = 'orders' AND constraint_name = 'orders_status_check'
   ) THEN
     ALTER TABLE orders DROP CONSTRAINT orders_status_check;
   END IF;
@@ -60,11 +60,19 @@ ALTER TABLE orders
 
 -- 5. RLS policies — profiles payment fields
 -- Allow sellers to update their own payment details
-CREATE POLICY IF NOT EXISTS "sellers_update_payment_details"
-  ON profiles
-  FOR UPDATE
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = 'profiles' AND policyname = 'sellers_update_payment_details'
+  ) THEN
+    CREATE POLICY "sellers_update_payment_details"
+      ON profiles
+      FOR UPDATE
+      USING (auth.uid() = id)
+      WITH CHECK (auth.uid() = id);
+  END IF;
+END $$;
 
 -- Payment details should NOT be visible to buyers — only the platform shows them during checkout
 -- The /api/payment/initiate route uses service role key so bypasses RLS
