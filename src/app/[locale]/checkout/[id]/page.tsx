@@ -107,10 +107,10 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
                 icon: Lock,
                 color: 'text-blue-400',
                 bg: 'bg-blue-500/5 border-blue-500/20',
-                titleEn: 'Secure Checkout',
-                titleAr: 'دفع آمن ومشفر',
-                descEn: 'Payments processed by Paymob — licensed by the Central Bank of Egypt.',
-                descAr: 'مدفوعات معالجة بواسطة Paymob، مرخص من البنك المركزي المصري.',
+                titleEn: 'Credential Lock',
+                titleAr: 'تأمين بيانات الدخول',
+                descEn: 'Account credentials are encrypted and only released after confirmed payment.',
+                descAr: 'بيانات الدخول مشفرة ولا تُسلَّم إلا بعد تأكيد الدفع.',
               },
               {
                 icon: RefreshCw,
@@ -151,7 +151,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
               {locale === 'ar' ? 'وسائل الدفع المقبولة' : 'Accepted Payment Methods'}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2">
-              {['Visa', 'Mastercard', 'Vodafone Cash', 'InstaPay', 'BTC', 'USDT', 'ETH'].map((label) => (
+              {['InstaPay', 'Vodafone Cash', 'Orange Money', 'BTC', 'USDT', 'ETH'].map((label) => (
                 <span
                   key={label}
                   className="px-2.5 py-1 rounded-lg bg-white/5 border border-border text-xs text-white/60 font-medium"

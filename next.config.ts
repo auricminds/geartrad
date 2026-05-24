@@ -21,16 +21,16 @@ const securityHeaders = [
     value: [
       // Default: only same-origin
       "default-src 'self'",
-      // Scripts: Next.js inline scripts + self (nonce-based would be stronger but needs middleware)
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accept.paymob.com",
+      // Scripts: Next.js inline scripts + self
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       // Styles: inline needed for Tailwind + Framer Motion
       "style-src 'self' 'unsafe-inline'",
       // Images: self, data URIs, Supabase storage, Unsplash, DiceBear
       "img-src 'self' data: blob: https://images.unsplash.com https://api.dicebear.com https://*.supabase.co",
-      // Connections: Supabase API + Realtime, Paymob
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accept.paymob.com",
-      // iFrames: only Paymob payment iframe
-      "frame-src https://accept.paymob.com",
+      // Connections: Supabase API + Realtime, blockchain APIs for crypto verification
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://blockstream.info https://apilist.tronscanapi.com https://api.etherscan.io",
+      // No iframes needed
+      "frame-src 'none'",
       // Fonts: self only
       "font-src 'self'",
       // No plugins ever
@@ -38,7 +38,7 @@ const securityHeaders = [
       // No <base> tag hijacking
       "base-uri 'self'",
       // Forms only post to same origin
-      "form-action 'self' https://accept.paymob.com",
+      "form-action 'self'",
     ].join('; '),
   },
 ];

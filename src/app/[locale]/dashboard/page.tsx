@@ -9,12 +9,12 @@ import Image from 'next/image';
 import {
   LayoutDashboard, Store, Plus, Package, ShoppingBag,
   ArrowLeft, Trash2, Eye, EyeOff, Star, TrendingUp,
-  CheckCircle2, Clock, AlertCircle, RefreshCw,
+  CheckCircle2, Clock, AlertCircle, RefreshCw, Wallet, ExternalLink, Save,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   getSellerListings, getSellerOrders, toggleListingAvailability,
-  deleteListing, getProfile,
+  deleteListing, getProfile, updateSellerPaymentDetails,
 } from '@/lib/api';
 import type { Listing } from '@/types';
 import type { OrderRow } from '@/lib/api';
@@ -24,10 +24,12 @@ import type { DbProfile } from '@/lib/supabase';
 export type { OrderRow };
 
 const STATUS_COLORS: Record<string, string> = {
-  pending:   'text-amber-400 bg-amber-500/10 border-amber-500/20',
-  completed: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-  disputed:  'text-red-400 bg-red-500/10 border-red-500/20',
-  refunded:  'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  pending:         'text-amber-400 bg-amber-500/10 border-amber-500/20',
+  proof_submitted: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  completed:       'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+  disputed:        'text-red-400 bg-red-500/10 border-red-500/20',
+  refunded:        'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  cancelled:       'text-muted bg-white/5 border-border',
 };
 
 const STATUS_ICONS: Record<string, typeof Clock> = {
@@ -47,9 +49,21 @@ export default function DashboardPage() {
   const [orders, setOrders]       = useState<OrderRow[]>([]);
   const [profile, setProfile]     = useState<DbProfile | null>(null);
   const [loading, setLoading]     = useState(true);
-  const [activeTab, setActiveTab] = useState<'listings' | 'orders'>('listings');
-  const [deleting, setDeleting]   = useState<string | null>(null);
-  const [toggling, setToggling]   = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'listings' | 'orders' | 'payment'>('listings');
+  const [deleting, setDeleting]       = useState<string | null>(null);
+  const [toggling, setToggling]       = useState<string | null>(null);
+  const [confirmingOrder, setConfirmingOrder] = useState<string | null>(null);
+  const [confirmedOrders, setConfirmedOrders] = useState<Set<string>>(new Set());
+
+  // Payment settings state
+  const [instapayId, setInstapayId]   = useState('');
+  const [vodafoneNum, setVodafoneNum] = useState('');
+  const [orangeNum, setOrangeNum]     = useState('');
+  const [walletUsdt, setWalletUsdt]   = useState('');
+  const [walletBtc, setWalletBtc]     = useState('');
+  const [walletEth, setWalletEth]     = useState('');
+  const [savingPayment, setSavingPayment] = useState(false);
+  const [paymentSaved, setPaymentSaved] = useState(false);
 
   const load = useCallback(async (uid: string) => {
     setLoading(true);
@@ -61,6 +75,19 @@ export default function DashboardPage() {
     setListings(l);
     setOrders(o);
     setProfile(p);
+    // Pre-fill payment settings
+    if (p) {
+      const pp = p as typeof p & {
+        instapay_id?: string; vodafone_number?: string; orange_number?: string;
+        crypto_wallet_usdt?: string; crypto_wallet_btc?: string; crypto_wallet_eth?: string;
+      };
+      setInstapayId(pp.instapay_id ?? '');
+      setVodafoneNum(pp.vodafone_number ?? '');
+      setOrangeNum(pp.orange_number ?? '');
+      setWalletUsdt(pp.crypto_wallet_usdt ?? '');
+      setWalletBtc(pp.crypto_wallet_btc ?? '');
+      setWalletEth(pp.crypto_wallet_eth ?? '');
+    }
     setLoading(false);
   }, []);
 
@@ -81,6 +108,37 @@ export default function DashboardPage() {
       prev.map((l) => l.id === id ? { ...l, isAvailable: !current } : l)
     );
     setToggling(null);
+  };
+
+  const handleConfirmOrder = async (orderId: string) => {
+    if (!user || confirmingOrder) return;
+    setConfirmingOrder(orderId);
+    const res = await fetch('/api/payment/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, sellerId: user.id }),
+    });
+    if (res.ok) {
+      setConfirmedOrders((prev) => { const s = new Set(prev); s.add(orderId); return s; });
+      setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, payment_status: 'paid', status: 'completed' } : o));
+    }
+    setConfirmingOrder(null);
+  };
+
+  const handleSavePaymentSettings = async () => {
+    if (!user) return;
+    setSavingPayment(true);
+    await updateSellerPaymentDetails(user.id, {
+      instapay_id:         instapayId.trim() || undefined,
+      vodafone_number:     vodafoneNum.trim() || undefined,
+      orange_number:       orangeNum.trim() || undefined,
+      crypto_wallet_usdt:  walletUsdt.trim() || undefined,
+      crypto_wallet_btc:   walletBtc.trim() || undefined,
+      crypto_wallet_eth:   walletEth.trim() || undefined,
+    });
+    setSavingPayment(false);
+    setPaymentSaved(true);
+    setTimeout(() => setPaymentSaved(false), 3000);
   };
 
   const handleDelete = async (id: string) => {
@@ -212,10 +270,11 @@ export default function DashboardPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-xl bg-surface border border-border mb-6 w-fit">
+      <div className="flex gap-1 p-1 rounded-xl bg-surface border border-border mb-6 w-fit flex-wrap">
         {([
-          { id: 'listings', labelEn: 'My Listings', labelAr: 'إعلاناتي' },
-          { id: 'orders',   labelEn: 'Orders',       labelAr: 'الطلبات'  },
+          { id: 'listings', labelEn: 'My Listings',      labelAr: 'إعلاناتي' },
+          { id: 'orders',   labelEn: 'Orders',            labelAr: 'الطلبات'  },
+          { id: 'payment',  labelEn: 'Payment Settings',  labelAr: 'إعدادات الدفع' },
         ] as const).map((tab) => (
           <button
             key={tab.id}
@@ -344,51 +403,177 @@ export default function DashboardPage() {
             </div>
           ) : (
             orders.map((order) => {
-              const StatusIcon = STATUS_ICONS[order.status] ?? Clock;
+              const isProofSubmitted = order.payment_status === 'proof_submitted';
+              const isCompleted = order.status === 'completed' || confirmedOrders.has(order.id);
+              const StatusIcon = STATUS_ICONS[isCompleted ? 'completed' : order.status] ?? Clock;
               const net = order.amount - order.platform_fee;
+              const statusKey = isCompleted ? 'completed' : (order.payment_status ?? order.status);
+
               return (
                 <div
                   key={order.id}
-                  className="flex items-center gap-3 p-3 sm:p-4 rounded-2xl bg-surface border border-border"
+                  className={cn(
+                    'rounded-2xl bg-surface border overflow-hidden',
+                    isProofSubmitted && !isCompleted ? 'border-blue-500/30' : 'border-border'
+                  )}
                 >
-                  {order.listing?.cover_image && (
-                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/5 shrink-0">
-                      <Image
-                        src={order.listing.cover_image}
-                        alt={order.listing.title ?? ''}
-                        width={48}
-                        height={48}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
+                  <div className="flex items-center gap-3 p-3 sm:p-4">
+                    {order.listing?.cover_image && (
+                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/5 shrink-0">
+                        <Image
+                          src={order.listing.cover_image}
+                          alt={order.listing.title ?? ''}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                          unoptimized
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-white truncate">
+                        {order.listing?.title ?? order.listing_id}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span className="text-xs text-muted">
+                          {isRTL ? 'المشتري:' : 'Buyer:'} {order.buyer?.username ?? '—'}
+                        </span>
+                        <span className="text-xs font-bold text-gold">
+                          +{net.toLocaleString()} EGP
+                        </span>
+                        <span className="text-xs text-muted capitalize">{order.payment_method}</span>
+                      </div>
+                    </div>
+                    <span className={cn(
+                      'inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border font-medium shrink-0',
+                      STATUS_COLORS[statusKey] ?? 'text-muted bg-white/5 border-border'
+                    )}>
+                      <StatusIcon className="w-3 h-3" />
+                      {isCompleted
+                        ? (isRTL ? 'مكتمل' : 'Completed')
+                        : isProofSubmitted
+                          ? (isRTL ? 'إثبات مُرسَل' : 'Proof Submitted')
+                          : (isRTL ? 'قيد الانتظار' : order.status.charAt(0).toUpperCase() + order.status.slice(1))}
+                    </span>
+                  </div>
+
+                  {/* Proof submitted — seller action required */}
+                  {isProofSubmitted && !isCompleted && (
+                    <div className="border-t border-blue-500/20 bg-blue-500/5 p-4 space-y-3">
+                      <p className="text-xs font-semibold text-blue-400">
+                        {isRTL ? '⚡ المشتري أرسل إثبات الدفع — تحقق وأكد الاستلام' : '⚡ Buyer submitted payment proof — review and confirm'}
+                      </p>
+                      {order.payment_reference && (
+                        <p className="text-xs text-muted">
+                          {isRTL ? 'رقم المرجع:' : 'Reference:'}{' '}
+                          <span className="text-white font-mono">{order.payment_reference}</span>
+                        </p>
+                      )}
+                      {order.payment_proof_url && (
+                        <a
+                          href={order.payment_proof_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {isRTL ? 'عرض لقطة الإثبات' : 'View proof screenshot'}
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleConfirmOrder(order.id)}
+                        disabled={!!confirmingOrder}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold transition-all disabled:opacity-60"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        {confirmingOrder === order.id
+                          ? (isRTL ? 'جاري التأكيد...' : 'Confirming...')
+                          : (isRTL ? 'تأكيد استلام الدفع — إرسال بيانات الدخول للمشتري' : 'Confirm Payment Received — Release Credentials')}
+                      </button>
                     </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">
-                      {order.listing?.title ?? order.listing_id}
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-xs text-muted">
-                        {isRTL ? 'المشتري:' : 'Buyer:'} {order.buyer?.username ?? '—'}
-                      </span>
-                      <span className="text-xs font-bold text-gold">
-                        +{net.toLocaleString()} EGP
-                      </span>
-                    </div>
-                  </div>
-                  <span className={cn(
-                    'inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border font-medium shrink-0',
-                    STATUS_COLORS[order.status] ?? 'text-muted bg-white/5 border-border'
-                  )}>
-                    <StatusIcon className="w-3 h-3" />
-                    {isRTL
-                      ? { pending: 'قيد الانتظار', completed: 'مكتمل', disputed: 'نزاع', refunded: 'مسترجع' }[order.status]
-                      : order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                  </span>
                 </div>
               );
             })
           )}
+        </div>
+      )}
+
+      {/* Payment Settings tab */}
+      {activeTab === 'payment' && (
+        <div className="space-y-6 max-w-lg">
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-purple/5 border border-purple/20">
+            <Wallet className="w-4 h-4 text-purple shrink-0 mt-0.5" />
+            <p className="text-xs text-muted leading-relaxed">
+              {isRTL
+                ? 'أضف تفاصيل الدفع حتى يتمكن المشترون من إرسال المبالغ إليك. بدون هذه البيانات لا يمكنهم إتمام الشراء.'
+                : 'Add your payment details so buyers can send you money. Without these, buyers cannot complete a purchase from you.'}
+            </p>
+          </div>
+
+          {/* Local payments */}
+          <div className="bg-surface border border-border rounded-2xl p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wider">
+              {isRTL ? 'محافظ محلية' : 'Local Payments'}
+            </h3>
+            {[
+              { label: 'InstaPay ID', labelAr: 'معرف إنستاباي', val: instapayId, set: setInstapayId, placeholder: 'your-instapay-id' },
+              { label: 'Vodafone Cash Number', labelAr: 'رقم فودافون كاش', val: vodafoneNum, set: setVodafoneNum, placeholder: '01XXXXXXXXX' },
+              { label: 'Orange Money Number', labelAr: 'رقم أورانج موني', val: orangeNum, set: setOrangeNum, placeholder: '01XXXXXXXXX' },
+            ].map((field) => (
+              <div key={field.label}>
+                <label className="block text-xs text-muted mb-1.5">
+                  {isRTL ? field.labelAr : field.label}
+                </label>
+                <input
+                  type="text"
+                  value={field.val}
+                  onChange={(e) => field.set(e.target.value)}
+                  placeholder={field.placeholder}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-purple/40 focus:border-purple transition-all"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Crypto wallets */}
+          <div className="bg-surface border border-border rounded-2xl p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wider">
+              {isRTL ? 'محافظ العملات الرقمية' : 'Crypto Wallets'}
+            </h3>
+            {[
+              { label: 'USDT Wallet (TRC20)', labelAr: 'محفظة USDT (TRC20)', val: walletUsdt, set: setWalletUsdt, placeholder: 'T...' },
+              { label: 'Bitcoin (BTC) Wallet', labelAr: 'محفظة بيتكوين (BTC)', val: walletBtc, set: setWalletBtc, placeholder: 'bc1q...' },
+              { label: 'Ethereum (ETH) Wallet', labelAr: 'محفظة إيثيريوم (ETH)', val: walletEth, set: setWalletEth, placeholder: '0x...' },
+            ].map((field) => (
+              <div key={field.label}>
+                <label className="block text-xs text-muted mb-1.5">
+                  {isRTL ? field.labelAr : field.label}
+                </label>
+                <input
+                  type="text"
+                  value={field.val}
+                  onChange={(e) => field.set(e.target.value)}
+                  placeholder={field.placeholder}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-muted font-mono focus:outline-none focus:ring-2 focus:ring-purple/40 focus:border-purple transition-all"
+                />
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSavePaymentSettings}
+            disabled={savingPayment}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-purple hover:bg-purple-light text-white text-sm font-semibold transition-all disabled:opacity-60 shadow-lg shadow-purple/25"
+          >
+            {paymentSaved
+              ? <><CheckCircle2 className="w-4 h-4" />{isRTL ? 'تم الحفظ!' : 'Saved!'}</>
+              : savingPayment
+                ? (isRTL ? 'جاري الحفظ...' : 'Saving...')
+                : <><Save className="w-4 h-4" />{isRTL ? 'حفظ إعدادات الدفع' : 'Save Payment Settings'}</>}
+          </button>
         </div>
       )}
     </div>

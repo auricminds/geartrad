@@ -9,6 +9,7 @@ import type { Listing, User, ListingType, AccountRank, BoostType } from '@/types
 // ── Type Conversion ──────────────────────────────────────────────────────────
 
 const PROFILE_COLS = 'id, username, account_type, avatar_url, rating, total_sales, is_verified, created_at';
+const PAYMENT_COLS = 'instapay_id, vodafone_number, orange_number, crypto_wallet_usdt, crypto_wallet_btc, crypto_wallet_eth';
 const LISTING_COLS = `
   id, seller_id, title, title_ar, description, description_ar,
   price, game, type, cover_image, rank, likes,
@@ -420,8 +421,11 @@ export type OrderRow = {
   amount: number;
   platform_fee: number;
   payment_method: string;
-  status: 'pending' | 'completed' | 'disputed' | 'refunded';
-  payment_status?: 'pending' | 'paid' | 'delivered' | 'refunded' | 'failed';
+  status: 'pending' | 'completed' | 'disputed' | 'refunded' | 'cancelled';
+  payment_status: 'pending' | 'proof_submitted' | 'paid' | 'delivered' | 'refunded' | 'failed' | 'cancelled';
+  payment_proof_url: string | null;
+  payment_reference: string | null;
+  proof_submitted_at: string | null;
   created_at: string;
   listing: { title: string; cover_image: string; game: string } | null;
   buyer: { username: string } | null;
@@ -433,7 +437,9 @@ export async function getSellerOrders(sellerId: string): Promise<OrderRow[]> {
     .from('orders')
     .select(`
       id, listing_id, buyer_id, seller_id, amount, platform_fee,
-      payment_method, status, created_at,
+      payment_method, status, payment_status,
+      payment_proof_url, payment_reference, proof_submitted_at,
+      created_at,
       listing:listings(title, cover_image, game),
       buyer:profiles!orders_buyer_id_fkey(username)
     `)
@@ -448,7 +454,9 @@ export async function getBuyerOrders(buyerId: string): Promise<OrderRow[]> {
     .from('orders')
     .select(`
       id, listing_id, buyer_id, seller_id, amount, platform_fee,
-      payment_method, status, payment_status, created_at,
+      payment_method, status, payment_status,
+      payment_proof_url, payment_reference, proof_submitted_at,
+      created_at,
       listing:listings(title, cover_image, game),
       seller:profiles!orders_seller_id_fkey(username)
     `)
@@ -456,6 +464,44 @@ export async function getBuyerOrders(buyerId: string): Promise<OrderRow[]> {
     .order('created_at', { ascending: false });
 
   return (data as OrderRow[] | null) ?? [];
+}
+
+export async function getSellerPaymentDetails(sellerId: string): Promise<{
+  instapay_id: string | null;
+  vodafone_number: string | null;
+  orange_number: string | null;
+  crypto_wallet_usdt: string | null;
+  crypto_wallet_btc: string | null;
+  crypto_wallet_eth: string | null;
+} | null> {
+  const { data } = await supabase
+    .from('profiles')
+    .select(PAYMENT_COLS)
+    .eq('id', sellerId)
+    .single();
+  return data as typeof data extends null ? null : {
+    instapay_id: string | null;
+    vodafone_number: string | null;
+    orange_number: string | null;
+    crypto_wallet_usdt: string | null;
+    crypto_wallet_btc: string | null;
+    crypto_wallet_eth: string | null;
+  };
+}
+
+export async function updateSellerPaymentDetails(userId: string, details: {
+  instapay_id?: string;
+  vodafone_number?: string;
+  orange_number?: string;
+  crypto_wallet_usdt?: string;
+  crypto_wallet_btc?: string;
+  crypto_wallet_eth?: string;
+}): Promise<boolean> {
+  const { error } = await supabase
+    .from('profiles')
+    .update(details)
+    .eq('id', userId);
+  return !error;
 }
 
 // ── Notifications ─────────────────────────────────────────────────────────────

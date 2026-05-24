@@ -299,28 +299,232 @@ After adding all variables → click **Redeploy** (Deployments → latest → Re
 
 ## STEP 6 — Connect Your Domain (Cloudflare + Vercel)
 
-### 6A — Buy the domain on Cloudflare
-1. Go to: cloudflare.com → Create free account
-2. Left sidebar → Domain Registration → Register Domains
-3. Search for `geartrad.com` (or `geartrad.gg` for gaming feel)
-4. Purchase (pay with card) — ~$10/year for .com, ~$20/year for .gg
-5. Fill in your real contact info (legally required by ICANN)
+> This section covers every single click. Read it fully once before you start, then follow it step by step. Do not skip any step.
 
-### 6B — Add domain to Vercel
-1. vercel.com → GearTrad → Settings → Domains
-2. Click "Add Domain" → type `geartrad.com` → Add
-3. Also add `www.geartrad.com` → Vercel handles the redirect
-4. Vercel shows you DNS records to add (write them down — usually one A record + one CNAME)
+---
 
-### 6C — Point DNS on Cloudflare
-1. Cloudflare → your domain → DNS → Records
-2. Delete any existing A or CNAME records for @ and www
-3. Add the records Vercel gave you:
-   - Type: **A** | Name: **@** | Content: `76.76.21.21` | TTL: Auto | Proxy: **OFF (grey cloud)**
-   - Type: **CNAME** | Name: **www** | Content: `cname.vercel-dns.com` | TTL: Auto | Proxy: **OFF (grey cloud)**
-4. Wait 5–30 minutes → Vercel shows green checkmark on your domain
+### PART 1 — Create Your Cloudflare Account
 
-> ⚠ The Cloudflare proxy (orange cloud) must be OFF for Vercel domains. Vercel manages SSL itself.
+**Why Cloudflare?** They sell domains at cost (no markup), give you free DDoS protection, free SSL, and fast DNS. No other registrar gives you all of this for free.
+
+1. Open a browser and go to: `https://cloudflare.com`
+2. Click the blue **"Sign Up"** button in the top right corner
+3. Fill in:
+   - **Email**: use a real email you check regularly (GearTrad-related if possible, e.g. `admin@geartrad.com` — but you don't have the domain yet, so use Gmail or any personal email for now)
+   - **Password**: strong password, save it in a password manager
+4. Click **"Create Account"**
+5. Cloudflare will send a verification email — open it and click **"Verify Email"**
+6. You are now logged in. You'll see the Cloudflare home dashboard.
+
+---
+
+### PART 2 — Buy the Domain
+
+> You will be on the Cloudflare dashboard homepage. It looks like a dark panel with a search bar at the top and a sidebar on the left.
+
+1. Look at the **left sidebar** — find and click **"Domain Registration"**
+   - If you don't see it, look for **"Registrar"** — same thing in some accounts
+2. Click **"Register Domains"** (a button or submenu item)
+3. A search bar appears with the label "Search for a domain name"
+4. Type: `geartrad.com` and press Enter (or click Search)
+5. **What you'll see:**
+   - A list of results: `geartrad.com`, `geartrad.net`, `geartrad.gg`, etc.
+   - Each shows a price per year
+   - `.com` is usually **~$10.44/year** (Cloudflare sells at cost — this is their actual price)
+   - `.gg` is usually **~$20–25/year** (gaming TLD — looks cool but costs more)
+6. **Which to buy?** Recommendation: `geartrad.com` — it's professional, cheap, and globally recognized. Buyers trust `.com` more.
+7. Click **"Add to cart"** next to `geartrad.com`
+8. Click **"Continue"** or **"Proceed to checkout"**
+
+---
+
+### PART 3 — Fill In Your Contact Information (ICANN Required)
+
+> ICANN is the international body that manages all domain names. They legally require your real contact information to be attached to the domain. This is called WHOIS data.
+
+You will see a form with these fields — fill them all in accurately:
+
+| Field | What to enter |
+|---|---|
+| First Name | Your real first name |
+| Last Name | Your real last name |
+| Email | Same email you used to create the Cloudflare account |
+| Phone | Your Egyptian phone number (format: `+20xxxxxxxxxx`) |
+| Address Line 1 | Your real street address |
+| City | Your city (e.g. Cairo, Alexandria) |
+| State / Province | Your governorate (e.g. Cairo, Giza) |
+| Postal Code | Your area postal code (e.g. 11511 for central Cairo) |
+| Country | Egypt |
+
+> **Why does this matter?** If you put fake info, ICANN can suspend your domain. Real info is required. Cloudflare offers free WHOIS privacy protection — after purchase, your real info is hidden from public lookup and replaced with Cloudflare's privacy contact. Enable it.
+
+9. At the bottom of the form, look for **"Privacy Protection"** or **"WHOIS Privacy"** — make sure this is toggled **ON** (this hides your personal address from public domain lookup tools)
+10. Click **"Continue"**
+
+---
+
+### PART 4 — Pay for the Domain
+
+11. You'll see an order summary:
+    - Domain: `geartrad.com`
+    - Duration: 1 year (auto-renew will be on by default — fine)
+    - Price: ~$10.44
+12. Click **"Add payment method"** — enter your Visa or Mastercard details
+13. Click **"Complete Purchase"** (or "Buy Now")
+14. **What happens next:**
+    - You'll see a confirmation screen saying the domain was registered
+    - Cloudflare sends a confirmation email to your email address
+    - The domain appears in your Cloudflare dashboard under **"Domain Registration"**
+
+> Your domain is now yours. It's registered. The internet doesn't know where to send traffic yet — that's the next steps.
+
+---
+
+### PART 5 — Add Your Domain to Vercel
+
+> Now you tell Vercel: "my site should be accessible at geartrad.com". Open a new browser tab for this.
+
+1. Go to: `https://vercel.com` → log in with your account
+2. Click on your **GearTrad project** (it should be on your dashboard)
+3. Click the **"Settings"** tab at the top of the project page
+4. In the left sidebar of Settings, click **"Domains"**
+5. You'll see a text field that says **"Enter a domain..."** or **"Add a domain"**
+6. Type: `geartrad.com` (without www) → click **"Add"**
+7. Vercel will show you a message. It will look like one of these:
+   - ✅ **"Domain added successfully — configure DNS"** → you're on track, continue
+   - ⚠️ **"Domain is already in use"** → someone else has this domain linked (unlikely if you just bought it) — contact Vercel support
+8. After adding `geartrad.com`, do the same again: type `www.geartrad.com` → click **"Add"**
+   - Vercel will automatically set up `www` to redirect to the main domain — just click "Add" and it handles it
+9. **Now look at what Vercel shows you for `geartrad.com`:**
+
+   Vercel will display DNS records you need to add. They will look like this:
+
+   ```
+   Type    Name    Value
+   A       @       76.76.21.21
+   ```
+
+   And for www:
+   ```
+   Type    Name    Value
+   CNAME   www     cname.vercel-dns.com
+   ```
+
+   > **Write these down or keep this browser tab open.** You will need these exact values in Part 6.
+
+   Note: The A record IP `76.76.21.21` is Vercel's IP address — this is standard and the same for all Vercel projects.
+
+---
+
+### PART 6 — Add the DNS Records in Cloudflare
+
+> Go back to your Cloudflare tab. This is where you tell the internet: "traffic to geartrad.com should go to Vercel's servers."
+
+1. In Cloudflare, click on **"geartrad.com"** in your domain list
+   - You'll land on the domain overview page
+2. In the left sidebar, click **"DNS"**
+3. Click **"Records"** (if it's a submenu)
+4. You'll see a table of DNS records. Cloudflare may have auto-added some default records — check if any **A** or **CNAME** records exist for `@` or `www`:
+   - If you see any A record with Name = `@` → click **Edit** → then **Delete** it
+   - If you see any CNAME record with Name = `www` → click **Edit** → then **Delete** it
+   - Leave any other records (MX, TXT, etc.) alone if they exist
+
+5. Click **"Add record"** button (blue button, usually top right of the records table)
+
+6. **Add the first record (A record for the main domain):**
+
+   | Field | Value |
+   |---|---|
+   | Type | A |
+   | Name | @ |
+   | IPv4 address | `76.76.21.21` |
+   | TTL | Auto |
+   | Proxy status | **DNS only (grey cloud)** ← CRITICAL |
+
+   > **The proxy toggle**: Cloudflare shows an orange cloud icon (Proxied) or a grey cloud icon (DNS only). You MUST select **grey cloud / DNS only** for Vercel domains. If you leave it orange, your site may not load or SSL will break. Click the cloud icon to toggle it — make sure it turns grey before saving.
+
+   Click **"Save"**
+
+7. Click **"Add record"** again for the second record (CNAME for www):
+
+   | Field | Value |
+   |---|---|
+   | Type | CNAME |
+   | Name | www |
+   | Target | `cname.vercel-dns.com` |
+   | TTL | Auto |
+   | Proxy status | **DNS only (grey cloud)** ← CRITICAL |
+
+   Click **"Save"**
+
+8. Your DNS Records table should now show:
+
+   ```
+   Type    Name    Content                    Proxy
+   A       @       76.76.21.21               DNS only (grey cloud)
+   CNAME   www     cname.vercel-dns.com      DNS only (grey cloud)
+   ```
+
+---
+
+### PART 7 — Wait for DNS to Propagate
+
+> DNS changes take time to spread across the internet. This is normal — you cannot speed it up.
+
+- **Minimum wait time**: 5 minutes
+- **Typical wait time**: 15–30 minutes
+- **Maximum possible**: up to 48 hours (rare — usually fine within an hour)
+
+**How to check if it worked:**
+
+1. Go back to Vercel → your project → Settings → Domains
+2. Look at `geartrad.com` in the list
+3. You will see one of these states:
+   - 🟡 **"Pending"** or **"Verifying..."** → DNS hasn't propagated yet, wait more
+   - 🔴 **"Invalid Configuration"** → DNS records are wrong — go back to Cloudflare and double check the values and make sure proxy is grey
+   - ✅ **"Valid Configuration"** (green checkmark) → everything is working
+
+4. Once you see the green checkmark, open a new browser tab and go to: `https://geartrad.com`
+5. Your GearTrad website should load with a padlock (HTTPS) in the address bar
+
+---
+
+### PART 8 — Update Your Paymob Return URLs
+
+> After connecting the domain, go back to Paymob and update the URLs that currently have your old Vercel URL.
+
+1. Paymob Dashboard → iFrames → your GearTrad iFrame → Edit
+2. Change Return URL (success) to: `https://geartrad.com/en/orders`
+3. Change Return URL (failure) to: `https://geartrad.com/en/browse`
+4. Save
+
+5. Paymob Dashboard → Settings → Webhooks
+6. Change webhook URL to: `https://geartrad.com/api/payment/paymob/webhook`
+7. Save
+
+---
+
+### Common Mistakes to Avoid
+
+| Mistake | What happens | How to fix |
+|---|---|---|
+| Left Cloudflare proxy ON (orange cloud) | Site doesn't load or shows SSL error | Go to Cloudflare DNS → click the orange cloud next to each record → make it grey |
+| Typed the wrong IP address | Vercel shows "Invalid Configuration" | Go back to Cloudflare DNS → edit the A record → make sure it's exactly `76.76.21.21` |
+| Added `www` as target instead of `@` for the A record | www works but main domain doesn't | Edit the A record — Name field must be `@` not `www` |
+| Forgot to add the domain to Vercel first | DNS points nowhere | Do Part 5 first, get the records from Vercel, then do Part 6 |
+| Checked too soon (within 2 minutes) | Says pending | Wait at least 15 minutes and refresh |
+| Added domain in Vercel but didn't redeploy | Site loads but shows old cached version | Vercel → Deployments → latest → Redeploy |
+
+---
+
+### After It Works — Test This Checklist
+
+- [ ] `https://geartrad.com` loads the homepage (padlock in browser address bar)
+- [ ] `https://www.geartrad.com` redirects to `https://geartrad.com` (no www in final URL)
+- [ ] `http://geartrad.com` redirects to `https://` (Vercel handles this automatically)
+- [ ] Vercel domain settings show green checkmark for both `geartrad.com` and `www.geartrad.com`
+- [ ] Paymob webhook and return URLs updated to `geartrad.com`
+- [ ] Vercel env var `NEXT_PUBLIC_SITE_URL` updated to `https://geartrad.com` (Settings → Environment Variables)
 
 ---
 

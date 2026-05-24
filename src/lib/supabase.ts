@@ -17,6 +17,13 @@ export type DbProfile = {
   total_sales: number;
   is_verified: boolean;
   created_at: string;
+  // Payment details (sellers only)
+  instapay_id: string | null;
+  vodafone_number: string | null;
+  orange_number: string | null;
+  crypto_wallet_usdt: string | null;
+  crypto_wallet_btc: string | null;
+  crypto_wallet_eth: string | null;
 };
 
 export type DbListing = {
@@ -70,7 +77,11 @@ export type DbOrder = {
   amount: number;
   platform_fee: number;
   payment_method: string;
-  status: 'pending' | 'completed' | 'disputed' | 'refunded';
+  status: 'pending' | 'completed' | 'disputed' | 'refunded' | 'cancelled';
+  payment_status: 'pending' | 'proof_submitted' | 'paid' | 'delivered' | 'refunded' | 'failed' | 'cancelled';
+  payment_proof_url: string | null;
+  payment_reference: string | null;
+  proof_submitted_at: string | null;
   created_at: string;
 };
 

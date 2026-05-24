@@ -80,16 +80,16 @@ export default function OrdersPage() {
     if (!user || confirmingId) return;
     setConfirmingId(orderId);
 
-    const res = await fetch('/api/payment/paymob/capture', {
+    const res = await fetch('/api/payment/confirm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId, buyerId: user.id }),
+      body: JSON.stringify({ orderId, sellerId: user.id }),
     });
 
     if (res.ok) {
       setConfirmedIds((prev) => { const s = new Set(prev); s.add(orderId); return s; });
       setOrders((prev) =>
-        prev.map((o) => o.id === orderId ? { ...o, payment_status: 'delivered', status: 'completed' } : o)
+        prev.map((o) => o.id === orderId ? { ...o, payment_status: 'paid', status: 'completed' } : o)
       );
     } else {
       const { error } = await res.json();
@@ -142,8 +142,8 @@ export default function OrdersPage() {
           </p>
           <p className="text-xs text-muted leading-relaxed">
             {isAr
-              ? 'دفعتك محجوزة ولن تصل للبائع حتى تضغط "تأكيد الاستلام". إذا لم يُسلّم البائع، افتح تذكرة دعم ونسترد لك المبلغ.'
-              : "Your payment is held and won't reach the seller until you press \"Confirm Delivery\". If the seller doesn't deliver, open a support ticket and we'll refund you."}
+              ? 'بيانات حسابك محجوزة ولن تُسلَّم إلا بعد تأكيد البائع استلام الدفع. إذا حدثت مشكلة، افتح تذكرة دعم.'
+              : "Your account credentials are locked and only released after the seller confirms payment. If anything goes wrong, open a dispute."}
           </p>
         </div>
       </div>
@@ -159,9 +159,9 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-4">
           {orders.map((order) => {
-            const isPaid = order.payment_status === 'paid' || order.payment_status === 'delivered' || order.status === 'completed';
-            const isDelivered = order.payment_status === 'delivered' || order.status === 'completed';
-            const isRefunded = order.payment_status === 'refunded' || order.status === 'refunded';
+            const isPaid = ['proof_submitted', 'paid', 'delivered'].includes(order.payment_status) || order.status === 'completed';
+            const isDelivered = order.payment_status === 'paid' || order.payment_status === 'delivered' || order.status === 'completed';
+            const isRefunded = order.payment_status === 'refunded' || order.payment_status === 'cancelled' || order.status === 'refunded' || order.status === 'cancelled';
             const alreadyConfirmed = confirmedIds.has(order.id) || isDelivered;
             const creds = credentials[order.id];
             const revealed = revealedIds.has(order.id);
@@ -322,13 +322,15 @@ export default function OrdersPage() {
 function OrderStatusBadge({ order, isAr }: { order: OrderRow; isAr: boolean }) {
   const status = order.payment_status ?? order.status;
   const map: Record<string, { label: string; labelAr: string; cls: string; icon: typeof Clock }> = {
-    pending:   { label: 'Payment Pending', labelAr: 'بانتظار الدفع', cls: 'text-amber-400 bg-amber-500/10 border-amber-500/20', icon: Clock },
-    paid:      { label: 'Awaiting Delivery', labelAr: 'بانتظار التسليم', cls: 'text-purple bg-purple/10 border-purple/20', icon: Clock },
-    delivered: { label: 'Completed', labelAr: 'مكتمل', cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', icon: CheckCircle2 },
-    completed: { label: 'Completed', labelAr: 'مكتمل', cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', icon: CheckCircle2 },
-    refunded:  { label: 'Refunded', labelAr: 'مُسترجع', cls: 'text-blue-400 bg-blue-500/10 border-blue-500/20', icon: RefreshCw },
-    failed:    { label: 'Failed', labelAr: 'فشل', cls: 'text-red-400 bg-red-500/10 border-red-500/20', icon: AlertCircle },
-    disputed:  { label: 'Disputed', labelAr: 'نزاع', cls: 'text-red-400 bg-red-500/10 border-red-500/20', icon: AlertCircle },
+    pending:         { label: 'Awaiting Payment',       labelAr: 'بانتظار الدفع',        cls: 'text-amber-400 bg-amber-500/10 border-amber-500/20',   icon: Clock },
+    proof_submitted: { label: 'Proof Submitted',        labelAr: 'إثبات الدفع مُرسَل',   cls: 'text-blue-400 bg-blue-500/10 border-blue-500/20',       icon: Clock },
+    paid:            { label: 'Confirmed',              labelAr: 'مؤكد',                 cls: 'text-purple bg-purple/10 border-purple/20',             icon: CheckCircle2 },
+    delivered:       { label: 'Completed',              labelAr: 'مكتمل',                cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', icon: CheckCircle2 },
+    completed:       { label: 'Completed',              labelAr: 'مكتمل',                cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', icon: CheckCircle2 },
+    refunded:        { label: 'Refunded',               labelAr: 'مُسترجع',              cls: 'text-blue-400 bg-blue-500/10 border-blue-500/20',       icon: RefreshCw },
+    cancelled:       { label: 'Cancelled',              labelAr: 'ملغي',                 cls: 'text-muted bg-white/5 border-border',                   icon: RefreshCw },
+    failed:          { label: 'Failed',                 labelAr: 'فشل',                  cls: 'text-red-400 bg-red-500/10 border-red-500/20',           icon: AlertCircle },
+    disputed:        { label: 'Disputed',               labelAr: 'نزاع',                 cls: 'text-red-400 bg-red-500/10 border-red-500/20',           icon: AlertCircle },
   };
   const s = map[status] ?? map.pending;
   const Icon = s.icon;
