@@ -1,6 +1,22 @@
 import { getTranslations, getLocale } from 'next-intl/server';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const isAr = locale === 'ar';
+  return {
+    alternates: {
+      canonical: `https://geartrad.com/${locale}`,
+      languages: { en: 'https://geartrad.com/en', ar: 'https://geartrad.com/ar' },
+    },
+    ...(isAr && {
+      title: 'جيرتراد — سوق الألعاب الأول في مصر والشرق الأوسط',
+      description: 'اشتر وبع حسابات الألعاب والسكنات والأسلحة بأمان. حماية الضمان، توصيل فوري.',
+    }),
+  };
+}
 import { HeroBanner } from '@/components/home/HeroBanner';
 import { StatsBar } from '@/components/home/StatsBar';
 import { BestsellerStrip } from '@/components/home/BestsellerStrip';

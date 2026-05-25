@@ -5,9 +5,29 @@ import { getProfile, getSellerListings } from '@/lib/api';
 import { ListingCard } from '@/components/listing/ListingCard';
 import { SellerAnalytics } from '@/components/listing/SellerAnalytics';
 import { cn } from '@/lib/utils';
+import type { Metadata } from 'next';
+
+const SITE_URL = 'https://geartrad.com';
 
 interface Props {
   params: Promise<{ id: string; locale: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id, locale } = await params;
+  const profile = await getProfile(id);
+  if (!profile) return {};
+
+  const title = `${profile.username} — GearTrad Seller`;
+  const description = `Browse ${profile.username}'s gaming listings on GearTrad. ${profile.total_sales} sales, rated ${Number(profile.rating).toFixed(1)}/5.`;
+  const url = `${SITE_URL}/${locale}/seller/${id}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: 'profile', url, title, description },
+  };
 }
 
 export default async function SellerProfilePage({ params }: Props) {

@@ -11,10 +11,35 @@ import { PageTransition } from '@/components/ui/PageTransition';
 import { getDir } from '@/lib/utils';
 import type { Metadata } from 'next';
 
+const SITE_URL = 'https://geartrad.com';
+
 export const metadata: Metadata = {
-  title: 'GearTrad — Gaming Marketplace for MENA',
-  description:
-    'Buy and sell gaming accounts, skins, weapons and more. The #1 trusted gaming marketplace in Egypt and MENA.',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'GearTrad — #1 Gaming Marketplace in Egypt & MENA',
+    template: '%s | GearTrad',
+  },
+  description: 'Buy and sell gaming accounts, skins, weapons and bundles safely. Escrow protection, instant delivery. Valorant, Fortnite, CS2, League of Legends and more.',
+  keywords: ['gaming marketplace', 'buy gaming accounts', 'sell gaming accounts', 'gaming skins', 'Egypt gaming', 'MENA gaming', 'Valorant accounts', 'Fortnite skins', 'CS2 accounts'],
+  authors: [{ name: 'GearTrad', url: SITE_URL }],
+  creator: 'GearTrad',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: SITE_URL,
+    siteName: 'GearTrad',
+    title: 'GearTrad — #1 Gaming Marketplace in Egypt & MENA',
+    description: 'Buy and sell gaming accounts, skins, weapons and bundles safely. Escrow protection, instant delivery.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'GearTrad Gaming Marketplace' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'GearTrad — #1 Gaming Marketplace in Egypt & MENA',
+    description: 'Buy and sell gaming accounts, skins, weapons and bundles safely.',
+    images: ['/og-image.png'],
+  },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+  alternates: { canonical: SITE_URL },
 };
 
 export function generateStaticParams() {

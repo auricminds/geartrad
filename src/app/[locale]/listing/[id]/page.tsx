@@ -10,9 +10,43 @@ import { ListingMobileBar } from '@/components/listing/ListingMobileBar';
 import { ListingViewers } from '@/components/listing/ListingViewers';
 import { SellerAnalytics } from '@/components/listing/SellerAnalytics';
 import { ActivityTracker } from '@/components/listing/ActivityTracker';
+import type { Metadata } from 'next';
+
+const SITE_URL = 'https://geartrad.com';
 
 interface ListingPageProps {
   params: Promise<{ id: string; locale: string }>;
+}
+
+export async function generateMetadata({ params }: ListingPageProps): Promise<Metadata> {
+  const { id, locale } = await params;
+  const listing = await getListing(id);
+  if (!listing) return {};
+
+  const title = locale === 'ar' && listing.titleAr ? listing.titleAr : listing.title;
+  const description = locale === 'ar' && listing.descriptionAr
+    ? listing.descriptionAr
+    : listing.description ?? `Buy ${listing.title} on GearTrad. ${listing.game} ${listing.type} by verified seller ${listing.seller.username}.`;
+  const url = `${SITE_URL}/${locale}/listing/${id}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      url,
+      title,
+      description,
+      images: listing.coverImage ? [{ url: listing.coverImage, width: 800, height: 600, alt: title }] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: listing.coverImage ? [listing.coverImage] : [],
+    },
+  };
 }
 
 export default async function ListingPage({ params }: ListingPageProps) {
@@ -31,8 +65,41 @@ export default async function ListingPage({ params }: ListingPageProps) {
 
   const isTrusted = listing.seller.rating >= 4.5 && listing.seller.totalSales >= 5;
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: listing.title,
+    description: listing.description ?? `${listing.title} — ${listing.game} ${listing.type} on GearTrad`,
+    image: listing.coverImage,
+    url: `${SITE_URL}/${locale}/listing/${id}`,
+    offers: {
+      '@type': 'Offer',
+      price: listing.price,
+      priceCurrency: 'EGP',
+      availability: listing.isAvailable
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/SoldOut',
+      seller: {
+        '@type': 'Person',
+        name: listing.seller.username,
+        url: `${SITE_URL}/${locale}/seller/${listing.seller.id}`,
+      },
+    },
+    aggregateRating: listing.seller.rating > 0 ? {
+      '@type': 'AggregateRating',
+      ratingValue: listing.seller.rating,
+      reviewCount: listing.seller.totalSales || 1,
+      bestRating: 5,
+      worstRating: 1,
+    } : undefined,
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-28 lg:pb-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Track game activity for recommendations */}
       <ActivityTracker game={listing.game} />
 
