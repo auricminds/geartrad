@@ -12,16 +12,16 @@
   },
   "home": {
     "hero": {
-      "badge": "The #1 Gaming Marketplace in MENA",
+      "badge": "The #1 Gaming Marketplace in Egypt & Gulf",
       "title": "Buy & Sell",
       "titleHighlight": "Gaming Accounts",
       "titleEnd": "with Confidence",
-      "subtitle": "Skins, weapons, accounts, and more — traded safely between real gamers.",
+      "subtitle": "Skins, weapons, accounts, and more — traded safely between gamers in Egypt, Saudi Arabia, UAE, and across the Gulf.",
       "cta": "Start Browsing",
       "ctaSell": "Start Selling",
       "stats": {
         "listings": "Active Listings",
-        "sellers": "Verified Sellers",
+        "sellers": "Registered Users",
         "trades": "Successful Trades"
       }
     },
@@ -179,7 +179,7 @@
     "close": "Close"
   },
   "footer": {
-    "tagline": "The gaming marketplace built for MENA.",
+    "tagline": "The #1 gaming marketplace for Egypt, Gulf & MENA.",
     "links": {
       "company": "Company",
       "about": "About",

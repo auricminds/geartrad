@@ -17,9 +17,9 @@ export function Footer() {
               <Image
                 src="/logo.png"
                 alt="GearTrad"
-                width={44}
-                height={44}
-                className="w-11 h-11 rounded-xl object-contain"
+                width={56}
+                height={56}
+                className="w-14 h-14 rounded-xl object-contain"
                 unoptimized
               />
               <span className="font-bold text-lg">

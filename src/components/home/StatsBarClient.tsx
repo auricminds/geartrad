@@ -39,7 +39,7 @@ export function StatsBarClient({ listings, sellers, trades }: Props) {
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-4 my-8">
+    <div className="grid grid-cols-3 gap-2 sm:gap-4 my-8">
       {stats.map((stat, i) => (
         <motion.div
           key={stat.label}
@@ -47,16 +47,16 @@ export function StatsBarClient({ listings, sellers, trades }: Props) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 }}
-          className={`flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl bg-surface border ${stat.border} hover:border-opacity-60 transition-colors`}
+          className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border ${stat.border} hover:border-opacity-60 transition-colors`}
         >
-          <div className={`p-2 rounded-xl ${stat.bg} ${stat.color}`}>
-            <stat.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl ${stat.bg} ${stat.color}`}>
+            <stat.icon className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
           </div>
           <div className="text-center">
-            <p className="text-base sm:text-2xl font-bold text-white leading-tight">
+            <p className="text-sm sm:text-2xl font-bold text-white leading-tight">
               <CountUp to={stat.value} />
             </p>
-            <p className="text-[10px] sm:text-xs text-muted mt-0.5 leading-tight">{stat.label}</p>
+            <p className="text-[9px] sm:text-xs text-muted mt-0.5 leading-tight">{stat.label}</p>
           </div>
         </motion.div>
       ))}

@@ -90,9 +90,9 @@ export function Navbar() {
               <Image
                 src="/logo.png"
                 alt="GearTrad"
-                width={52}
-                height={52}
-                className="w-12 h-12 rounded-xl object-contain"
+                width={64}
+                height={64}
+                className="w-14 h-14 rounded-xl object-contain"
                 priority
                 unoptimized
               />

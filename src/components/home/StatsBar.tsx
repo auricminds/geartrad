@@ -8,15 +8,15 @@ async function fetchStats() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    const [listingsRes, sellersRes, tradesRes] = await Promise.all([
+    const [listingsRes, usersRes, tradesRes] = await Promise.all([
       db.from('listings').select('*', { count: 'exact', head: true }).eq('is_available', true),
-      db.from('profiles').select('*', { count: 'exact', head: true }).eq('is_verified', true).in('account_type', ['seller', 'both']),
+      db.from('profiles').select('*', { count: 'exact', head: true }),
       db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
     ]);
 
     return {
       listings: listingsRes.count ?? 0,
-      sellers: sellersRes.count ?? 0,
+      sellers: usersRes.count ?? 0,
       trades: tradesRes.count ?? 0,
     };
   } catch {

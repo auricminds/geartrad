@@ -19,8 +19,8 @@ export const metadata: Metadata = {
     default: 'GearTrad — #1 Gaming Marketplace in Egypt & MENA',
     template: '%s | GearTrad',
   },
-  description: 'Buy and sell gaming accounts, skins, weapons and bundles safely. Escrow protection, instant delivery. Valorant, Fortnite, CS2, League of Legends and more.',
-  keywords: ['gaming marketplace', 'buy gaming accounts', 'sell gaming accounts', 'gaming skins', 'Egypt gaming', 'MENA gaming', 'Valorant accounts', 'Fortnite skins', 'CS2 accounts'],
+  description: 'Buy and sell gaming accounts, skins, weapons and bundles safely in Egypt, Saudi Arabia, UAE, and across the Gulf. Escrow protection, instant delivery. Valorant, Fortnite, CS2, FIFA and more.',
+  keywords: ['gaming marketplace Egypt', 'gaming marketplace Gulf', 'buy gaming accounts Egypt', 'sell gaming accounts Saudi Arabia', 'gaming skins UAE', 'Egypt gaming', 'Gulf gaming', 'MENA gaming', 'Valorant accounts', 'Fortnite skins', 'CS2 accounts', 'FIFA accounts Arab'],
   authors: [{ name: 'GearTrad', url: SITE_URL }],
   creator: 'GearTrad',
   openGraph: {
@@ -71,7 +71,7 @@ export default async function LocaleLayout({
           <StoreProvider>
             <Navbar />
             <CartDrawer />
-            <main className="min-h-screen pb-14 md:pb-0">
+            <main className="min-h-screen pb-20 md:pb-0">
               <PageTransition>{children}</PageTransition>
             </main>
             <MobileBottomNav />
