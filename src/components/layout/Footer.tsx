@@ -1,7 +1,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Share2, Camera, Play, MessageCircle } from 'lucide-react';
+import { Instagram } from 'lucide-react';
 
 export function Footer() {
   const t = useTranslations('footer');
@@ -30,14 +30,15 @@ export function Footer() {
               {t('tagline')}
             </p>
             <div className="flex items-center gap-3 mt-4">
-              {[Share2, Camera, Play, MessageCircle].map((Icon, i) => (
-                <button
-                  key={i}
-                  className="w-9 h-9 rounded-xl bg-white/5 hover:bg-purple/10 hover:text-purple flex items-center justify-center text-muted transition-all duration-200"
-                >
-                  <Icon className="w-4 h-4" />
-                </button>
-              ))}
+              <a
+                href="https://www.instagram.com/geartrad?igsh=MXJ1NDB2dGF1eGJvMA%3D%3D&utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GearTrad on Instagram"
+                className="w-9 h-9 rounded-xl bg-white/5 hover:bg-purple/10 hover:text-purple flex items-center justify-center text-muted transition-all duration-200"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
             </div>
           </div>
 
