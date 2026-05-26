@@ -1,62 +1,38 @@
-'use client';
-
-import { useTranslations } from 'next-intl';
 import { TrendingUp, Users, ShieldCheck } from 'lucide-react';
-import { motion, useInView, useMotionValue, useTransform, animate } from 'framer-motion';
-import { useEffect, useRef } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { StatsBarClient } from './StatsBarClient';
 
-function CountUp({ to, suffix = '' }: { to: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-40px' });
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, (v) => {
-    if (to >= 1000) return `${(v / 1000).toFixed(1)}k+`;
-    return `${Math.round(v)}${suffix}`;
-  });
+async function fetchStats() {
+  try {
+    const db = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
-  useEffect(() => {
-    if (!isInView) return;
-    const controls = animate(count, to, {
-      duration: 1.8,
-      ease: [0.22, 1, 0.36, 1],
-    });
-    return controls.stop;
-  }, [isInView, count, to]);
+    const [listingsRes, sellersRes, tradesRes] = await Promise.all([
+      db.from('listings').select('*', { count: 'exact', head: true }).eq('is_available', true),
+      db.from('profiles').select('*', { count: 'exact', head: true }).eq('is_verified', true).in('account_type', ['seller', 'both']),
+      db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
+    ]);
 
-  return <motion.span ref={ref}>{rounded}</motion.span>;
+    return {
+      listings: listingsRes.count ?? 0,
+      sellers: sellersRes.count ?? 0,
+      trades: tradesRes.count ?? 0,
+    };
+  } catch {
+    return { listings: 0, sellers: 0, trades: 0 };
+  }
 }
 
-export function StatsBar() {
-  const t = useTranslations('home.hero.stats');
+export async function StatsBar() {
+  const stats = await fetchStats();
 
-  const stats = [
-    { icon: TrendingUp, value: 12400, label: t('listings'), color: 'text-purple', bg: 'bg-purple/10', border: 'border-purple/20' },
-    { icon: Users,      value: 3200,  label: t('sellers'),  color: 'text-gold',   bg: 'bg-gold/10',   border: 'border-gold/20' },
-    { icon: ShieldCheck, value: 28900, label: t('trades'),  color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+  const items = [
+    { icon: TrendingUp,  value: stats.listings, color: 'text-purple',      bg: 'bg-purple/10',       border: 'border-purple/20',       labelKey: 'listings' },
+    { icon: Users,       value: stats.sellers,  color: 'text-gold',        bg: 'bg-gold/10',         border: 'border-gold/20',         labelKey: 'sellers'  },
+    { icon: ShieldCheck, value: stats.trades,   color: 'text-emerald-400', bg: 'bg-emerald-500/10',  border: 'border-emerald-500/20',  labelKey: 'trades'   },
   ];
 
-  return (
-    <div className="grid grid-cols-3 gap-4 my-8">
-      {stats.map((stat, i) => (
-        <motion.div
-          key={stat.label}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 }}
-          className={`flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl bg-surface border ${stat.border} hover:border-opacity-60 transition-colors`}
-        >
-          <div className={`p-2 rounded-xl ${stat.bg} ${stat.color}`}>
-            <stat.icon className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <div className="text-center">
-            <p className="text-base sm:text-2xl font-bold text-white leading-tight">
-              <CountUp to={stat.value} />
-            </p>
-            <p className="text-[10px] sm:text-xs text-muted mt-0.5 leading-tight">{stat.label}</p>
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  );
+  return <StatsBarClient items={items} />;
 }
