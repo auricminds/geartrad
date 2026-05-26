@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 const SITE_URL = 'https://geartrad.com';
 const LOCALES = ['en', 'ar'];
 

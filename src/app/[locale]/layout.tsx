@@ -39,7 +39,10 @@ export const metadata: Metadata = {
     images: ['/og-image.png'],
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
-  alternates: { canonical: SITE_URL },
+  alternates: {
+    canonical: `${SITE_URL}/en`,
+    languages: { en: `${SITE_URL}/en`, ar: `${SITE_URL}/ar` },
+  },
 };
 
 export function generateStaticParams() {
