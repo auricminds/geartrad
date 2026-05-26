@@ -4,6 +4,10 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'GearTrad',
   description: 'The gaming marketplace for MENA',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export const viewport: Viewport = {
