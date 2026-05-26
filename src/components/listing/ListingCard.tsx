@@ -227,6 +227,30 @@ export function ListingCard({ listing, size = 'md' }: ListingCardProps) {
             </div>
           )}
 
+          {/* Payment methods */}
+          {listing.seller.paymentMethods && (
+            <div className="flex items-center gap-1 flex-wrap mb-3">
+              {listing.seller.paymentMethods.vodafone && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/10 border border-red-500/20 text-red-400">VOD</span>
+              )}
+              {listing.seller.paymentMethods.orange && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/10 border border-orange-500/20 text-orange-400">ONG</span>
+              )}
+              {listing.seller.paymentMethods.instapay && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">IP</span>
+              )}
+              {listing.seller.paymentMethods.paypal && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/10 border border-blue-500/20 text-blue-400">PP</span>
+              )}
+              {listing.seller.paymentMethods.usdt && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-500/10 border border-green-500/20 text-green-400">USDT</span>
+              )}
+              {listing.seller.paymentMethods.btc && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">BTC</span>
+              )}
+            </div>
+          )}
+
           {/* Price + Actions */}
           <div className="flex items-center justify-between gap-2">
             <div>

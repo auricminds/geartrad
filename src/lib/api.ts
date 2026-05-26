@@ -9,16 +9,17 @@ import type { Listing, User, ListingType, AccountRank, BoostType } from '@/types
 // ── Type Conversion ──────────────────────────────────────────────────────────
 
 const PROFILE_COLS = 'id, username, account_type, role, avatar_url, rating, total_sales, is_verified, created_at';
-const PAYMENT_COLS = 'instapay_id, vodafone_number, orange_number, crypto_wallet_usdt, crypto_wallet_btc, crypto_wallet_eth';
+const PAYMENT_COLS = 'instapay_id, vodafone_number, orange_number, paypal_email, crypto_wallet_usdt, crypto_wallet_btc, crypto_wallet_eth';
 const LISTING_COLS = `
   id, seller_id, title, title_ar, description, description_ar,
   price, game, type, cover_image, rank, likes,
   is_boosted, boost_type, boost_expires_at, is_available,
   level, hours_played, win_rate, achievements, created_at,
-  seller:profiles!listings_seller_id_fkey(${PROFILE_COLS})
+  seller:profiles!listings_seller_id_fkey(${PROFILE_COLS}, ${PAYMENT_COLS})
 `;
 
 export function dbProfileToUser(p: DbProfile): User {
+  const hasPayment = p.vodafone_number || p.orange_number || p.instapay_id || p.paypal_email || p.crypto_wallet_usdt || p.crypto_wallet_btc || p.crypto_wallet_eth;
   return {
     id: p.id,
     username: p.username,
@@ -30,6 +31,15 @@ export function dbProfileToUser(p: DbProfile): User {
     totalSales: p.total_sales,
     joinedAt: new Date(p.created_at),
     isVerified: p.is_verified,
+    paymentMethods: hasPayment ? {
+      vodafone: p.vodafone_number,
+      orange: p.orange_number,
+      instapay: p.instapay_id,
+      paypal: p.paypal_email,
+      usdt: p.crypto_wallet_usdt,
+      btc: p.crypto_wallet_btc,
+      eth: p.crypto_wallet_eth,
+    } : undefined,
   };
 }
 
@@ -359,7 +369,7 @@ export async function ensureProfile(
 export async function getProfile(userId: string): Promise<DbProfile | null> {
   const { data } = await supabase
     .from('profiles')
-    .select(PROFILE_COLS)
+    .select(`${PROFILE_COLS}, ${PAYMENT_COLS}`)
     .eq('id', userId)
     .single();
   return data as DbProfile | null;
@@ -449,6 +459,7 @@ export async function getSellerPaymentDetails(sellerId: string): Promise<{
   instapay_id: string | null;
   vodafone_number: string | null;
   orange_number: string | null;
+  paypal_email: string | null;
   crypto_wallet_usdt: string | null;
   crypto_wallet_btc: string | null;
   crypto_wallet_eth: string | null;
@@ -458,23 +469,25 @@ export async function getSellerPaymentDetails(sellerId: string): Promise<{
     .select(PAYMENT_COLS)
     .eq('id', sellerId)
     .single();
-  return data as typeof data extends null ? null : {
+  return data as {
     instapay_id: string | null;
     vodafone_number: string | null;
     orange_number: string | null;
+    paypal_email: string | null;
     crypto_wallet_usdt: string | null;
     crypto_wallet_btc: string | null;
     crypto_wallet_eth: string | null;
-  };
+  } | null;
 }
 
 export async function updateSellerPaymentDetails(userId: string, details: {
-  instapay_id?: string;
-  vodafone_number?: string;
-  orange_number?: string;
-  crypto_wallet_usdt?: string;
-  crypto_wallet_btc?: string;
-  crypto_wallet_eth?: string;
+  instapay_id?: string | null;
+  vodafone_number?: string | null;
+  orange_number?: string | null;
+  paypal_email?: string | null;
+  crypto_wallet_usdt?: string | null;
+  crypto_wallet_btc?: string | null;
+  crypto_wallet_eth?: string | null;
 }): Promise<boolean> {
   const { error } = await supabase
     .from('profiles')

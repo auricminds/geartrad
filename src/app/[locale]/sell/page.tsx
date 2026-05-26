@@ -1,14 +1,23 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, CheckSquare, Square, ChevronDown, Zap, ArrowLeft, Upload, AlertCircle, X, Lock, Eye, EyeOff, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, CheckSquare, Square, ChevronDown, Zap, ArrowLeft, Upload, AlertCircle, X, Lock, Eye, EyeOff, ShieldAlert, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { createListing, uploadListingImage } from '@/lib/api';
+import { createListing, uploadListingImage, getSellerPaymentDetails, updateSellerPaymentDetails } from '@/lib/api';
 import { useStore } from '@/components/providers/StoreProvider';
+
+const PAYMENT_METHODS = [
+  { id: 'vodafone', key: 'vodafone_number' as const, label: 'Vodafone Cash', labelAr: 'فودافون كاش', placeholder: '01XXXXXXXXX', color: 'border-red-500/40 bg-red-500/5 text-red-400' },
+  { id: 'orange',   key: 'orange_number'   as const, label: 'Orange Money',  labelAr: 'أورنج موني',  placeholder: '01XXXXXXXXX', color: 'border-orange-500/40 bg-orange-500/5 text-orange-400' },
+  { id: 'instapay', key: 'instapay_id'     as const, label: 'InstaPay',      labelAr: 'إنستاباي',    placeholder: 'InstaPay ID or phone', color: 'border-emerald-500/40 bg-emerald-500/5 text-emerald-400' },
+  { id: 'paypal',   key: 'paypal_email'    as const, label: 'PayPal',        labelAr: 'باي بال',     placeholder: 'your@paypal.com', color: 'border-blue-500/40 bg-blue-500/5 text-blue-400' },
+  { id: 'usdt',     key: 'crypto_wallet_usdt' as const, label: 'USDT (TRC20)', labelAr: 'يو إس دي تي (TRC20)', placeholder: 'TRC20 wallet address', color: 'border-green-500/40 bg-green-500/5 text-green-400' },
+  { id: 'btc',      key: 'crypto_wallet_btc'  as const, label: 'Bitcoin (BTC)', labelAr: 'بيتكوين',      placeholder: 'BTC wallet address', color: 'border-yellow-500/40 bg-yellow-500/5 text-yellow-400' },
+] as const;
 
 const GAMES = ['Valorant', 'Fortnite', 'CS2', 'League of Legends', 'PUBG Mobile', 'Apex Legends', 'FIFA', 'Call of Duty', 'Brawl Stars', 'Other'];
 const TYPES = ['Account', 'Skin', 'Weapon', 'Bundle', 'Ticket'];
@@ -74,6 +83,34 @@ export default function SellPage() {
   const [credEmail, setCredEmail]       = useState('');
   const [credPassword, setCredPassword] = useState('');
   const [credExtra, setCredExtra]       = useState('');
+
+  // Payment methods
+  const [selectedMethods, setSelectedMethods] = useState<Set<string>>(new Set());
+  const [paymentValues, setPaymentValues]     = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!user) return;
+    getSellerPaymentDetails(user.id).then((details) => {
+      if (!details) return;
+      const pre: Record<string, string> = {};
+      const active = new Set<string>();
+      for (const m of PAYMENT_METHODS) {
+        const val = details[m.key];
+        if (val) { pre[m.id] = val; active.add(m.id); }
+      }
+      setPaymentValues(pre);
+      setSelectedMethods(active);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  const toggleMethod = (id: string) => {
+    setSelectedMethods((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   const isAccountType = type === 'Account';
 
@@ -176,6 +213,17 @@ export default function SellPage() {
       return;
     }
 
+    if (selectedMethods.size === 0) {
+      setError(locale === 'ar' ? 'يجب اختيار طريقة دفع واحدة على الأقل' : 'Please select at least one payment method');
+      return;
+    }
+    for (const m of PAYMENT_METHODS) {
+      if (selectedMethods.has(m.id) && !paymentValues[m.id]?.trim()) {
+        setError(locale === 'ar' ? `يرجى إدخال بيانات ${m.labelAr}` : `Please enter your ${m.label} details`);
+        return;
+      }
+    }
+
     const priceNum = parseInt(price, 10);
     if (isNaN(priceNum) || priceNum <= 0) {
       setError(locale === 'ar' ? 'السعر يجب أن يكون رقماً موجباً' : 'Price must be a positive number');
@@ -184,6 +232,13 @@ export default function SellPage() {
 
     setLoading(true);
     try {
+      // Save payment methods to seller profile
+      const paymentUpdate: Record<string, string | null> = {};
+      for (const m of PAYMENT_METHODS) {
+        paymentUpdate[m.key] = selectedMethods.has(m.id) ? (paymentValues[m.id]?.trim() || null) : null;
+      }
+      await updateSellerPaymentDetails(user.id, paymentUpdate);
+
       // Upload image if a file was chosen
       let coverImageUrl = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&q=80';
       if (imageFile) {
@@ -552,6 +607,55 @@ export default function SellPage() {
                 )}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Payment Methods */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-purple" />
+            <h3 className="text-sm font-semibold text-white">
+              {locale === 'ar' ? 'طرق الدفع المقبولة *' : 'Accepted Payment Methods *'}
+            </h3>
+          </div>
+          <p className="text-xs text-muted -mt-2">
+            {locale === 'ar'
+              ? 'اختر طريقة دفع واحدة أو أكثر وأدخل بياناتك — ستظهر للمشترين على ملفك وإعلاناتك'
+              : 'Select one or more methods and enter your details — buyers will see these on your profile and listings'}
+          </p>
+
+          <div className="space-y-2">
+            {PAYMENT_METHODS.map((m) => {
+              const active = selectedMethods.has(m.id);
+              return (
+                <div key={m.id} className={cn('rounded-xl border transition-all overflow-hidden', active ? m.color : 'border-border/50')}>
+                  <button
+                    type="button"
+                    onClick={() => toggleMethod(m.id)}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-start"
+                  >
+                    {active
+                      ? <CheckSquare className="w-4 h-4 shrink-0" />
+                      : <Square className="w-4 h-4 shrink-0 text-muted/40" />}
+                    <span className={cn('text-sm font-medium', active ? '' : 'text-muted')}>
+                      {locale === 'ar' ? m.labelAr : m.label}
+                    </span>
+                  </button>
+                  {active && (
+                    <div className="px-4 pb-3">
+                      <input
+                        type="text"
+                        value={paymentValues[m.id] ?? ''}
+                        onChange={(e) => setPaymentValues((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                        placeholder={m.placeholder}
+                        className={inputCls}
+                        autoComplete="off"
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 

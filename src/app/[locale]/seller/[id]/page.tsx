@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Star, Shield, BadgeCheck, Timer, Package, ArrowLeft, MessageCircle } from 'lucide-react';
+import { Star, Shield, BadgeCheck, Timer, Package, ArrowLeft, CreditCard } from 'lucide-react';
 import { getProfile, getSellerListings } from '@/lib/api';
 import { ListingCard } from '@/components/listing/ListingCard';
 import { SellerAnalytics } from '@/components/listing/SellerAnalytics';
@@ -44,6 +44,15 @@ export default async function SellerProfilePage({ params }: Props) {
   const isTrusted = Number(profile.rating) >= 4.5 && profile.total_sales >= 5;
   const initials  = profile.username.slice(0, 2).toUpperCase();
   const stars     = Math.floor(Number(profile.rating));
+
+  const paymentMethods = [
+    { key: 'vodafone_number' as const, label: 'Vodafone Cash',  labelAr: 'فودافون كاش',       color: 'bg-red-500/10 border-red-500/20 text-red-400' },
+    { key: 'orange_number'   as const, label: 'Orange Money',   labelAr: 'أورنج موني',         color: 'bg-orange-500/10 border-orange-500/20 text-orange-400' },
+    { key: 'instapay_id'     as const, label: 'InstaPay',       labelAr: 'إنستاباي',           color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' },
+    { key: 'paypal_email'    as const, label: 'PayPal',         labelAr: 'باي بال',            color: 'bg-blue-500/10 border-blue-500/20 text-blue-400' },
+    { key: 'crypto_wallet_usdt' as const, label: 'USDT',        labelAr: 'يو إس دي تي',        color: 'bg-green-500/10 border-green-500/20 text-green-400' },
+    { key: 'crypto_wallet_btc'  as const, label: 'Bitcoin',     labelAr: 'بيتكوين',            color: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' },
+  ].filter((m) => !!profile[m.key]);
   const activeListings = listings.filter((l) => l.isAvailable);
 
   // Rank distribution across listings
@@ -150,6 +159,28 @@ export default async function SellerProfilePage({ params }: Props) {
           <div className="bg-surface border border-border rounded-2xl p-5">
             <SellerAnalytics sellerId={id} locale={locale} />
           </div>
+
+          {/* Payment methods */}
+          {paymentMethods.length > 0 && (
+            <div className="bg-surface border border-border rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <CreditCard className="w-3.5 h-3.5 text-muted" />
+                <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">
+                  {isAr ? 'طرق الدفع المقبولة' : 'Accepted Payment Methods'}
+                </h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {paymentMethods.map((m) => (
+                  <span
+                    key={m.key}
+                    className={cn('inline-flex items-center px-2.5 py-1 rounded-lg border text-xs font-medium', m.color)}
+                  >
+                    {isAr ? m.labelAr : m.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Listings */}

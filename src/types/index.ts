@@ -3,6 +3,16 @@ export type ListingType = 'account' | 'skin' | 'weapon' | 'bundle' | 'ticket';
 export type BoostType = 'weekly' | 'monthly' | null;
 export type AccountRank = 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond' | 'Master' | 'Grandmaster' | 'Challenger';
 
+export interface PaymentMethods {
+  vodafone?: string | null;
+  orange?: string | null;
+  instapay?: string | null;
+  paypal?: string | null;
+  usdt?: string | null;
+  btc?: string | null;
+  eth?: string | null;
+}
+
 export interface User {
   id: string;
   username: string;
@@ -14,6 +24,7 @@ export interface User {
   totalSales: number;
   joinedAt: Date;
   isVerified: boolean;
+  paymentMethods?: PaymentMethods;
 }
 
 export interface Listing {

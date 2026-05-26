@@ -23,6 +23,7 @@ export type DbProfile = {
   instapay_id: string | null;
   vodafone_number: string | null;
   orange_number: string | null;
+  paypal_email: string | null;
   crypto_wallet_usdt: string | null;
   crypto_wallet_btc: string | null;
   crypto_wallet_eth: string | null;
