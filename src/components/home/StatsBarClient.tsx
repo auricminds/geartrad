@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { TrendingUp, Users, ShieldCheck, LucideIcon } from 'lucide-react';
+import { TrendingUp, Users, ShieldCheck } from 'lucide-react';
 import { motion, useInView, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 
@@ -23,23 +23,26 @@ function CountUp({ to }: { to: number }) {
   return <motion.span ref={ref}>{rounded}</motion.span>;
 }
 
-interface StatItem {
-  icon: LucideIcon;
-  value: number;
-  color: string;
-  bg: string;
-  border: string;
-  labelKey: string;
+interface Props {
+  listings: number;
+  sellers: number;
+  trades: number;
 }
 
-export function StatsBarClient({ items }: { items: StatItem[] }) {
+export function StatsBarClient({ listings, sellers, trades }: Props) {
   const t = useTranslations('home.hero.stats');
+
+  const stats = [
+    { icon: TrendingUp,  value: listings, label: t('listings'), color: 'text-purple',      bg: 'bg-purple/10',      border: 'border-purple/20'      },
+    { icon: Users,       value: sellers,  label: t('sellers'),  color: 'text-gold',        bg: 'bg-gold/10',        border: 'border-gold/20'        },
+    { icon: ShieldCheck, value: trades,   label: t('trades'),   color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+  ];
 
   return (
     <div className="grid grid-cols-3 gap-4 my-8">
-      {items.map((stat, i) => (
+      {stats.map((stat, i) => (
         <motion.div
-          key={stat.labelKey}
+          key={stat.label}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
@@ -53,9 +56,7 @@ export function StatsBarClient({ items }: { items: StatItem[] }) {
             <p className="text-base sm:text-2xl font-bold text-white leading-tight">
               <CountUp to={stat.value} />
             </p>
-            <p className="text-[10px] sm:text-xs text-muted mt-0.5 leading-tight">
-              {t(stat.labelKey as 'listings' | 'sellers' | 'trades')}
-            </p>
+            <p className="text-[10px] sm:text-xs text-muted mt-0.5 leading-tight">{stat.label}</p>
           </div>
         </motion.div>
       ))}

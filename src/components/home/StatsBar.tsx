@@ -1,4 +1,3 @@
-import { TrendingUp, Users, ShieldCheck } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { StatsBarClient } from './StatsBarClient';
 
@@ -27,12 +26,5 @@ async function fetchStats() {
 
 export async function StatsBar() {
   const stats = await fetchStats();
-
-  const items = [
-    { icon: TrendingUp,  value: stats.listings, color: 'text-purple',      bg: 'bg-purple/10',       border: 'border-purple/20',       labelKey: 'listings' },
-    { icon: Users,       value: stats.sellers,  color: 'text-gold',        bg: 'bg-gold/10',         border: 'border-gold/20',         labelKey: 'sellers'  },
-    { icon: ShieldCheck, value: stats.trades,   color: 'text-emerald-400', bg: 'bg-emerald-500/10',  border: 'border-emerald-500/20',  labelKey: 'trades'   },
-  ];
-
-  return <StatsBarClient items={items} />;
+  return <StatsBarClient listings={stats.listings} sellers={stats.sellers} trades={stats.trades} />;
 }
