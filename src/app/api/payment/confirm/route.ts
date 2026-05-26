@@ -11,76 +11,100 @@ function getAdmin() {
 /**
  * POST /api/payment/confirm
  *
- * Seller confirms they received the payment.
- * Moves order to completed, releases credentials to buyer.
+ * Two flows:
+ * 1. Seller confirms payment received (proof_submitted → paid) — pass sellerId
+ * 2. Buyer confirms delivery / account works (paid → delivered) — pass buyerId
  */
 export async function POST(req: NextRequest) {
   try {
-    const { orderId, sellerId } = await req.json() as {
-      orderId: string;
-      sellerId: string;
-    };
+    const body = await req.json() as { orderId: string; sellerId?: string; buyerId?: string };
+    const { orderId, sellerId, buyerId } = body;
 
-    if (!orderId || !sellerId) {
+    if (!orderId || (!sellerId && !buyerId)) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const admin = getAdmin();
 
-    // Verify order belongs to this seller and is in proof_submitted state
-    const { data: order, error } = await admin
-      .from('orders')
-      .select('id, seller_id, buyer_id, payment_status, listing_id')
-      .eq('id', orderId)
-      .eq('seller_id', sellerId)
-      .single();
+    // ── Seller confirms payment received ─────────────────────────────────────
+    if (sellerId) {
+      const { data: order, error } = await admin
+        .from('orders')
+        .select('id, seller_id, buyer_id, payment_status, listing_id')
+        .eq('id', orderId)
+        .eq('seller_id', sellerId)
+        .single();
 
-    if (error || !order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      if (error || !order) {
+        return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      }
+      if (order.payment_status !== 'proof_submitted') {
+        return NextResponse.json({ error: 'Order is not in proof_submitted state' }, { status: 409 });
+      }
+
+      await admin.from('orders').update({
+        payment_status: 'paid',
+        status: 'completed',
+      }).eq('id', orderId);
+
+      const { data: profile } = await admin
+        .from('profiles').select('total_sales').eq('id', sellerId).single();
+      if (profile) {
+        await admin.from('profiles')
+          .update({ total_sales: (profile.total_sales ?? 0) + 1 })
+          .eq('id', sellerId);
+      }
+
+      const { data: listing } = await admin
+        .from('listings').select('title').eq('id', order.listing_id).single();
+
+      await admin.from('notifications').insert({
+        user_id: order.buyer_id,
+        type: 'sale',
+        title: 'Payment Confirmed — Credentials Available',
+        body: `Seller confirmed your payment for "${listing?.title ?? 'your order'}". Your account credentials are now available in My Orders.`,
+        related_id: orderId,
+      });
+
+      return NextResponse.json({ success: true });
     }
-    if (order.payment_status !== 'proof_submitted') {
-      return NextResponse.json(
-        { error: 'Order is not in proof_submitted state' },
-        { status: 409 },
-      );
+
+    // ── Buyer confirms delivery ───────────────────────────────────────────────
+    if (buyerId) {
+      const { data: order, error } = await admin
+        .from('orders')
+        .select('id, buyer_id, seller_id, payment_status, listing_id')
+        .eq('id', orderId)
+        .eq('buyer_id', buyerId)
+        .single();
+
+      if (error || !order) {
+        return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      }
+      if (!['paid', 'delivered'].includes(order.payment_status)) {
+        return NextResponse.json({ error: 'Credentials must be released before confirming delivery' }, { status: 409 });
+      }
+
+      await admin.from('orders').update({
+        payment_status: 'delivered',
+        status: 'completed',
+      }).eq('id', orderId);
+
+      const { data: listing } = await admin
+        .from('listings').select('title').eq('id', order.listing_id).single();
+
+      await admin.from('notifications').insert({
+        user_id: order.seller_id,
+        type: 'sale',
+        title: 'Delivery Confirmed',
+        body: `Buyer confirmed receipt of "${listing?.title ?? 'your listing'}". The trade is now complete.`,
+        related_id: orderId,
+      });
+
+      return NextResponse.json({ success: true });
     }
 
-    // Mark order as completed
-    await admin.from('orders').update({
-      payment_status: 'paid',
-      status: 'completed',
-    }).eq('id', orderId);
-
-    // Increment seller's total_sales
-    const { data: profile } = await admin
-      .from('profiles')
-      .select('total_sales')
-      .eq('id', sellerId)
-      .single();
-
-    if (profile) {
-      await admin.from('profiles')
-        .update({ total_sales: (profile.total_sales ?? 0) + 1 })
-        .eq('id', sellerId);
-    }
-
-    // Fetch listing title for notification
-    const { data: listing } = await admin
-      .from('listings')
-      .select('title')
-      .eq('id', order.listing_id)
-      .single();
-
-    // Notify buyer — credentials are now available
-    await admin.from('notifications').insert({
-      user_id: order.buyer_id,
-      type: 'sale',
-      title: 'Payment Confirmed — Credentials Available',
-      body: `Seller confirmed your payment for "${listing?.title ?? 'your order'}". Your account credentials are now available in My Orders.`,
-      related_id: orderId,
-    });
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   } catch (err) {
     console.error('[payment/confirm]', err);
     return NextResponse.json({ error: 'Failed to confirm payment' }, { status: 500 });

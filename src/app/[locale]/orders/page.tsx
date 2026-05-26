@@ -83,7 +83,7 @@ export default function OrdersPage() {
     const res = await fetch('/api/payment/confirm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId, sellerId: user.id }),
+      body: JSON.stringify({ orderId, buyerId: user.id }),
     });
 
     if (res.ok) {

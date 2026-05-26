@@ -17,13 +17,13 @@ interface CheckoutClientProps {
   listingId: string;
   sellerId: string;
   total: number;
-  platformFee: number;
+  sellerMethods: string[]; // IDs of payment methods the seller has configured
 }
 
-type PaymentMethod = 'instapay' | 'vodafone' | 'orange' | 'usdt' | 'btc' | 'eth';
+type PaymentMethod = 'instapay' | 'vodafone' | 'orange' | 'paypal' | 'usdt' | 'btc' | 'eth';
 type Step = 'method' | 'details' | 'proof' | 'done';
 
-const PAYMENT_METHODS: {
+const ALL_PAYMENT_METHODS: {
   id: PaymentMethod;
   icon: React.ElementType;
   labelEn: string;
@@ -51,6 +51,12 @@ const PAYMENT_METHODS: {
     descEn: 'Mobile wallet transfer', descAr: 'تحويل محفظة موبايل',
   },
   {
+    id: 'paypal', icon: Wallet,
+    labelEn: 'PayPal', labelAr: 'باي بال',
+    group: 'local',
+    descEn: 'PayPal transfer', descAr: 'تحويل باي بال',
+  },
+  {
     id: 'usdt', icon: Wallet,
     labelEn: 'USDT (TRC20)', labelAr: 'USDT (TRC20)',
     group: 'crypto',
@@ -72,16 +78,20 @@ const PAYMENT_METHODS: {
 
 const METHOD_LABELS: Record<PaymentMethod, string> = {
   instapay: 'InstaPay', vodafone: 'Vodafone Cash', orange: 'Orange Money',
-  usdt: 'USDT (TRC20)', btc: 'Bitcoin (BTC)', eth: 'Ethereum (ETH)',
+  paypal: 'PayPal', usdt: 'USDT (TRC20)', btc: 'Bitcoin (BTC)', eth: 'Ethereum (ETH)',
 };
 
-export function CheckoutClient({ locale, listingId, sellerId, total, platformFee }: CheckoutClientProps) {
+export function CheckoutClient({ locale, listingId, sellerId, total, sellerMethods }: CheckoutClientProps) {
   const router = useRouter();
   const { user } = useStore();
   const isAr = locale === 'ar';
 
+  // Only show methods the seller has set up
+  const PAYMENT_METHODS = ALL_PAYMENT_METHODS.filter((pm) => sellerMethods.includes(pm.id));
+  const defaultMethod = (PAYMENT_METHODS[0]?.id ?? 'instapay') as PaymentMethod;
+
   const [step, setStep]             = useState<Step>('method');
-  const [method, setMethod]         = useState<PaymentMethod>('instapay');
+  const [method, setMethod]         = useState<PaymentMethod>(defaultMethod);
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState('');
   const [copied, setCopied]         = useState(false);
@@ -99,6 +109,19 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isCrypto = ['usdt', 'btc', 'eth'].includes(method);
+
+  if (PAYMENT_METHODS.length === 0) {
+    return (
+      <div className="bg-surface border border-amber-500/20 rounded-2xl p-6 text-center">
+        <p className="text-amber-300 text-sm font-medium mb-1">
+          {isAr ? 'البائع لم يُضف طرق دفع بعد' : 'Seller has not set up payment methods yet'}
+        </p>
+        <p className="text-muted text-xs">
+          {isAr ? 'تواصل مع البائع عبر الدردشة لترتيب الدفع.' : 'Contact the seller via chat to arrange payment.'}
+        </p>
+      </div>
+    );
+  }
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -295,27 +318,31 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
               </div>
             </div>
 
-            <div>
-              <p className="text-xs text-muted mb-2 uppercase tracking-wider">
-                {isAr ? 'محافظ محلية' : 'Local Payments'}
-              </p>
-              <div className="space-y-2">
-                {localMethods.map((pm) => (
-                  <MethodRow key={pm.id} pm={pm} selected={method === pm.id} locale={locale} onSelect={() => setMethod(pm.id)} />
-                ))}
+            {localMethods.length > 0 && (
+              <div>
+                <p className="text-xs text-muted mb-2 uppercase tracking-wider">
+                  {isAr ? 'محافظ محلية' : 'Local Payments'}
+                </p>
+                <div className="space-y-2">
+                  {localMethods.map((pm) => (
+                    <MethodRow key={pm.id} pm={pm} selected={method === pm.id} locale={locale} onSelect={() => setMethod(pm.id)} />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div>
-              <p className="text-xs text-muted mb-2 uppercase tracking-wider">
-                {isAr ? 'عملات رقمية' : 'Crypto'}
-              </p>
-              <div className="space-y-2">
-                {cryptoMethods.map((pm) => (
-                  <MethodRow key={pm.id} pm={pm} selected={method === pm.id} locale={locale} onSelect={() => setMethod(pm.id)} />
-                ))}
+            {cryptoMethods.length > 0 && (
+              <div>
+                <p className="text-xs text-muted mb-2 uppercase tracking-wider">
+                  {isAr ? 'عملات رقمية' : 'Crypto'}
+                </p>
+                <div className="space-y-2">
+                  {cryptoMethods.map((pm) => (
+                    <MethodRow key={pm.id} pm={pm} selected={method === pm.id} locale={locale} onSelect={() => setMethod(pm.id)} />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Escrow explanation */}
@@ -512,7 +539,7 @@ export function CheckoutClient({ locale, listingId, sellerId, total, platformFee
 function MethodRow({
   pm, selected, locale, onSelect,
 }: {
-  pm: (typeof PAYMENT_METHODS)[number];
+  pm: (typeof ALL_PAYMENT_METHODS)[number];
   selected: boolean;
   locale: string;
   onSelect: () => void;

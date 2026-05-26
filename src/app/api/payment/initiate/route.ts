@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const { listingId, buyerId, paymentMethod } = await req.json() as {
       listingId: string;
       buyerId: string;
-      paymentMethod: 'instapay' | 'vodafone' | 'orange' | 'usdt' | 'btc' | 'eth';
+      paymentMethod: 'instapay' | 'vodafone' | 'orange' | 'paypal' | 'usdt' | 'btc' | 'eth';
     };
 
     if (!listingId || !buyerId || !paymentMethod) {
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     // 2. Fetch seller's payment details for the chosen method
     const { data: seller } = await admin
       .from('profiles')
-      .select('instapay_id, vodafone_number, orange_number, crypto_wallet_usdt, crypto_wallet_btc, crypto_wallet_eth')
+      .select('instapay_id, vodafone_number, orange_number, paypal_email, crypto_wallet_usdt, crypto_wallet_btc, crypto_wallet_eth')
       .eq('id', listing.seller_id)
       .single();
 
@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
       instapay: 'instapay_id',
       vodafone: 'vodafone_number',
       orange:   'orange_number',
+      paypal:   'paypal_email',
       usdt:     'crypto_wallet_usdt',
       btc:      'crypto_wallet_btc',
       eth:      'crypto_wallet_eth',
@@ -72,8 +73,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const platformFee = Math.round(listing.price * 0.05);
-    const total = listing.price + platformFee;
+    const total = listing.price;
 
     // 3. Create order (pending)
     const { data: order, error: orderErr } = await admin
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
         buyer_id: buyerId,
         seller_id: listing.seller_id,
         amount: total,
-        platform_fee: platformFee,
+        platform_fee: 0,
         payment_method: paymentMethod,
         payment_status: 'pending',
         status: 'pending',
@@ -110,7 +110,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       orderId: order.id,
       total,
-      platformFee,
       paymentAddress,
       paymentMethod,
     });

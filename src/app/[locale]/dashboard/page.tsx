@@ -172,7 +172,7 @@ export default function DashboardPage() {
   const soldListings   = listings.filter((l) => !l.isAvailable).length;
   const totalRevenue   = orders
     .filter((o) => o.status === 'completed')
-    .reduce((sum, o) => sum + (o.amount - o.platform_fee), 0);
+    .reduce((sum, o) => sum + o.amount, 0);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
@@ -406,7 +406,6 @@ export default function DashboardPage() {
               const isProofSubmitted = order.payment_status === 'proof_submitted';
               const isCompleted = order.status === 'completed' || confirmedOrders.has(order.id);
               const StatusIcon = STATUS_ICONS[isCompleted ? 'completed' : order.status] ?? Clock;
-              const net = order.amount - order.platform_fee;
               const statusKey = isCompleted ? 'completed' : (order.payment_status ?? order.status);
 
               return (
@@ -439,7 +438,7 @@ export default function DashboardPage() {
                           {isRTL ? 'المشتري:' : 'Buyer:'} {order.buyer?.username ?? '—'}
                         </span>
                         <span className="text-xs font-bold text-gold">
-                          +{net.toLocaleString()} EGP
+                          +{order.amount.toLocaleString()} EGP
                         </span>
                         <span className="text-xs text-muted capitalize">{order.payment_method}</span>
                       </div>

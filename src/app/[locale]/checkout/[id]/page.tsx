@@ -29,8 +29,18 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
   }
 
   const displayTitle = locale === 'ar' && listing.titleAr ? listing.titleAr : listing.title;
-  const platformFee  = Math.round(listing.price * 0.05);
-  const total        = listing.price + platformFee;
+
+  // Derive which payment method IDs the seller has set up
+  const pm = listing.seller.paymentMethods ?? {};
+  const sellerMethods: string[] = [
+    pm.vodafone && 'vodafone',
+    pm.orange   && 'orange',
+    pm.instapay && 'instapay',
+    pm.paypal   && 'paypal',
+    pm.usdt     && 'usdt',
+    pm.btc      && 'btc',
+    pm.eth      && 'eth',
+  ].filter(Boolean) as string[];
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
@@ -44,8 +54,8 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
             locale={locale}
             listingId={listing.id}
             sellerId={listing.seller.id}
-            total={total}
-            platformFee={platformFee}
+            total={listing.price}
+            sellerMethods={sellerMethods}
           />
         </div>
 
@@ -76,18 +86,13 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
             </div>
 
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-muted">
-                <span>{locale === 'ar' ? 'سعر الحساب' : 'Listing price'}</span>
-                <span className="text-white">{formatPrice(listing.price, locale)}</span>
-              </div>
-              <div className="flex justify-between text-muted">
-                <span>{locale === 'ar' ? 'رسوم المنصة (5%)' : 'Platform fee (5%)'}</span>
-                <span className="text-white">{formatPrice(platformFee, locale)}</span>
-              </div>
-              <div className="flex justify-between font-bold text-white text-base pt-3 border-t border-border">
+              <div className="flex justify-between font-bold text-white text-base">
                 <span>{locale === 'ar' ? 'الإجمالي' : 'Total'}</span>
-                <span>{formatPrice(total, locale)}</span>
+                <span>{formatPrice(listing.price, locale)}</span>
               </div>
+              <p className="text-[11px] text-emerald-400">
+                {locale === 'ar' ? '✓ لا توجد رسوم إضافية' : '✓ No platform fees'}
+              </p>
             </div>
           </div>
 
@@ -145,22 +150,27 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
             ))}
           </div>
 
-          {/* Payment method logos */}
-          <div className="p-4 rounded-xl border border-border bg-surface/50">
-            <p className="text-xs text-muted mb-3 text-center uppercase tracking-wider">
-              {locale === 'ar' ? 'وسائل الدفع المقبولة' : 'Accepted Payment Methods'}
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {['InstaPay', 'Vodafone Cash', 'Orange Money', 'BTC', 'USDT', 'ETH'].map((label) => (
-                <span
-                  key={label}
-                  className="px-2.5 py-1 rounded-lg bg-white/5 border border-border text-xs text-white/60 font-medium"
-                >
-                  {label}
-                </span>
-              ))}
-            </div>
-          </div>
+          {/* Seller's accepted payment methods */}
+          {sellerMethods.length > 0 && (() => {
+            const labels: Record<string, string> = {
+              vodafone: 'Vodafone Cash', orange: 'Orange Money', instapay: 'InstaPay',
+              paypal: 'PayPal', usdt: 'USDT', btc: 'BTC', eth: 'ETH',
+            };
+            return (
+              <div className="p-4 rounded-xl border border-border bg-surface/50">
+                <p className="text-xs text-muted mb-3 text-center uppercase tracking-wider">
+                  {locale === 'ar' ? 'وسائل الدفع المقبولة من البائع' : 'Seller Accepts'}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {sellerMethods.map((id) => (
+                    <span key={id} className="px-2.5 py-1 rounded-lg bg-white/5 border border-border text-xs text-white/60 font-medium">
+                      {labels[id] ?? id}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>
