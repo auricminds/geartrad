@@ -158,48 +158,26 @@ export async function createListing(payload: {
   hours_played?: number | null;
   win_rate?: number | null;
   achievements?: number | null;
-  // Sensitive — stored encrypted, never returned in public queries
   account_email?: string;
   account_password?: string;
   account_extra_info?: string;
 }, sellerId: string): Promise<{ id: string } | null> {
-  const boost = payload.boost_type && payload.boost_type !== 'none' ? payload.boost_type : null;
-  const now = Date.now();
-  const boostExpiry = boost === 'weekly'
-    ? new Date(now + 7 * 86400000).toISOString()
-    : boost === 'monthly'
-    ? new Date(now + 30 * 86400000).toISOString()
-    : null;
-
-  const { data, error } = await supabase
-    .from('listings')
-    .insert({
-      seller_id: sellerId,
-      title: payload.title.trim(),
-      title_ar: payload.title_ar?.trim() || null,
-      description: payload.description.trim(),
-      description_ar: payload.description_ar?.trim() || null,
-      price: payload.price,
-      game: payload.game,
-      type: payload.type.toLowerCase(),
-      cover_image: payload.cover_image.trim(),
-      rank: payload.rank || null,
-      is_boosted: !!boost,
-      boost_type: boost,
-      boost_expires_at: boostExpiry,
-      level: payload.level || null,
-      hours_played: payload.hours_played || null,
-      win_rate: payload.win_rate || null,
-      achievements: payload.achievements || null,
-      account_email: payload.account_email || null,
-      account_password: payload.account_password || null,
-      account_extra_info: payload.account_extra_info || null,
-    })
-    .select('id')
-    .single();
-
-  if (error) { console.error('createListing error:', error); return null; }
-  return data;
+  try {
+    const res = await fetch('/api/listings/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payload, sellerId }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.error('createListing error:', err);
+      return null;
+    }
+    return await res.json();
+  } catch (e) {
+    console.error('createListing error:', e);
+    return null;
+  }
 }
 
 // ── Wishlist ──────────────────────────────────────────────────────────────────
@@ -544,12 +522,22 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
 // ── Image upload ──────────────────────────────────────────────────────────────
 
 export async function uploadListingImage(file: File, userId: string): Promise<string | null> {
-  const ext = file.name.split('.').pop() ?? 'jpg';
-  const path = `${userId}/${Date.now()}.${ext}`;
-  const { error } = await supabase.storage.from('listing-images').upload(path, file, { upsert: false });
-  if (error) { console.error('uploadListingImage error:', error); return null; }
-  const { data } = supabase.storage.from('listing-images').getPublicUrl(path);
-  return data.publicUrl;
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('userId', userId);
+    const res = await fetch('/api/listings/upload-image', { method: 'POST', body: formData });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.error('uploadListingImage error:', err);
+      return null;
+    }
+    const { url } = await res.json();
+    return url;
+  } catch (e) {
+    console.error('uploadListingImage error:', e);
+    return null;
+  }
 }
 
 // ── Verifications ─────────────────────────────────────────────────────────────
