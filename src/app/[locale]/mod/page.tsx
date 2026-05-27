@@ -28,8 +28,9 @@ async function modAction(body: Record<string, unknown>): Promise<boolean> {
 type Tab = 'orders' | 'users' | 'listings' | 'verifications' | 'tickets';
 
 type OrderRow = {
-  id: string; status: string; payment_status: string; total: number;
-  created_at: string;
+  id: string; status: string; payment_status: string; amount: number;
+  payment_proof_url: string | null; payment_reference: string | null; proof_submitted_at: string | null;
+  listing_id: string; created_at: string;
   listing: { id: string; title: string; game: string; cover_image: string } | null;
   buyer: { id: string; username: string } | null;
   seller: { id: string; username: string } | null;
@@ -284,7 +285,7 @@ export default function ModPage() {
                           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
                             <span className="text-xs text-muted">Buyer: <span className="text-white/80">{order.buyer?.username ?? '—'}</span></span>
                             <span className="text-xs text-muted">Seller: <span className="text-white/80">{order.seller?.username ?? '—'}</span></span>
-                            <span className="text-xs text-muted">{formatPrice(order.total, locale)}</span>
+                            <span className="text-xs text-muted">{formatPrice(order.amount, locale)}</span>
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
@@ -293,6 +294,28 @@ export default function ModPage() {
                           <span className="text-[10px] text-muted">{new Date(order.created_at).toLocaleDateString()}</span>
                         </div>
                       </div>
+
+                      {/* Proof display */}
+                      {(order.payment_proof_url || order.payment_reference) && (
+                        <div className="mt-3 pt-3 border-t border-border/50 space-y-1.5">
+                          {order.payment_reference && (
+                            <p className="text-xs text-muted">
+                              Ref: <span className="text-white font-mono">{order.payment_reference}</span>
+                            </p>
+                          )}
+                          {order.payment_proof_url && (
+                            <a
+                              href={order.payment_proof_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                            >
+                              <Eye className="w-3 h-3" />
+                              View payment proof
+                            </a>
+                          )}
+                        </div>
+                      )}
 
                       {/* Actions */}
                       {order.status !== 'cancelled' && order.status !== 'completed' && (
@@ -308,6 +331,20 @@ export default function ModPage() {
                             <XCircle className="w-3.5 h-3.5 shrink-0" />
                             Cancel Trade
                           </button>
+
+                          {order.status !== 'disputed' && (
+                            <button
+                              onClick={async () => {
+                                if (!confirm('Mark this order as disputed?')) return;
+                                const ok = await modAction({ type: 'resolve-order', requesterId: user.id, orderId: order.id, resolution: 'dispute' });
+                                if (ok) setOrders((prev) => prev.map((o) => o.id === order.id ? { ...o, status: 'disputed' } : o));
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 border border-red-500/20 text-red-300 text-xs font-medium hover:bg-red-500/25 transition-all"
+                            >
+                              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                              Mark Disputed
+                            </button>
+                          )}
 
                           {order.status === 'disputed' && (
                             <>

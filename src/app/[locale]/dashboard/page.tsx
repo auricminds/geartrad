@@ -9,7 +9,7 @@ import Image from 'next/image';
 import {
   LayoutDashboard, Store, Plus, Package, ShoppingBag,
   ArrowLeft, Trash2, Eye, EyeOff, Star, TrendingUp,
-  CheckCircle2, Clock, AlertCircle, RefreshCw, Wallet, ExternalLink, Save,
+  CheckCircle2, Clock, AlertCircle, RefreshCw, Wallet, ExternalLink, Save, MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -490,6 +490,19 @@ export default function DashboardPage() {
                           ? (isRTL ? 'جاري التأكيد...' : 'Confirming...')
                           : (isRTL ? 'تأكيد استلام الدفع — إرسال بيانات الدخول للمشتري' : 'Confirm Payment Received — Release Credentials')}
                       </button>
+                    </div>
+                  )}
+
+                  {/* Message Buyer */}
+                  {order.status !== 'cancelled' && (
+                    <div className="px-4 pb-3">
+                      <Link
+                        href={`/${locale}/chat?listing=${order.listing_id}`}
+                        className="flex items-center justify-center gap-1.5 text-xs text-muted hover:text-white transition-colors"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        {isRTL ? 'مراسلة المشتري' : 'Message Buyer'}
+                      </Link>
                     </div>
                   )}
                 </div>

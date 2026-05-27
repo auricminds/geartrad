@@ -8,6 +8,7 @@ import Link from 'next/link';
 import {
   ShoppingBag, Clock, CheckCircle2, AlertCircle, RefreshCw,
   Shield, Eye, EyeOff, Copy, Check, ArrowLeft, Lock, ExternalLink,
+  Star, MessageCircle,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
 import { getBuyerOrders } from '@/lib/api';
@@ -45,6 +46,11 @@ export default function OrdersPage() {
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const [showPass, setShowPass] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState('');
+  const [ratingFor, setRatingFor] = useState<string | null>(null); // orderId currently being rated
+  const [pendingRating, setPendingRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [ratedIds, setRatedIds] = useState<Set<string>>(new Set());
 
   const load = useCallback(async (uid: string) => {
     setLoading(true);
@@ -91,11 +97,31 @@ export default function OrdersPage() {
       setOrders((prev) =>
         prev.map((o) => o.id === orderId ? { ...o, payment_status: 'paid', status: 'completed' } : o)
       );
+      // Prompt for rating after confirming delivery
+      setRatingFor(orderId);
+      setPendingRating(5);
+      setRatingComment('');
     } else {
       const { error } = await res.json();
       alert(error ?? 'Confirmation failed. Please contact support.');
     }
     setConfirmingId(null);
+  };
+
+  const handleSubmitRating = async (orderId: string) => {
+    if (!user || !pendingRating) return;
+    setSubmittingRating(true);
+    try {
+      await fetch('/api/orders/rate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, buyerId: user.id, rating: pendingRating, comment: ratingComment }),
+      });
+      setRatedIds((prev) => { const s = new Set(prev); s.add(orderId); return s; });
+      setRatingFor(null);
+    } finally {
+      setSubmittingRating(false);
+    }
   };
 
   const copyToClipboard = (text: string, key: string) => {
@@ -289,6 +315,52 @@ export default function OrdersPage() {
                     </div>
                   )}
 
+                  {/* Rating prompt — shown immediately after delivery is confirmed */}
+                  {ratingFor === order.id && !ratedIds.has(order.id) && (
+                    <div className="rounded-xl border border-gold/30 bg-gold/5 p-4 space-y-3">
+                      <p className="text-sm font-semibold text-gold">
+                        {isAr ? 'قيّم هذا البائع' : 'Rate this seller'}
+                      </p>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setPendingRating(n)}
+                          >
+                            <Star className={cn('w-6 h-6 transition-colors', n <= pendingRating ? 'text-gold fill-gold' : 'text-muted')} />
+                          </button>
+                        ))}
+                      </div>
+                      <textarea
+                        value={ratingComment}
+                        onChange={(e) => setRatingComment(e.target.value)}
+                        placeholder={isAr ? 'أضف تعليقاً (اختياري)' : 'Add a comment (optional)'}
+                        rows={2}
+                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm text-white placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-purple/40 resize-none"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={!pendingRating || submittingRating}
+                          onClick={() => handleSubmitRating(order.id)}
+                          className="flex-1 py-2 rounded-xl bg-gold hover:bg-gold/90 text-black text-sm font-semibold transition-all disabled:opacity-60"
+                        >
+                          {submittingRating
+                            ? (isAr ? 'جاري الإرسال...' : 'Submitting...')
+                            : (isAr ? 'إرسال التقييم' : 'Submit Rating')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRatingFor(null)}
+                          className="px-4 py-2 rounded-xl bg-white/5 text-muted text-sm hover:text-white transition-colors"
+                        >
+                          {isAr ? 'تخطي' : 'Skip'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Dispute option */}
                   {isPaid && !alreadyConfirmed && !isRefunded && (
                     <Link
@@ -297,6 +369,17 @@ export default function OrdersPage() {
                     >
                       <AlertCircle className="w-3.5 h-3.5" />
                       {isAr ? 'البائع لم يُسلّم — افتح تذكرة نزاع' : "Seller didn't deliver — Open a dispute"}
+                    </Link>
+                  )}
+
+                  {/* Message Seller */}
+                  {!isRefunded && (
+                    <Link
+                      href={`/${locale}/chat?listing=${order.listing_id}`}
+                      className="flex items-center justify-center gap-2 text-xs text-muted hover:text-white transition-colors"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      {isAr ? 'مراسلة البائع' : 'Message Seller'}
                     </Link>
                   )}
 

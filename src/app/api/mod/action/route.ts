@@ -82,10 +82,12 @@ export async function POST(req: NextRequest) {
 
   // ── Resolve order ────────────────────────────────────────────
   if (type === 'resolve-order') {
-    const { orderId, resolution } = body; // resolution: 'complete' | 'refund'
+    const { orderId, resolution } = body; // resolution: 'complete' | 'refund' | 'dispute'
     const update = resolution === 'complete'
       ? { status: 'completed', payment_status: 'paid' }
-      : { status: 'refunded', payment_status: 'refunded' };
+      : resolution === 'dispute'
+        ? { status: 'disputed' }
+        : { status: 'refunded', payment_status: 'refunded' };
     const { error } = await db.from('orders').update(update).eq('id', orderId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });

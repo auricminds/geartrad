@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { emailOrderCancelled } from '@/lib/email';
 
 function getAdmin() {
   return createClient(
@@ -96,6 +97,14 @@ export async function POST(req: NextRequest) {
 
     if (notifications.length > 0) {
       await admin.from('notifications').insert(notifications);
+    }
+
+    // Email both parties (fire-and-forget)
+    if (order.buyer_id !== userId) {
+      emailOrderCancelled(order.buyer_id, title, true).catch(() => {});
+    }
+    if (order.seller_id !== userId) {
+      emailOrderCancelled(order.seller_id, title, false).catch(() => {});
     }
 
     return NextResponse.json({ success: true });

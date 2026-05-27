@@ -86,6 +86,8 @@ export type DbOrder = {
   payment_reference: string | null;
   proof_submitted_at: string | null;
   created_at: string;
+  buyer_rating: number | null;
+  buyer_comment: string | null;
 };
 
 export type DbNotification = {

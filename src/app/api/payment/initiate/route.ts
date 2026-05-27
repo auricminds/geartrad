@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { emailNewOrder } from '@/lib/email';
 
 function getAdmin() {
   return createClient(
@@ -106,6 +107,7 @@ export async function POST(req: NextRequest) {
       body: `A buyer has initiated purchase of "${listing.title}". Waiting for payment proof.`,
       related_id: order.id,
     });
+    emailNewOrder(listing.seller_id, listing.title, total, paymentMethod).catch(() => {});
 
     return NextResponse.json({
       orderId: order.id,

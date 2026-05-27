@@ -415,6 +415,8 @@ export type OrderRow = {
   payment_proof_url: string | null;
   payment_reference: string | null;
   proof_submitted_at: string | null;
+  buyer_rating: number | null;
+  buyer_comment: string | null;
   created_at: string;
   listing: { title: string; cover_image: string; game: string } | null;
   buyer: { username: string } | null;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { emailCredentialsAvailable, emailDeliveryConfirmed } from '@/lib/email';
 
 function getAdmin() {
   return createClient(
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
         body: `Seller confirmed your payment for "${listing?.title ?? 'your order'}". Your account credentials are now available in My Orders.`,
         related_id: orderId,
       });
+      emailCredentialsAvailable(order.buyer_id, listing?.title ?? 'your order').catch(() => {});
 
       return NextResponse.json({ success: true });
     }
@@ -93,6 +95,10 @@ export async function POST(req: NextRequest) {
       const { data: listing } = await admin
         .from('listings').select('title').eq('id', order.listing_id).single();
 
+      // Fetch order amount for email
+      const { data: fullOrder } = await admin
+        .from('orders').select('amount').eq('id', orderId).single();
+
       await admin.from('notifications').insert({
         user_id: order.seller_id,
         type: 'sale',
@@ -100,6 +106,7 @@ export async function POST(req: NextRequest) {
         body: `Buyer confirmed receipt of "${listing?.title ?? 'your listing'}". The trade is now complete.`,
         related_id: orderId,
       });
+      emailDeliveryConfirmed(order.seller_id, listing?.title ?? 'your listing', fullOrder?.amount ?? 0).catch(() => {});
 
       return NextResponse.json({ success: true });
     }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { emailProofSubmitted } from '@/lib/email';
 
 function getAdmin() {
   return createClient(
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
       body: `Buyer has sent payment proof for "${listing?.title ?? 'your listing'}". Please review and confirm receipt.`,
       related_id: orderId,
     });
+    emailProofSubmitted(order.seller_id, listing?.title ?? 'your listing', reference ?? null, proofUrl ?? null).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (err) {
