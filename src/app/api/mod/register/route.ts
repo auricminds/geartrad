@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const ADMIN_EMAILS = ['slaxltc@gmail.com', 'auricminds@gmail.com'];
+/**
+ * Allowed admin emails — set MOD_ADMIN_EMAILS in Vercel env as a comma-separated list.
+ * e.g. MOD_ADMIN_EMAILS=admin@geartrad.com,mod@geartrad.com
+ */
+function getAllowedEmails(): string[] {
+  const raw = process.env.MOD_ADMIN_EMAILS ?? '';
+  return raw.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+}
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
@@ -11,18 +18,23 @@ export async function POST(req: NextRequest) {
   }
 
   const normalizedEmail = email.toLowerCase().trim();
+  const allowedEmails = getAllowedEmails();
 
-  if (!ADMIN_EMAILS.includes(normalizedEmail)) {
+  if (allowedEmails.length === 0) {
+    return NextResponse.json({ error: 'Admin registration is not configured.' }, { status: 503 });
+  }
+
+  if (!allowedEmails.includes(normalizedEmail)) {
     return NextResponse.json({ error: 'This email is not authorized for admin access.' }, { status: 403 });
   }
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com';
 
   // Fallback: if service role key is missing, use regular signup
   if (!serviceKey || !supabaseUrl) {
     const anonClient = createClient(supabaseUrl!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.vercel.app';
     const { error } = await anonClient.auth.signUp({
       email: normalizedEmail,
       password,

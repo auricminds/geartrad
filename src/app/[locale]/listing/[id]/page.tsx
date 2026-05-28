@@ -12,7 +12,7 @@ import { SellerAnalytics } from '@/components/listing/SellerAnalytics';
 import { ActivityTracker } from '@/components/listing/ActivityTracker';
 import type { Metadata } from 'next';
 
-const SITE_URL = 'https://geartrad.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com';
 
 interface ListingPageProps {
   params: Promise<{ id: string; locale: string }>;

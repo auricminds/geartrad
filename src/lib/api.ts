@@ -538,10 +538,17 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
 
 export async function uploadListingImage(file: File, userId: string): Promise<string | null> {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('userId', userId);
-    const res = await fetch('/api/listings/upload-image', { method: 'POST', body: formData });
+    const res = await fetch('/api/listings/upload-image', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       console.error('uploadListingImage error:', err);

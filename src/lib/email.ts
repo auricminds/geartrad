@@ -10,6 +10,7 @@ import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 
 const FROM = process.env.RESEND_FROM_EMAIL ?? 'GearTrad <noreply@geartrad.com>';
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com';
 
 function getResend() {
   const key = process.env.RESEND_API_KEY;
@@ -66,7 +67,7 @@ function layout(body: string) {
 </style></head>
 <body><div class="wrap">${body}
 <div class="footer">GearTrad — The #1 Gaming Marketplace in Egypt &amp; Gulf<br>
-<a href="https://geartrad.com" style="color:#7c3aed;">geartrad.com</a></div>
+<a href="${BASE}" style="color:#7c3aed;">${BASE.replace('https://', '')}</a></div>
 </div></body></html>`;
 }
 
@@ -85,7 +86,7 @@ export async function emailNewOrder(sellerId: string, listingTitle: string, amou
     <div class="label" style="margin-top:12px">Payment Method</div><div class="value" style="text-transform:capitalize">${paymentMethod}</div>
   </div>
   <p>The buyer will send you payment directly and submit proof. You'll get another email when proof is submitted.</p>
-  <a class="btn" href="https://geartrad.com/en/dashboard">View Dashboard →</a>
+  <a class="btn" href="${BASE}/en/dashboard">View Dashboard →</a>
   <p class="muted">Do not release any account details until you've confirmed the payment arrived in your account.</p>
 </div>`));
 }
@@ -100,7 +101,7 @@ export async function emailProofSubmitted(sellerId: string, listingTitle: string
   ${reference ? `<div class="box"><div class="label">Reference / TX ID</div><div class="value" style="font-family:monospace;font-size:13px">${reference}</div></div>` : ''}
   ${proofUrl ? `<div class="box"><div class="label">Screenshot</div><div class="value"><a href="${proofUrl}" style="color:#7c3aed">View proof image →</a></div></div>` : ''}
   <p>Once you verify the money is in your account, click <strong>Confirm Payment Received</strong> in your dashboard to release the credentials to the buyer.</p>
-  <a class="btn" href="https://geartrad.com/en/dashboard">Confirm in Dashboard →</a>
+  <a class="btn" href="${BASE}/en/dashboard">Confirm in Dashboard →</a>
   <p class="muted">⚠ Only confirm after you have personally verified the money arrived. Do not confirm without checking.</p>
 </div>`));
 }
@@ -112,7 +113,7 @@ export async function emailCredentialsAvailable(buyerId: string, listingTitle: s
 <div class="header"><h1>🔓 Credentials Unlocked</h1><p>Your account is ready</p></div>
 <div class="body">
   <p>The seller has confirmed receipt of your payment for <strong>${listingTitle}</strong>. Your account credentials are now available.</p>
-  <a class="btn" href="https://geartrad.com/en/orders">View My Orders →</a>
+  <a class="btn" href="${BASE}/en/orders">View My Orders →</a>
   <div class="box">
     <div class="label">Next Steps</div>
     <ol style="margin:8px 0 0;padding-left:20px;color:#aaa;font-size:13px;line-height:1.8">
@@ -138,19 +139,18 @@ export async function emailDeliveryConfirmed(sellerId: string, listingTitle: str
     <div class="label">You Earned</div><div class="value">${amount.toLocaleString()} EGP</div>
   </div>
   <p>The money was sent directly to you — this is just a confirmation that the buyer is happy. Your total sales count has been updated.</p>
-  <a class="btn" href="https://geartrad.com/en/dashboard">View Dashboard →</a>
+  <a class="btn" href="${BASE}/en/dashboard">View Dashboard →</a>
 </div>`));
 }
 
 export async function emailOrderCancelled(userId: string, listingTitle: string, isBuyer: boolean) {
   const email = await getUserEmail(userId);
   if (!email) return;
-  const who = isBuyer ? 'your order' : 'an order for your listing';
   await send(email, 'Order Cancelled — GearTrad', layout(`
 <div class="header"><h1>❌ Order Cancelled</h1><p>The trade did not complete</p></div>
 <div class="body">
   <p>${isBuyer ? 'Your order' : 'An order for your listing'} <strong>${listingTitle}</strong> has been cancelled. ${isBuyer ? 'The listing is available again if you wish to try again.' : 'Your listing is now active again and available for other buyers.'}</p>
-  <a class="btn" href="https://geartrad.com/en/${isBuyer ? 'browse' : 'dashboard'}">${isBuyer ? 'Browse Listings →' : 'View Dashboard →'}</a>
+  <a class="btn" href="${BASE}/en/${isBuyer ? 'browse' : 'dashboard'}">${isBuyer ? 'Browse Listings →' : 'View Dashboard →'}</a>
   <p class="muted">If you believe this was an error, please open a support ticket.</p>
 </div>`));
 }

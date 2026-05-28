@@ -1,6 +1,8 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 export function GET() {
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com';
+
   const text = `User-agent: *
 Allow: /
 Disallow: /*/mod/
@@ -12,7 +14,7 @@ Disallow: /*/profile/
 Disallow: /*/chat/
 Disallow: /api/
 
-Sitemap: https://geartrad.com/sitemap.xml`;
+Sitemap: ${base}/sitemap.xml`;
 
   return new Response(text, {
     headers: { 'Content-Type': 'text/plain; charset=utf-8' },

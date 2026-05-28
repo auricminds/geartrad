@@ -8,8 +8,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const isAr = locale === 'ar';
   return {
     alternates: {
-      canonical: `https://geartrad.com/${locale}`,
-      languages: { en: 'https://geartrad.com/en', ar: 'https://geartrad.com/ar' },
+      canonical: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com'}/${locale}`,
+      languages: {
+        en: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com'}/en`,
+        ar: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com'}/ar`,
+      },
     },
     ...(isAr && {
       title: 'جيرتراد — سوق الألعاب الأول في مصر والشرق الأوسط',

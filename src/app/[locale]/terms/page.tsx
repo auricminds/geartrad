@@ -26,11 +26,11 @@ export default function TermsPage() {
         },
         {
           title: '5. Escrow & Payment',
-          body: 'All transactions on GearTrad are processed through an escrow system. Buyer funds are held by GearTrad (via Paymob) and are not released to the seller until the buyer explicitly confirms delivery. A platform fee of 5% is deducted from the seller\'s payout. GearTrad is not liable for account bans, suspensions, or item loss caused by game publishers after a completed and confirmed transaction. Crypto payments are irreversible by nature; buyers should only confirm receipt after verifying delivery.',
+          body: 'All transactions on GearTrad use a peer-to-peer escrow system. The buyer pays the seller directly via the chosen payment method (Vodafone Cash, InstaPay, crypto, etc.). GearTrad holds the account credentials and only releases them to the buyer after the seller confirms payment received. GearTrad charges no platform fee — 100% of the sale goes to the seller. GearTrad is not liable for account bans, suspensions, or item loss caused by game publishers after a completed and confirmed transaction. Crypto payments are irreversible by nature; buyers should only confirm receipt after verifying delivery.',
         },
         {
           title: '6. Buyer Protection & Refunds',
-          body: 'If a seller fails to deliver, the buyer must NOT confirm delivery and must open a support ticket within 72 hours of payment. GearTrad moderators will review evidence from both parties. If the seller is found to be at fault, a full refund will be issued within 3–7 business days depending on the payment method. GearTrad\'s decision is final. Chargebacks initiated directly with card issuers without first contacting GearTrad support will result in immediate account suspension.',
+          body: 'If a seller fails to deliver, the buyer must NOT confirm delivery and must open a support ticket within 72 hours of payment. GearTrad moderators will review evidence from both parties and make a final decision. Because payments are peer-to-peer, refund resolution depends on the payment method and both parties cooperating. GearTrad\'s decision on dispute outcomes is final. Attempting to dispute or chargeback through a payment processor without first going through GearTrad support will result in immediate account suspension.',
         },
         {
           title: '7. Prohibited Conduct',

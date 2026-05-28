@@ -1,14 +1,21 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const serviceClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  const { data, error } = await serviceClient.auth.admin.listUsers({ perPage: 1000 });
+  const { searchParams } = new URL(req.url);
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+  const perPage = 200;
+
+  const { data, error } = await serviceClient.auth.admin.listUsers({
+    page,
+    perPage,
+  });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

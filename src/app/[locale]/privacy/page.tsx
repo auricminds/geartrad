@@ -14,7 +14,7 @@ export default function PrivacyPage() {
         },
         {
           title: '2. What We Do NOT Collect',
-          body: 'We do not collect or store card numbers, CVVs, or full banking credentials — those are handled exclusively by Paymob\'s PCI-DSS compliant infrastructure. We do not collect your physical location beyond country level. We do not sell, rent, or trade your personal data to any third party for marketing purposes, ever.',
+          body: 'We do not collect or store card numbers, CVVs, or full banking credentials. Payments are peer-to-peer — buyers send money directly to sellers via their chosen method (Vodafone Cash, InstaPay, crypto, etc.). We do not handle or intermediate any funds. We do not collect your physical location beyond country level. We do not sell, rent, or trade your personal data to any third party for marketing purposes, ever.',
         },
         {
           title: '3. How We Use Your Data',
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
         },
         {
           title: '4. Data Sharing',
-          body: 'We share data with: (a) Paymob — payment data required to process transactions (amount, currency, buyer email); (b) Supabase — our database and authentication provider, hosted on secure EU/US infrastructure; (c) Law enforcement — only when legally required by a valid court order or Egyptian law. We do not share data with advertisers, data brokers, or any other third parties.',
+          body: 'We share data with: (a) Supabase — our database and authentication provider, hosted on secure infrastructure; (b) Resend — transactional email delivery (recipient email address and email content only); (c) Law enforcement — only when legally required by a valid court order or Egyptian law. We do not share data with advertisers, data brokers, or any other third parties.',
         },
         {
           title: '5. Identity Verification Data',

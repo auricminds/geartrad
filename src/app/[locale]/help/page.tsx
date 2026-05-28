@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getLocale } from 'next-intl/server';
 import { MessageCircle, ShoppingBag, Shield, User, CreditCard, AlertTriangle } from 'lucide-react';
 
 const FAQS = [
@@ -36,7 +37,8 @@ const FAQS = [
   },
 ];
 
-export default function HelpPage() {
+export default async function HelpPage() {
+  const locale = await getLocale();
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
       <h1 className="text-3xl font-bold text-white mb-2">Help Center</h1>
@@ -72,7 +74,7 @@ export default function HelpPage() {
         <p className="text-white font-semibold mb-2">Still need help?</p>
         <p className="text-muted text-sm mb-4">Open a support ticket and our team will get back to you.</p>
         <Link
-          href="/en/support"
+          href={`/${locale}/support`}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple hover:bg-purple-light text-white text-sm font-medium transition-all"
         >
           <MessageCircle className="w-4 h-4" />

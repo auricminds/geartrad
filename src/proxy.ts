@@ -39,28 +39,30 @@ const BLOCKED_PATTERNS = [
   /etc\/passwd/i,
 ];
 
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com';
+
 const SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  <url><loc>https://geartrad.com/en</loc><lastmod>2026-05-26</lastmod><changefreq>daily</changefreq><priority>1.0</priority><xhtml:link rel="alternate" hreflang="en" href="https://geartrad.com/en"/><xhtml:link rel="alternate" hreflang="ar" href="https://geartrad.com/ar"/></url>
-  <url><loc>https://geartrad.com/ar</loc><lastmod>2026-05-26</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>https://geartrad.com/en/browse</loc><lastmod>2026-05-26</lastmod><changefreq>hourly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://geartrad.com/ar/browse</loc><lastmod>2026-05-26</lastmod><changefreq>hourly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://geartrad.com/en/top-accounts</loc><lastmod>2026-05-26</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://geartrad.com/ar/top-accounts</loc><lastmod>2026-05-26</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://geartrad.com/en/bestsellers</loc><lastmod>2026-05-26</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://geartrad.com/ar/bestsellers</loc><lastmod>2026-05-26</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://geartrad.com/en/sell</loc><lastmod>2026-05-26</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://geartrad.com/ar/sell</loc><lastmod>2026-05-26</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://geartrad.com/en/about</loc><lastmod>2026-05-26</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://geartrad.com/ar/about</loc><lastmod>2026-05-26</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://geartrad.com/en/help</loc><lastmod>2026-05-26</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://geartrad.com/ar/help</loc><lastmod>2026-05-26</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://geartrad.com/en/safety</loc><lastmod>2026-05-26</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://geartrad.com/en/privacy</loc><lastmod>2026-05-26</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://geartrad.com/en/terms</loc><lastmod>2026-05-26</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>${BASE}/en</loc><changefreq>daily</changefreq><priority>1.0</priority><xhtml:link rel="alternate" hreflang="en" href="${BASE}/en"/><xhtml:link rel="alternate" hreflang="ar" href="${BASE}/ar"/></url>
+  <url><loc>${BASE}/ar</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>${BASE}/en/browse</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>
+  <url><loc>${BASE}/ar/browse</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>
+  <url><loc>${BASE}/en/top-accounts</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>${BASE}/ar/top-accounts</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>${BASE}/en/bestsellers</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>${BASE}/ar/bestsellers</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>${BASE}/en/sell</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>${BASE}/ar/sell</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>${BASE}/en/about</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>${BASE}/ar/about</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>${BASE}/en/help</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>${BASE}/ar/help</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>${BASE}/en/safety</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>${BASE}/en/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>${BASE}/en/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>`;
 
-const ROBOTS_TXT = `User-agent: *\nAllow: /\nDisallow: /*/mod/\nDisallow: /*/auth/\nDisallow: /*/checkout/\nDisallow: /*/orders/\nDisallow: /*/dashboard/\nDisallow: /*/profile/\nDisallow: /*/chat/\nDisallow: /api/\n\nSitemap: https://geartrad.com/sitemap.xml`;
+const ROBOTS_TXT = `User-agent: *\nAllow: /\nDisallow: /*/mod/\nDisallow: /*/auth/\nDisallow: /*/checkout/\nDisallow: /*/orders/\nDisallow: /*/dashboard/\nDisallow: /*/profile/\nDisallow: /*/chat/\nDisallow: /api/\n\nSitemap: ${BASE}/sitemap.xml`;
 
 export default function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

@@ -10,12 +10,36 @@ function getServiceClient() {
 }
 
 export async function POST(req: NextRequest) {
+  // ── Auth: verify the caller owns the userId they're uploading to ──────────
+  const authHeader = req.headers.get('authorization');
+  const token = authHeader?.replace('Bearer ', '').trim();
+
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const anonClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
+  const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
+
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // ── Parse form data ───────────────────────────────────────────────────────
   const formData = await req.formData();
   const file = formData.get('file') as File | null;
   const userId = formData.get('userId') as string | null;
 
   if (!file || !userId) {
     return NextResponse.json({ error: 'Missing file or userId' }, { status: 400 });
+  }
+
+  // Ensure the authenticated user matches the upload target
+  if (user.id !== userId && !userId.startsWith('verif/')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const db = getServiceClient();

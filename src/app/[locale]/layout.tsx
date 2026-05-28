@@ -11,7 +11,7 @@ import { PageTransition } from '@/components/ui/PageTransition';
 import { getDir } from '@/lib/utils';
 import type { Metadata } from 'next';
 
-const SITE_URL = 'https://geartrad.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

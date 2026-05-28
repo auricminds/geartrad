@@ -7,7 +7,7 @@ import { SellerAnalytics } from '@/components/listing/SellerAnalytics';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 
-const SITE_URL = 'https://geartrad.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com';
 
 interface Props {
   params: Promise<{ id: string; locale: string }>;
