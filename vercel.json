@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/auto-cancel-orders",
-      "schedule": "0 * * * *"
+      "schedule": "0 2 * * *"
     },
     {
       "path": "/api/cron/auto-complete-orders",
-      "schedule": "0 * * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
