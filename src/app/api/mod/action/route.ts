@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { createClient as createAnonClient } from '@supabase/supabase-js';
+import { getSessionUserId } from '@/lib/auth-server';
 
 function getServiceClient() {
   return createClient(
@@ -18,12 +18,13 @@ async function verifyMod(userId: string): Promise<string | null> {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { type, requesterId } = body;
-
+  const requesterId = await getSessionUserId(req);
   if (!requesterId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const body = await req.json();
+  const { type } = body;
 
   const requesterRole = await verifyMod(requesterId);
   if (requesterRole !== 'moderator' && requesterRole !== 'admin') {

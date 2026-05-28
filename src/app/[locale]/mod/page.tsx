@@ -11,12 +11,22 @@ import {
 import { useStore } from '@/components/providers/StoreProvider';
 import { getAllTickets, getAllVerifications, getAllOrders, getAllUsers, getAllListingsAdmin } from '@/lib/api';
 import { cn, formatPrice } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+
+async function getToken(): Promise<string | null> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token ?? null;
+}
 
 async function modAction(body: Record<string, unknown>): Promise<boolean> {
   try {
+    const token = await getToken();
     const res = await fetch('/api/mod/action', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(body),
     });
     return res.ok;
@@ -114,7 +124,11 @@ export default function ModPage() {
       getAllListingsAdmin(),
       getAllTickets(),
       getAllVerifications(),
-      fetch('/api/mod/users').then((r) => r.json()).catch(() => ({})),
+      getToken().then((token) =>
+        fetch('/api/mod/users', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }).then((r) => r.json()).catch(() => ({}))
+      ),
     ]).then(([o, u, l, t, v, emails]) => {
       setOrders(o as OrderRow[]);
       setUsers(u as UserRow[]);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { emailNewOrder } from '@/lib/email';
+import { getSessionUserId } from '@/lib/auth-server';
 
 function getAdmin() {
   return createClient(
@@ -9,14 +10,14 @@ function getAdmin() {
   );
 }
 
-/**
- * POST /api/payment/initiate
- *
- * Creates a pending order, locks the listing, and returns the
- * seller's payment details so the buyer knows where to send money.
- */
 export async function POST(req: NextRequest) {
   try {
+    // Verify the caller is the buyer
+    const sessionUserId = await getSessionUserId(req);
+    if (!sessionUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { listingId, buyerId, paymentMethod } = await req.json() as {
       listingId: string;
       buyerId: string;
@@ -25,6 +26,10 @@ export async function POST(req: NextRequest) {
 
     if (!listingId || !buyerId || !paymentMethod) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    if (sessionUserId !== buyerId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const admin = getAdmin();
@@ -109,12 +114,7 @@ export async function POST(req: NextRequest) {
     });
     emailNewOrder(listing.seller_id, listing.title, total, paymentMethod).catch(() => {});
 
-    return NextResponse.json({
-      orderId: order.id,
-      total,
-      paymentAddress,
-      paymentMethod,
-    });
+    return NextResponse.json({ orderId: order.id, total, paymentAddress, paymentMethod });
   } catch (err) {
     console.error('[payment/initiate]', err);
     return NextResponse.json({ error: 'Failed to initiate payment' }, { status: 500 });

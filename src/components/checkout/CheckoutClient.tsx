@@ -129,15 +129,24 @@ export function CheckoutClient({ locale, listingId, sellerId, total, sellerMetho
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    return token
+      ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+      : { 'Content-Type': 'application/json' };
+  };
+
   // ── Step 1: Initiate order ───────────────────────────────────────────────────
   const handleInitiate = async () => {
     if (!user) { router.push(`/${locale}/auth/sign-in`); return; }
     setError('');
     setLoading(true);
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/payment/initiate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ listingId, buyerId: user.id, paymentMethod: method }),
       });
       const data = await res.json();
@@ -192,9 +201,10 @@ export function CheckoutClient({ locale, listingId, sellerId, total, sellerMetho
         proofUrl = urlData.publicUrl;
       }
 
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/payment/submit-proof', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           orderId,
           buyerId: user.id,
@@ -219,9 +229,10 @@ export function CheckoutClient({ locale, listingId, sellerId, total, sellerMetho
   // ── Cancel order ─────────────────────────────────────────────────────────────
   const handleCancel = async () => {
     if (!user || !orderId) { setStep('method'); return; }
+    const headers = await getAuthHeaders();
     await fetch('/api/payment/cancel', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ orderId, userId: user.id }),
     });
     setOrderId('');

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { emailProofSubmitted } from '@/lib/email';
+import { getSessionUserId } from '@/lib/auth-server';
 
 function getAdmin() {
   return createClient(
@@ -9,19 +10,18 @@ function getAdmin() {
   );
 }
 
-/**
- * POST /api/payment/submit-proof
- *
- * Buyer submits payment proof (screenshot URL or tx hash).
- * Moves order to proof_submitted status and notifies the seller.
- */
 export async function POST(req: NextRequest) {
   try {
+    const sessionUserId = await getSessionUserId(req);
+    if (!sessionUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { orderId, buyerId, proofUrl, reference } = await req.json() as {
       orderId: string;
       buyerId: string;
-      proofUrl?: string;   // screenshot URL (uploaded to Supabase storage)
-      reference?: string;  // tx hash (crypto) or transfer reference (local)
+      proofUrl?: string;
+      reference?: string;
     };
 
     if (!orderId || !buyerId) {
@@ -30,10 +30,12 @@ export async function POST(req: NextRequest) {
     if (!proofUrl && !reference) {
       return NextResponse.json({ error: 'Provide a proof screenshot or transaction reference' }, { status: 400 });
     }
+    if (sessionUserId !== buyerId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const admin = getAdmin();
 
-    // Verify order belongs to this buyer and is in pending state
     const { data: order, error } = await admin
       .from('orders')
       .select('id, buyer_id, seller_id, payment_status, listing_id')
@@ -48,7 +50,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Proof already submitted for this order' }, { status: 409 });
     }
 
-    // Update order with proof
     await admin.from('orders').update({
       payment_status: 'proof_submitted',
       payment_proof_url: proofUrl ?? null,
@@ -56,14 +57,12 @@ export async function POST(req: NextRequest) {
       proof_submitted_at: new Date().toISOString(),
     }).eq('id', orderId);
 
-    // Fetch listing title for notification
     const { data: listing } = await admin
       .from('listings')
       .select('title')
       .eq('id', order.listing_id)
       .single();
 
-    // Notify seller to confirm payment
     await admin.from('notifications').insert({
       user_id: order.seller_id,
       type: 'sale',

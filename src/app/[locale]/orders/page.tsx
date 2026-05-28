@@ -13,6 +13,7 @@ import {
 import { cn, formatPrice } from '@/lib/utils';
 import { getBuyerOrders } from '@/lib/api';
 import type { OrderRow } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 type Credentials = {
   account_email: string | null;
@@ -64,6 +65,11 @@ export default function OrdersPage() {
     if (user) load(user.id);
   }, [user, authLoading, locale, router, load]);
 
+  const getToken = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ?? null;
+  };
+
   const handleRevealCredentials = async (order: OrderRow) => {
     if (!user) return;
     if (credentials[order.id]) {
@@ -71,7 +77,10 @@ export default function OrdersPage() {
       return;
     }
 
-    const res = await fetch(`/api/orders/credentials?orderId=${order.id}&buyerId=${user.id}`);
+    const token = await getToken();
+    const res = await fetch(`/api/orders/credentials?orderId=${order.id}&buyerId=${user.id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     const data = await res.json();
 
     if (res.ok) {
@@ -86,9 +95,10 @@ export default function OrdersPage() {
     if (!user || confirmingId) return;
     setConfirmingId(orderId);
 
+    const token = await getToken();
     const res = await fetch('/api/payment/confirm', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify({ orderId, buyerId: user.id }),
     });
 
@@ -112,9 +122,10 @@ export default function OrdersPage() {
     if (!user || !pendingRating) return;
     setSubmittingRating(true);
     try {
+      const token = await getToken();
       await fetch('/api/orders/rate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ orderId, buyerId: user.id, rating: pendingRating, comment: ratingComment }),
       });
       setRatedIds((prev) => { const s = new Set(prev); s.add(orderId); return s; });

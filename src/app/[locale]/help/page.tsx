@@ -1,6 +1,17 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getLocale } from 'next-intl/server';
 import { MessageCircle, ShoppingBag, Shield, User, CreditCard, AlertTriangle } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Help Center — GearTrad',
+  description: 'Find answers to common questions about buying and selling game accounts, payments, and account safety on GearTrad.',
+  openGraph: {
+    title: 'Help Center — GearTrad',
+    description: 'Find answers to common questions about buying and selling game accounts on GearTrad.',
+    url: 'https://geartrad.com/en/help',
+  },
+};
 
 const FAQS = [
   {

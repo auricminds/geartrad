@@ -2,6 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,10 +49,13 @@ export function HeroBanner({ banners }: HeroBannerProps) {
             i === current ? 'opacity-100' : 'opacity-0 pointer-events-none'
           )}
         >
-          <img
+          <Image
             src={banner.imageUrl}
             alt={banner.advertiserName}
-            className="w-full h-full object-cover pointer-events-none"
+            fill
+            className="object-cover pointer-events-none"
+            priority={i === 0}
+            sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-transparent pointer-events-none" />
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent pointer-events-none" />

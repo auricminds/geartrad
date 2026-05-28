@@ -19,6 +19,7 @@ import {
 import type { Listing } from '@/types';
 import type { OrderRow } from '@/lib/api';
 import type { DbProfile } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 // Re-export OrderRow from api since it's needed here
 export type { OrderRow };
@@ -59,6 +60,7 @@ export default function DashboardPage() {
   const [instapayId, setInstapayId]   = useState('');
   const [vodafoneNum, setVodafoneNum] = useState('');
   const [orangeNum, setOrangeNum]     = useState('');
+  const [paypalEmail, setPaypalEmail] = useState('');
   const [walletUsdt, setWalletUsdt]   = useState('');
   const [walletBtc, setWalletBtc]     = useState('');
   const [walletEth, setWalletEth]     = useState('');
@@ -79,11 +81,12 @@ export default function DashboardPage() {
     if (p) {
       const pp = p as typeof p & {
         instapay_id?: string; vodafone_number?: string; orange_number?: string;
-        crypto_wallet_usdt?: string; crypto_wallet_btc?: string; crypto_wallet_eth?: string;
+        paypal_email?: string; crypto_wallet_usdt?: string; crypto_wallet_btc?: string; crypto_wallet_eth?: string;
       };
       setInstapayId(pp.instapay_id ?? '');
       setVodafoneNum(pp.vodafone_number ?? '');
       setOrangeNum(pp.orange_number ?? '');
+      setPaypalEmail(pp.paypal_email ?? '');
       setWalletUsdt(pp.crypto_wallet_usdt ?? '');
       setWalletBtc(pp.crypto_wallet_btc ?? '');
       setWalletEth(pp.crypto_wallet_eth ?? '');
@@ -113,9 +116,11 @@ export default function DashboardPage() {
   const handleConfirmOrder = async (orderId: string) => {
     if (!user || confirmingOrder) return;
     setConfirmingOrder(orderId);
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     const res = await fetch('/api/payment/confirm', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify({ orderId, sellerId: user.id }),
     });
     if (res.ok) {
@@ -132,6 +137,7 @@ export default function DashboardPage() {
       instapay_id:         instapayId.trim() || undefined,
       vodafone_number:     vodafoneNum.trim() || undefined,
       orange_number:       orangeNum.trim() || undefined,
+      paypal_email:        paypalEmail.trim() || undefined,
       crypto_wallet_usdt:  walletUsdt.trim() || undefined,
       crypto_wallet_btc:   walletBtc.trim() || undefined,
       crypto_wallet_eth:   walletEth.trim() || undefined,
@@ -533,6 +539,7 @@ export default function DashboardPage() {
               { label: 'InstaPay ID', labelAr: 'معرف إنستاباي', val: instapayId, set: setInstapayId, placeholder: 'your-instapay-id' },
               { label: 'Vodafone Cash Number', labelAr: 'رقم فودافون كاش', val: vodafoneNum, set: setVodafoneNum, placeholder: '01XXXXXXXXX' },
               { label: 'Orange Money Number', labelAr: 'رقم أورانج موني', val: orangeNum, set: setOrangeNum, placeholder: '01XXXXXXXXX' },
+              { label: 'PayPal Email', labelAr: 'بريد باي بال', val: paypalEmail, set: setPaypalEmail, placeholder: 'you@example.com' },
             ].map((field) => (
               <div key={field.label}>
                 <label className="block text-xs text-muted mb-1.5">

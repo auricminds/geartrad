@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { emailCredentialsAvailable, emailDeliveryConfirmed } from '@/lib/email';
+import { getSessionUserId } from '@/lib/auth-server';
 
 function getAdmin() {
   return createClient(
@@ -18,11 +19,22 @@ function getAdmin() {
  */
 export async function POST(req: NextRequest) {
   try {
+    const sessionUserId = await getSessionUserId(req);
+    if (!sessionUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await req.json() as { orderId: string; sellerId?: string; buyerId?: string };
     const { orderId, sellerId, buyerId } = body;
 
     if (!orderId || (!sellerId && !buyerId)) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Verify session matches the claimed role
+    const claimedId = sellerId ?? buyerId;
+    if (sessionUserId !== claimedId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const admin = getAdmin();
@@ -95,7 +107,6 @@ export async function POST(req: NextRequest) {
       const { data: listing } = await admin
         .from('listings').select('title').eq('id', order.listing_id).single();
 
-      // Fetch order amount for email
       const { data: fullOrder } = await admin
         .from('orders').select('amount').eq('id', orderId).single();
 

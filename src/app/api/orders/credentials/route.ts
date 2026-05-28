@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getSessionUserId } from '@/lib/auth-server';
 
 function getAdmin() {
   return createClient(
@@ -18,12 +19,21 @@ function getAdmin() {
  * Credentials are NEVER returned publicly — this is the only place they're exposed.
  */
 export async function GET(req: NextRequest) {
+  const sessionUserId = await getSessionUserId(req);
+  if (!sessionUserId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { searchParams } = req.nextUrl;
   const orderId = searchParams.get('orderId');
   const buyerId = searchParams.get('buyerId');
 
   if (!orderId || !buyerId) {
     return NextResponse.json({ error: 'Missing params' }, { status: 400 });
+  }
+
+  if (sessionUserId !== buyerId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const admin = getAdmin();

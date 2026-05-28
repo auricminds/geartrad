@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { emailOrderCancelled } from '@/lib/email';
+import { getSessionUserId } from '@/lib/auth-server';
 
 function getAdmin() {
   return createClient(
@@ -18,6 +19,11 @@ function getAdmin() {
  */
 export async function POST(req: NextRequest) {
   try {
+    const sessionUserId = await getSessionUserId(req);
+    if (!sessionUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { orderId, userId } = await req.json() as {
       orderId: string;
       userId: string;
@@ -25,6 +31,10 @@ export async function POST(req: NextRequest) {
 
     if (!orderId || !userId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    if (sessionUserId !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const admin = getAdmin();

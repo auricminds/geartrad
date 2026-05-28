@@ -32,10 +32,34 @@ import { getListings, getTopSellers } from '@/lib/api';
 import type { AdBanner } from '@/types';
 
 const adBanners: AdBanner[] = [
-  { id: '1', imageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1400&q=80', linkUrl: '#', advertiserName: 'GearTrad', expiresAt: new Date('2027-01-01') },
-  { id: '2', imageUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1400&q=80', linkUrl: '#', advertiserName: 'GearTrad', expiresAt: new Date('2027-01-01') },
-  { id: '3', imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=80', linkUrl: '#', advertiserName: 'GearTrad', expiresAt: new Date('2027-01-01') },
+  { id: '1', imageUrl: '/banners/banner-1.webp', linkUrl: '#', advertiserName: 'GearTrad', expiresAt: new Date('2027-01-01') },
+  { id: '2', imageUrl: '/banners/banner-2.webp', linkUrl: '#', advertiserName: 'GearTrad', expiresAt: new Date('2027-01-01') },
+  { id: '3', imageUrl: '/banners/banner-3.webp', linkUrl: '#', advertiserName: 'GearTrad', expiresAt: new Date('2027-01-01') },
 ];
+
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com';
+
+const orgJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'GearTrad',
+  url: BASE,
+  logo: `${BASE}/logo.png`,
+  description: 'The #1 marketplace for buying and selling game accounts, skins, and in-game items in Egypt and the Middle East.',
+  sameAs: [],
+};
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'GearTrad',
+  url: BASE,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: { '@type': 'EntryPoint', urlTemplate: `${BASE}/en/browse?q={search_term_string}` },
+    'query-input': 'required name=search_term_string',
+  },
+};
 
 export default async function HomePage() {
   const t = await getTranslations('home');
@@ -52,6 +76,8 @@ export default async function HomePage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
 
       {/* Hero — no entrance delay, it's above the fold */}
       <HeroBanner banners={adBanners} />

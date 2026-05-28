@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getSessionUserId } from '@/lib/auth-server';
 
 /**
  * POST /api/orders/rate
@@ -9,6 +10,11 @@ import { createClient } from '@supabase/supabase-js';
  */
 export async function POST(req: NextRequest) {
   try {
+    const sessionUserId = await getSessionUserId(req);
+    if (!sessionUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { orderId, buyerId, rating, comment } = await req.json() as {
       orderId: string;
       buyerId: string;
@@ -18,6 +24,10 @@ export async function POST(req: NextRequest) {
 
     if (!orderId || !buyerId || !rating) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    if (sessionUserId !== buyerId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
       return NextResponse.json({ error: 'Rating must be an integer between 1 and 5' }, { status: 400 });
