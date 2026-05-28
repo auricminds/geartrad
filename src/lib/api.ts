@@ -173,9 +173,14 @@ export async function createListing(payload: {
   account_extra_info?: string;
 }, sellerId: string): Promise<{ id: string } | null> {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     const res = await fetch('/api/listings/create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ payload, sellerId }),
     });
     if (!res.ok) {
