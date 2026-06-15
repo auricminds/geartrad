@@ -18,7 +18,14 @@ export type DbProfile = {
   total_sales: number;
   is_verified: boolean;
   is_banned: boolean;
+  banned_until: string | null;
   created_at: string;
+  // Personal info (collected at registration)
+  full_name: string | null;
+  phone: string | null;
+  country: string | null;
+  gender: 'male' | 'female' | 'prefer_not_to_say' | null;
+  date_of_birth: string | null;
   // Payment details (sellers only)
   instapay_id: string | null;
   vodafone_number: string | null;

@@ -49,6 +49,8 @@ type UserRow = {
   id: string; username: string; account_type: string; role: string;
   rating: number; total_sales: number; is_verified: boolean; created_at: string;
   is_banned: boolean; banned_until: string | null;
+  full_name: string | null; phone: string | null; country: string | null;
+  gender: string | null; date_of_birth: string | null;
 };
 type ListingRow = {
   id: string; title: string; game: string; price: number; is_available: boolean;
@@ -62,6 +64,7 @@ type TicketRow = {
 };
 type VerifRow = {
   id: string; status: string; submitted_at: string; notes: string | null;
+  id_doc_type: string | null; id_front_url: string;
   user: { id: string; username: string; avatar_url: string | null } | null;
 };
 
@@ -467,6 +470,11 @@ export default function ModPage() {
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           {[
                             { label: 'Email',        value: emailMap[u.id] || '—' },
+                            { label: 'Full Name',    value: u.full_name || '—' },
+                            { label: 'Phone',        value: u.phone || '—' },
+                            { label: 'Country',      value: u.country || '—' },
+                            { label: 'Gender',       value: u.gender?.replace('_', ' ') || '—' },
+                            { label: 'Date of Birth',value: u.date_of_birth ? new Date(u.date_of_birth).toLocaleDateString() : '—' },
                             { label: 'Account Type', value: u.account_type },
                             { label: 'Role',         value: u.role },
                             { label: 'Total Sales',  value: u.total_sales },
@@ -476,7 +484,7 @@ export default function ModPage() {
                           ].map(({ label, value }) => (
                             <div key={label} className={cn(
                               'bg-white/5 rounded-xl p-2.5',
-                              label === 'Email' ? 'col-span-2 sm:col-span-4' : ''
+                              label === 'Email' || label === 'Full Name' ? 'col-span-2 sm:col-span-2' : ''
                             )}>
                               <p className="text-[10px] text-muted uppercase tracking-wider">{label}</p>
                               <p className="text-xs text-white font-medium mt-0.5 break-all">{value}</p>
@@ -668,8 +676,30 @@ export default function ModPage() {
                     <p className="text-muted text-xs mt-0.5">Submitted {new Date(v.submitted_at).toLocaleDateString()}</p>
                     {v.notes && <p className="text-xs text-amber-300 mt-0.5">{v.notes}</p>}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                     <Badge status={v.status} />
+                    {v.id_doc_type && (
+                      <span className="px-2 py-0.5 rounded-lg bg-white/5 border border-border text-[10px] text-muted capitalize">
+                        {v.id_doc_type.replace('_', ' ')}
+                      </span>
+                    )}
+                    {/* View ID document */}
+                    {v.id_front_url && (
+                      <button
+                        onClick={async () => {
+                          const token = await getToken();
+                          const res = await fetch(`/api/mod/view-id?path=${encodeURIComponent(v.id_front_url)}`, {
+                            headers: token ? { Authorization: `Bearer ${token}` } : {},
+                          });
+                          const data = await res.json();
+                          if (data.url) window.open(data.url, '_blank');
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg bg-blue-500/15 border border-blue-500/20 text-blue-300 text-xs font-medium hover:bg-blue-500/25 transition-all flex items-center gap-1"
+                      >
+                        <Eye className="w-3 h-3" />
+                        View ID
+                      </button>
+                    )}
                     {v.status === 'pending' && (
                       <>
                         <button
