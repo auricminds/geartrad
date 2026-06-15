@@ -35,73 +35,59 @@ export function HeroBanner({ banners }: HeroBannerProps) {
 
   if (banners.length === 0) {
     return (
-      <section className="w-full">
-        <div className="w-full rounded-2xl aspect-[4/3] sm:aspect-[16/7] bg-surface border border-border" />
+      <section className="w-full px-1">
+        <div className="w-full rounded-3xl aspect-[16/9] sm:aspect-[16/7] bg-surface border border-white/5" />
       </section>
     );
   }
 
   return (
-    <section className="w-full">
-      {/* ── Banner carousel — clean image, no text on top ─── */}
-      <div className="relative w-full overflow-hidden rounded-2xl aspect-[16/9] sm:aspect-[16/7]">
-        {banners.map((banner, i) => (
-          <div
-            key={banner.id}
-            className={cn(
-              'absolute inset-0 transition-opacity duration-700',
-              i === current ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            )}
-          >
-            <Image
-              src={banner.imageUrl}
-              alt={banner.advertiserName}
-              fill
-              className="object-cover object-center pointer-events-none"
-              priority={i === 0}
-              sizes="(max-width: 768px) 100vw, 100vw"
-            />
-
-            {/* Sponsored label + Visit button — minimal corner overlay */}
-            <div className="absolute top-3 end-3 flex items-center gap-2 z-20">
-              <span className="px-2 py-1 rounded-lg bg-black/60 text-[10px] text-white/60 backdrop-blur-sm">
-                Sponsored · {banner.advertiserName}
-              </span>
-              {banner.linkUrl && banner.linkUrl !== '#' && (
-                <a
-                  href={banner.linkUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/50 border border-white/20 text-white text-[11px] font-medium hover:bg-black/70 transition-all backdrop-blur-sm"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  {locale === 'ar' ? 'زيارة' : 'Visit'}
-                </a>
+    <section className="w-full px-1">
+      {/* ── Banner carousel ─── */}
+      {/* Outer wrapper: floating card feel */}
+      <div className="relative rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.6)] ring-1 ring-white/8">
+        {/* Carousel viewport */}
+        <div className="relative w-full overflow-hidden rounded-3xl aspect-[16/9] sm:aspect-[16/7] bg-black">
+          {banners.map((banner, i) => (
+            <div
+              key={banner.id}
+              className={cn(
+                'absolute inset-0 transition-opacity duration-700',
+                i === current ? 'opacity-100' : 'opacity-0 pointer-events-none'
               )}
+            >
+              <Image
+                src={banner.imageUrl}
+                alt={banner.advertiserName}
+                fill
+                className="object-contain object-center pointer-events-none"
+                priority={i === 0}
+                sizes="(max-width: 768px) 100vw, 100vw"
+              />
+
+              {/* Sponsored label + Visit button */}
+              <div className="absolute top-3 end-3 flex items-center gap-2 z-20">
+                <span className="px-2 py-1 rounded-lg bg-black/60 text-[10px] text-white/60 backdrop-blur-sm">
+                  Sponsored · {banner.advertiserName}
+                </span>
+                {banner.linkUrl && banner.linkUrl !== '#' && (
+                  <a
+                    href={banner.linkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/50 border border-white/20 text-white text-[11px] font-medium hover:bg-black/70 transition-all backdrop-blur-sm"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    {locale === 'ar' ? 'زيارة' : 'Visit'}
+                  </a>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {/* Prev / Next buttons — only when multiple banners */}
-        {hasMultiple && (
-          <>
-            <button
-              type="button"
-              onClick={prev}
-              className="absolute start-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all z-20 backdrop-blur-sm"
-            >
-              {locale === 'ar' ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </button>
-            <button
-              type="button"
-              onClick={next}
-              className="absolute end-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all z-20 backdrop-blur-sm"
-            >
-              {locale === 'ar' ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            </button>
-
-            {/* Dots */}
+          {/* Dots */}
+          {hasMultiple && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
               {banners.map((_, i) => (
                 <motion.button
@@ -117,6 +103,26 @@ export function HeroBanner({ banners }: HeroBannerProps) {
                 />
               ))}
             </div>
+          )}
+        </div>
+
+        {/* Prev / Next buttons — outside the clipping viewport, centred on the card */}
+        {hasMultiple && (
+          <>
+            <button
+              type="button"
+              onClick={prev}
+              className="absolute start-0 -translate-x-1/2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 border border-white/15 text-white flex items-center justify-center hover:bg-purple/80 hover:border-purple/60 transition-all z-30 backdrop-blur-md shadow-lg"
+            >
+              {locale === 'ar' ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+            </button>
+            <button
+              type="button"
+              onClick={next}
+              className="absolute end-0 translate-x-1/2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 border border-white/15 text-white flex items-center justify-center hover:bg-purple/80 hover:border-purple/60 transition-all z-30 backdrop-blur-md shadow-lg"
+            >
+              {locale === 'ar' ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+            </button>
           </>
         )}
       </div>
