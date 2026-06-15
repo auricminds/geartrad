@@ -44,21 +44,43 @@ export async function GET(req: NextRequest) {
       payment_status: 'delivered',
     }).eq('id', order.id);
 
+    // Update seller's total_sales count
+    const { count: completedCount } = await admin
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('seller_id', order.seller_id)
+      .in('payment_status', ['paid', 'delivered']);
+    if (completedCount !== null) {
+      await admin.from('profiles')
+        .update({ total_sales: completedCount })
+        .eq('id', order.seller_id);
+    }
+
+    // Fetch listing title for notifications/email
+    const { data: listing } = await admin
+      .from('listings').select('title').eq('id', order.listing_id).single();
+    const listingTitle = listing?.title ?? 'your listing';
+
     // Notify buyer
     await admin.from('notifications').insert({
       user_id: order.buyer_id,
       type: 'system',
       title: 'Order Auto-Completed',
-      body: 'Your order was automatically marked as complete because the 72-hour confirmation window passed.',
+      body: `Your order for "${listingTitle}" was automatically marked as complete because the 72-hour confirmation window passed.`,
       related_id: order.id,
     });
 
-    // Fetch listing title for email
-    const { data: listing } = await admin
-      .from('listings').select('title').eq('id', order.listing_id).single();
+    // Notify seller
+    await admin.from('notifications').insert({
+      user_id: order.seller_id,
+      type: 'sale',
+      title: 'Trade Auto-Completed',
+      body: `"${listingTitle}" was automatically marked as complete. The buyer did not dispute within 72 hours.`,
+      related_id: order.id,
+    });
 
     // Email seller
-    await emailDeliveryConfirmed(order.seller_id, listing?.title ?? 'your listing', order.amount);
+    await emailDeliveryConfirmed(order.seller_id, listingTitle, order.amount);
 
     completed++;
   }

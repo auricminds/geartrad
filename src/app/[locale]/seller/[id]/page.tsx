@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Star, Shield, BadgeCheck, Timer, Package, ArrowLeft, CreditCard } from 'lucide-react';
-import { getProfile, getSellerListings } from '@/lib/api';
+import { Star, Shield, BadgeCheck, Package, ArrowLeft, CreditCard, CheckCircle2, Clock, AlertCircle, TrendingUp } from 'lucide-react';
+import { getProfile, getSellerListings, getSellerStats } from '@/lib/api';
 import { ListingCard } from '@/components/listing/ListingCard';
 import { SellerAnalytics } from '@/components/listing/SellerAnalytics';
 import { cn } from '@/lib/utils';
@@ -34,9 +34,10 @@ export default async function SellerProfilePage({ params }: Props) {
   const { id, locale } = await params;
   const isAr = locale === 'ar';
 
-  const [profile, listings] = await Promise.all([
+  const [profile, listings, stats] = await Promise.all([
     getProfile(id),
     getSellerListings(id),
+    getSellerStats(id),
   ]);
 
   if (!profile) notFound();
@@ -113,15 +114,39 @@ export default async function SellerProfilePage({ params }: Props) {
             <p className="text-muted text-xs mb-4">{isAr ? 'التقييم' : 'Rating'}</p>
 
             {/* Stats grid */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="grid grid-cols-2 gap-2 mb-4">
               <div className="bg-background rounded-xl p-3 text-center">
-                <p className="text-lg font-bold text-white">{profile.total_sales}</p>
-                <p className="text-xs text-muted">{isAr ? 'إجمالي المبيعات' : 'Total Sales'}</p>
+                <div className="flex items-center justify-center gap-1 mb-0.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <p className="text-lg font-bold text-white">{stats.successfulTrades}</p>
+                </div>
+                <p className="text-[11px] text-muted">{isAr ? 'صفقات ناجحة' : 'Successful Trades'}</p>
               </div>
               <div className="bg-background rounded-xl p-3 text-center">
-                <p className="text-lg font-bold text-white">{activeListings.length}</p>
-                <p className="text-xs text-muted">{isAr ? 'إعلانات نشطة' : 'Active Listings'}</p>
+                <div className="flex items-center justify-center gap-1 mb-0.5">
+                  <Package className="w-3.5 h-3.5 text-purple" />
+                  <p className="text-lg font-bold text-white">{activeListings.length}</p>
+                </div>
+                <p className="text-[11px] text-muted">{isAr ? 'إعلانات نشطة' : 'Active Listings'}</p>
               </div>
+              {stats.openTrades > 0 && (
+                <div className="bg-background rounded-xl p-3 text-center">
+                  <div className="flex items-center justify-center gap-1 mb-0.5">
+                    <Clock className="w-3.5 h-3.5 text-amber-400" />
+                    <p className="text-lg font-bold text-white">{stats.openTrades}</p>
+                  </div>
+                  <p className="text-[11px] text-muted">{isAr ? 'صفقات جارية' : 'Open Trades'}</p>
+                </div>
+              )}
+              {stats.totalOrders > 0 && (
+                <div className="bg-background rounded-xl p-3 text-center">
+                  <div className="flex items-center justify-center gap-1 mb-0.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-gold" />
+                    <p className="text-lg font-bold text-white">{stats.totalOrders}</p>
+                  </div>
+                  <p className="text-[11px] text-muted">{isAr ? 'إجمالي الطلبات' : 'Total Orders'}</p>
+                </div>
+              )}
             </div>
 
             {/* Message seller */}

@@ -563,6 +563,24 @@ export default function ModPage() {
                             <Eye className="w-3.5 h-3.5" />
                             View Deals
                           </button>
+
+                          {/* Delete user — admin only */}
+                          {userRole === 'admin' && (
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Permanently delete ${u.username}? This cannot be undone.`)) return;
+                                const ok = await modAction({ type: 'delete-user', requesterId: user.id, userId: u.id });
+                                if (ok) {
+                                  setUsers((prev) => prev.filter((x) => x.id !== u.id));
+                                  setExpandedUser(null);
+                                }
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-900/30 border border-red-700/40 text-red-400 text-xs font-medium hover:bg-red-900/50 transition-all"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Delete User
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}

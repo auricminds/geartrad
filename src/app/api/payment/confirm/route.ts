@@ -104,6 +104,21 @@ export async function POST(req: NextRequest) {
         status: 'completed',
       }).eq('id', orderId);
 
+      // Increment seller's total_sales (in case seller never confirmed from dashboard)
+      const { data: sellerProfile } = await admin
+        .from('profiles').select('total_sales').eq('id', order.seller_id).single();
+      // Count the actual completed orders to keep total_sales accurate
+      const { count: completedCount } = await admin
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+        .eq('seller_id', order.seller_id)
+        .in('payment_status', ['paid', 'delivered']);
+      if (sellerProfile !== null) {
+        await admin.from('profiles')
+          .update({ total_sales: completedCount ?? (sellerProfile.total_sales ?? 0) })
+          .eq('id', order.seller_id);
+      }
+
       const { data: listing } = await admin
         .from('listings').select('title').eq('id', order.listing_id).single();
 

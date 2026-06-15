@@ -2,7 +2,9 @@
 
 import { useStore } from '@/components/providers/StoreProvider';
 import { useLocale } from 'next-intl';
-import { Bell, ShoppingBag, MessageCircle, Info, Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Bell, ShoppingBag, MessageCircle, Info, Check, ArrowRight, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Notification } from '@/components/providers/StoreProvider';
 
@@ -10,25 +12,55 @@ const typeIcons: Record<Notification['type'], typeof Bell> = {
   sale: ShoppingBag,
   message: MessageCircle,
   system: Info,
+  mod: Shield,
 };
 
 const typeColors: Record<Notification['type'], string> = {
   sale: 'text-gold bg-gold/10',
   message: 'text-purple bg-purple/10',
   system: 'text-emerald-400 bg-emerald-400/10',
+  mod: 'text-amber-400 bg-amber-400/10',
 };
 
-export function NotificationsPanel() {
+function getNotificationHref(n: Notification, locale: string, userRole: string): string {
+  if (n.type === 'message' && n.related_id) return `/${locale}/chat?listing=${n.related_id}`;
+  if (n.type === 'sale') {
+    return userRole === 'seller' ? `/${locale}/dashboard` : `/${locale}/orders`;
+  }
+  if (n.type === 'mod' && n.related_id) return `/${locale}/mod/tickets/${n.related_id}`;
+  return `/${locale}/support`;
+}
+
+function formatNotifTime(iso: string): string {
+  try {
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'Just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  } catch {
+    return '';
+  }
+}
+
+export function NotificationsPanel({ userRole }: { userRole?: string }) {
   const { notifications, notifOpen, setNotifOpen, markOneRead, markAllRead, unreadCount } = useStore();
   const locale = useLocale();
+  const router = useRouter();
   const isRTL = locale === 'ar';
 
   if (!notifOpen) return null;
 
+  const handleClick = (n: Notification) => {
+    markOneRead(n.id);
+    setNotifOpen(false);
+    const href = getNotificationHref(n, locale, userRole ?? 'user');
+    router.push(href);
+  };
+
   return (
-    // Uses fixed positioning anchored to the viewport so the panel never goes
-    // off-screen on small mobile displays (absolute right-0 relative to the
-    // small bell-button div would push the panel partially off the left edge).
     <div
       className={cn(
         'fixed top-[68px] w-80 max-w-[calc(100vw-2rem)] bg-surface border border-border rounded-2xl shadow-2xl z-50 overflow-hidden',
@@ -67,16 +99,16 @@ export function NotificationsPanel() {
               {locale === 'ar' ? 'لا توجد إشعارات' : 'No notifications yet'}
             </div>
           ) : (
-            notifications.map((n) => {
+            notifications.slice(0, 8).map((n) => {
               const Icon = typeIcons[n.type];
               return (
                 <button
                   type="button"
                   key={n.id}
-                  onClick={() => markOneRead(n.id)}
+                  onClick={() => handleClick(n)}
                   className={cn(
-                    'w-full flex gap-3 p-4 text-start transition-colors',
-                    !n.read ? 'bg-purple/5 hover:bg-purple/10 cursor-pointer' : 'hover:bg-white/5 cursor-default'
+                    'w-full flex gap-3 p-4 text-start transition-colors cursor-pointer',
+                    !n.read ? 'bg-purple/5 hover:bg-purple/10' : 'hover:bg-white/5'
                   )}
                 >
                   <div
@@ -95,12 +127,24 @@ export function NotificationsPanel() {
                       )}
                     </div>
                     <p className="text-xs text-muted mt-0.5 leading-relaxed">{n.body}</p>
-                    <p className="text-xs text-muted/50 mt-1">{n.time}</p>
+                    <p className="text-xs text-muted/50 mt-1">{formatNotifTime(n.time)}</p>
                   </div>
                 </button>
               );
             })
           )}
+        </div>
+
+        {/* Footer — See all link */}
+        <div className="border-t border-border">
+          <Link
+            href={`/${locale}/notifications`}
+            onClick={() => setNotifOpen(false)}
+            className="flex items-center justify-center gap-1.5 py-3 text-xs text-purple hover:text-purple-light transition-colors font-medium"
+          >
+            {locale === 'ar' ? 'عرض كل الإشعارات' : 'See all notifications'}
+            <ArrowRight className={cn('w-3 h-3', isRTL && 'rotate-180')} />
+          </Link>
         </div>
     </div>
   );

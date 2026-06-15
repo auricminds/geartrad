@@ -3,7 +3,6 @@ import { getListing } from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
 import { CheckoutClient } from '@/components/checkout/CheckoutClient';
 import { Shield, Star, Lock, RefreshCw, HeadphonesIcon } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
 
 interface CheckoutPageProps {
   params: Promise<{ id: string; locale: string }>;
@@ -11,7 +10,6 @@ interface CheckoutPageProps {
 
 export default async function CheckoutPage({ params }: CheckoutPageProps) {
   const { id, locale } = await params;
-  await getTranslations('checkout');
 
   const listing = await getListing(id);
   if (!listing) notFound();

@@ -11,11 +11,12 @@ import {
   ArrowLeft, Trash2, Eye, EyeOff, Star, TrendingUp,
   CheckCircle2, Clock, AlertCircle, RefreshCw, Wallet, ExternalLink, Save, MessageCircle,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
 import {
   getSellerListings, getSellerOrders, toggleListingAvailability,
-  deleteListing, getProfile, updateSellerPaymentDetails,
+  deleteListing, getProfile, updateSellerPaymentDetails, getSellerStats,
 } from '@/lib/api';
+import type { SellerStats } from '@/lib/api';
 import type { Listing } from '@/types';
 import type { OrderRow } from '@/lib/api';
 import type { DbProfile } from '@/lib/supabase';
@@ -49,6 +50,7 @@ export default function DashboardPage() {
   const [listings, setListings]   = useState<Listing[]>([]);
   const [orders, setOrders]       = useState<OrderRow[]>([]);
   const [profile, setProfile]     = useState<DbProfile | null>(null);
+  const [sellerStats, setSellerStats] = useState<SellerStats | null>(null);
   const [loading, setLoading]     = useState(true);
   const [activeTab, setActiveTab] = useState<'listings' | 'orders' | 'payment'>('listings');
   const [deleting, setDeleting]       = useState<string | null>(null);
@@ -69,14 +71,16 @@ export default function DashboardPage() {
 
   const load = useCallback(async (uid: string) => {
     setLoading(true);
-    const [l, o, p] = await Promise.all([
+    const [l, o, p, s] = await Promise.all([
       getSellerListings(uid),
       getSellerOrders(uid),
       getProfile(uid),
+      getSellerStats(uid),
     ]);
     setListings(l);
     setOrders(o);
     setProfile(p);
+    setSellerStats(s);
     // Pre-fill payment settings
     if (p) {
       const pp = p as typeof p & {
@@ -176,9 +180,6 @@ export default function DashboardPage() {
 
   const activeListing  = listings.filter((l) => l.isAvailable).length;
   const soldListings   = listings.filter((l) => !l.isAvailable).length;
-  const totalRevenue   = orders
-    .filter((o) => o.status === 'completed')
-    .reduce((sum, o) => sum + o.amount, 0);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
@@ -220,34 +221,48 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
         {[
+          {
+            icon: CheckCircle2,
+            color: 'text-emerald-400',
+            bg: 'bg-emerald-500/10',
+            value: sellerStats?.successfulTrades ?? 0,
+            label: isRTL ? 'صفقات ناجحة' : 'Successful Trades',
+          },
           {
             icon: Package,
             color: 'text-purple',
             bg: 'bg-purple/10',
             value: activeListing,
-            label: isRTL ? 'إعلانات نشطة' : 'Active',
+            label: isRTL ? 'إعلانات نشطة' : 'Active Listings',
+          },
+          {
+            icon: Clock,
+            color: 'text-amber-400',
+            bg: 'bg-amber-500/10',
+            value: sellerStats?.openTrades ?? 0,
+            label: isRTL ? 'صفقات جارية' : 'Open Trades',
           },
           {
             icon: Store,
-            color: 'text-emerald-400',
-            bg: 'bg-emerald-500/10',
+            color: 'text-blue-400',
+            bg: 'bg-blue-500/10',
             value: soldListings,
-            label: isRTL ? 'مباعة' : 'Sold',
+            label: isRTL ? 'مباعة' : 'Listings Sold',
           },
           {
             icon: ShoppingBag,
             color: 'text-gold',
             bg: 'bg-gold/10',
-            value: orders.length,
-            label: isRTL ? 'طلبات' : 'Orders',
+            value: sellerStats?.totalOrders ?? orders.length,
+            label: isRTL ? 'إجمالي الطلبات' : 'Total Orders',
           },
           {
             icon: TrendingUp,
             color: 'text-blue-400',
             bg: 'bg-blue-500/10',
-            value: profile?.rating ? `${profile.rating}★` : '—',
+            value: profile?.rating ? `${Number(profile.rating).toFixed(1)}★` : '—',
             label: isRTL ? 'التقييم' : 'Rating',
           },
         ].map((stat, i) => (
@@ -264,13 +279,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Revenue callout */}
-      {totalRevenue > 0 && (
+      {(sellerStats?.totalRevenue ?? 0) > 0 && (
         <div className="mb-6 px-5 py-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3">
           <Star className="w-5 h-5 text-emerald-400 shrink-0" />
           <p className="text-emerald-300 text-sm font-medium">
             {isRTL
-              ? `إجمالي أرباحك: ${totalRevenue.toLocaleString()} ج.م`
-              : `Total earnings: ${totalRevenue.toLocaleString()} EGP`}
+              ? `إجمالي أرباحك: ${formatPrice(sellerStats?.totalRevenue ?? 0, 'ar')}`
+              : `Total earnings: ${formatPrice(sellerStats?.totalRevenue ?? 0, 'en')}`}
           </p>
         </div>
       )}

@@ -122,5 +122,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   }
 
+  // ── Delete user — admin only ─────────────────────────────────
+  if (type === 'delete-user') {
+    if (requesterRole !== 'admin') {
+      return NextResponse.json({ error: 'Only admins can delete users' }, { status: 403 });
+    }
+    const { userId } = body;
+    if (!userId || userId === requesterId) {
+      return NextResponse.json({ error: 'Cannot delete yourself' }, { status: 400 });
+    }
+    // Delete from Supabase Auth (cascades to profile via FK if set, otherwise clean up manually)
+    const { error: authErr } = await db.auth.admin.deleteUser(userId);
+    if (authErr) return NextResponse.json({ error: authErr.message }, { status: 500 });
+    // Ensure profile row is removed even without cascade
+    await db.from('profiles').delete().eq('id', userId);
+    return NextResponse.json({ success: true });
+  }
+
   return NextResponse.json({ error: 'Unknown action type' }, { status: 400 });
 }

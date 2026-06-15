@@ -4,7 +4,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
-import { Gamepad2, Mail, Lock, User, ShoppingBag, Store, Zap, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Gamepad2, Mail, Lock, User, ShoppingBag, Store, Zap, AlertCircle, CheckCircle2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase';
@@ -20,6 +20,7 @@ export default function SignUpPage() {
 
   const usernameRef = useRef<HTMLInputElement>(null);
   const emailRef    = useRef<HTMLInputElement>(null);
+  const ageRef      = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const confirmRef  = useRef<HTMLInputElement>(null);
 
@@ -35,11 +36,16 @@ export default function SignUpPage() {
 
     const username = usernameRef.current?.value.trim() ?? '';
     const email    = emailRef.current?.value.trim() ?? '';
+    const age      = Number(ageRef.current?.value ?? 0);
     const password = passwordRef.current?.value ?? '';
     const confirm  = confirmRef.current?.value ?? '';
 
     if (!username || !email || !password || !confirm) {
       setError(locale === 'ar' ? 'يرجى ملء جميع الحقول' : 'Please fill in all fields');
+      return;
+    }
+    if (!age || age < 13 || age > 100) {
+      setError(locale === 'ar' ? 'يرجى إدخال عمر صحيح (13 - 100)' : 'Please enter a valid age (13–100)');
       return;
     }
     if (password.length < 6) {
@@ -62,6 +68,7 @@ export default function SignUpPage() {
             username,
             account_type: accountType,
             boost_type: boostType !== 'none' ? boostType : null,
+            age,
           },
         },
       });
@@ -244,6 +251,16 @@ export default function SignUpPage() {
               placeholder="you@example.com"
               icon={<Mail className="w-4 h-4" />}
               autoComplete="email"
+              required
+            />
+            <Input
+              ref={ageRef}
+              label={locale === 'ar' ? 'العمر' : 'Age'}
+              type="number"
+              placeholder={locale === 'ar' ? 'مثال: 22' : 'e.g. 22'}
+              icon={<Calendar className="w-4 h-4" />}
+              min={13}
+              max={100}
               required
             />
             <Input

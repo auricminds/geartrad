@@ -8,11 +8,12 @@ import { Listing, CartItem } from '@/types';
 
 export interface Notification {
   id: string;
-  type: 'sale' | 'message' | 'system';
+  type: 'sale' | 'message' | 'system' | 'mod';
   title: string;
   body: string;
   time: string;
   read: boolean;
+  related_id: string | null;
 }
 
 interface StoreContextType {
@@ -178,13 +179,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) { setNotifications([]); return; }
     getNotifications(user.id).then((rows) => {
-      setNotifications(rows.map((r: { id: string; type: string; title: string; body: string; created_at: string; is_read: boolean }) => ({
+      setNotifications(rows.map((r: { id: string; type: string; title: string; body: string; created_at: string; is_read: boolean; related_id?: string | null }) => ({
         id: r.id,
         type: r.type as Notification['type'],
         title: r.title,
         body: r.body,
         time: r.created_at,
         read: r.is_read,
+        related_id: r.related_id ?? null,
       })));
     }).catch(() => {});
 
@@ -194,7 +196,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
         (payload) => {
-          const r = payload.new as { id: string; type: string; title: string; body: string; created_at: string; is_read: boolean };
+          const r = payload.new as { id: string; type: string; title: string; body: string; created_at: string; is_read: boolean; related_id?: string | null };
           setNotifications((prev) => [{
             id: r.id,
             type: r.type as Notification['type'],
@@ -202,6 +204,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             body: r.body,
             time: r.created_at,
             read: false,
+            related_id: r.related_id ?? null,
           }, ...prev]);
         }
       )

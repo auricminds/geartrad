@@ -50,22 +50,32 @@ export async function GET(req: NextRequest) {
       .update({ is_available: true })
       .eq('id', order.listing_id);
 
+    // Fetch listing title for notifications/email
+    const { data: listing } = await admin
+      .from('listings').select('title').eq('id', order.listing_id).single();
+    const title = listing?.title ?? 'a listing';
+
     // Notify buyer
     await admin.from('notifications').insert({
       user_id: order.buyer_id,
       type: 'system',
       title: 'Order Auto-Cancelled',
-      body: 'Your order was cancelled because no payment proof was submitted within 24 hours. The listing is available again.',
+      body: `Your order for "${title}" was cancelled because no payment proof was submitted within 24 hours. The listing is available again.`,
       related_id: order.id,
     });
 
-    // Fetch listing title for email
-    const { data: listing } = await admin
-      .from('listings').select('title').eq('id', order.listing_id).single();
-    const title = listing?.title ?? 'a listing';
+    // Notify seller
+    await admin.from('notifications').insert({
+      user_id: order.seller_id,
+      type: 'system',
+      title: 'Order Auto-Cancelled',
+      body: `An order for "${title}" was cancelled because the buyer did not submit payment proof within 24 hours. Your listing is now available again.`,
+      related_id: order.id,
+    });
 
-    // Email buyer
+    // Email buyer and seller
     await emailOrderCancelled(order.buyer_id, title, true);
+    await emailOrderCancelled(order.seller_id, title, false);
 
     cancelled++;
   }

@@ -73,6 +73,32 @@ function layout(body: string) {
 
 // ─── Exported helpers ────────────────────────────────────────────────────────
 
+export async function emailAdInquiry(inquiry: {
+  name: string;
+  company: string | null;
+  email: string;
+  phone: string | null;
+  message: string;
+}) {
+  const adminEmail = process.env.ADMIN_EMAIL ?? 'ads@geartrad.com';
+  await send(adminEmail, `New Ad Inquiry from ${inquiry.name} — GearTrad`, layout(`
+<div class="header"><h1>📢 New Ad Inquiry</h1><p>Someone wants to advertise on GearTrad</p></div>
+<div class="body">
+  <div class="box">
+    <div class="label">Name</div><div class="value">${inquiry.name}</div>
+    ${inquiry.company ? `<div class="label" style="margin-top:12px">Company</div><div class="value">${inquiry.company}</div>` : ''}
+    <div class="label" style="margin-top:12px">Email</div><div class="value"><a href="mailto:${inquiry.email}" style="color:#7c3aed">${inquiry.email}</a></div>
+    ${inquiry.phone ? `<div class="label" style="margin-top:12px">Phone</div><div class="value">${inquiry.phone}</div>` : ''}
+  </div>
+  <div class="box">
+    <div class="label">Message</div>
+    <div style="margin-top:8px;font-size:14px;color:#e2e2e8;line-height:1.7;white-space:pre-wrap">${inquiry.message}</div>
+  </div>
+  <a class="btn" href="mailto:${inquiry.email}?subject=Re: Your GearTrad Ad Inquiry">Reply to ${inquiry.name} →</a>
+  <p class="muted">This inquiry was submitted via the Advertise page on GearTrad.</p>
+</div>`));
+}
+
 export async function emailNewOrder(sellerId: string, listingTitle: string, amount: number, paymentMethod: string) {
   const email = await getUserEmail(sellerId);
   if (!email) return;

@@ -190,7 +190,7 @@ export function Navbar() {
                   </motion.span>
                 )}
               </motion.button>
-              <NotificationsPanel />
+              <NotificationsPanel userRole={userRole} />
             </div>
 
             {/* Auth */}

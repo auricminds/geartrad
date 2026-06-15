@@ -8,7 +8,7 @@ import Link from 'next/link';
 import {
   ShoppingBag, Clock, CheckCircle2, AlertCircle, RefreshCw,
   Shield, Eye, EyeOff, Copy, Check, ArrowLeft, Lock, ExternalLink,
-  Star, MessageCircle,
+  Star, MessageCircle, ThumbsUp, ThumbsDown,
 } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
 import { getBuyerOrders } from '@/lib/api';
@@ -24,13 +24,13 @@ type Credentials = {
 // How long buyer has to confirm delivery before auto-void warning triggers (72h)
 const CONFIRM_WINDOW_MS = 72 * 60 * 60 * 1000;
 
-function timeLeft(createdAt: string): string {
+function timeLeft(createdAt: string, isAr: boolean): string {
   const elapsed = Date.now() - new Date(createdAt).getTime();
   const remaining = CONFIRM_WINDOW_MS - elapsed;
-  if (remaining <= 0) return 'Expired';
+  if (remaining <= 0) return isAr ? 'انتهت المهلة' : 'Expired';
   const hours = Math.floor(remaining / 3600000);
   const minutes = Math.floor((remaining % 3600000) / 60000);
-  return `${hours}h ${minutes}m left`;
+  return isAr ? `متبقي ${hours} ساعة ${minutes} دقيقة` : `${hours}h ${minutes}m left`;
 }
 
 export default function OrdersPage() {
@@ -47,6 +47,7 @@ export default function OrdersPage() {
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const [showPass, setShowPass] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState('');
+  const [verifiedIds, setVerifiedIds] = useState<Set<string>>(new Set());
   const [ratingFor, setRatingFor] = useState<string | null>(null); // orderId currently being rated
   const [pendingRating, setPendingRating] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
@@ -285,6 +286,34 @@ export default function OrdersPage() {
                                 : '⚠ Do not share these credentials with anyone. Chat the seller if you need help logging in.'}
                             </p>
                           </div>
+                          {/* Credential verification — only before confirming delivery */}
+                          {!alreadyConfirmed && !verifiedIds.has(order.id) && (
+                            <div className="px-4 pb-4 space-y-2">
+                              <p className="text-xs text-muted text-center">
+                                {isAr ? 'هل بيانات الدخول تعمل؟' : 'Do the credentials work?'}
+                              </p>
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setVerifiedIds((prev) => { const s = new Set(prev); s.add(order.id); return s; });
+                                    handleConfirmDelivery(order.id);
+                                  }}
+                                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 text-xs font-semibold transition-all"
+                                >
+                                  <ThumbsUp className="w-3.5 h-3.5" />
+                                  {isAr ? 'تعمل — تأكيد الاستلام' : 'Works — Confirm Delivery'}
+                                </button>
+                                <Link
+                                  href={`/${locale}/support`}
+                                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 text-xs font-semibold transition-all"
+                                >
+                                  <ThumbsDown className="w-3.5 h-3.5" />
+                                  {isAr ? 'لا تعمل — افتح نزاعاً' : "Doesn't Work — Dispute"}
+                                </Link>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ) : null}
                     </div>
@@ -295,7 +324,7 @@ export default function OrdersPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-xs text-muted">
                         <span>{isAr ? 'وقت التأكيد المتبقي:' : 'Confirmation window:'}</span>
-                        <span className="text-amber-400 font-medium">{timeLeft(order.created_at)}</span>
+                        <span className="text-amber-400 font-medium">{timeLeft(order.created_at, isAr)}</span>
                       </div>
                       <button
                         type="button"

@@ -380,6 +380,40 @@ export async function getProfile(userId: string): Promise<DbProfile | null> {
   return data as DbProfile | null;
 }
 
+// ── Seller Stats ──────────────────────────────────────────────────────────────
+
+export type SellerStats = {
+  successfulTrades: number;  // completed (delivered/paid)
+  openTrades: number;        // pending / proof_submitted
+  disputedTrades: number;
+  totalOrders: number;
+  totalRevenue: number;
+};
+
+export async function getSellerStats(sellerId: string): Promise<SellerStats> {
+  const { data: orders } = await supabase
+    .from('orders')
+    .select('status, payment_status, amount')
+    .eq('seller_id', sellerId);
+
+  if (!orders) return { successfulTrades: 0, openTrades: 0, disputedTrades: 0, totalOrders: 0, totalRevenue: 0 };
+
+  const successfulTrades = orders.filter(
+    (o) => o.status === 'completed' || o.payment_status === 'delivered' || o.payment_status === 'paid'
+  ).length;
+  const openTrades = orders.filter(
+    (o) => o.payment_status === 'pending' || o.payment_status === 'proof_submitted'
+  ).length;
+  const disputedTrades = orders.filter(
+    (o) => o.status === 'disputed'
+  ).length;
+  const totalRevenue = orders
+    .filter((o) => o.status === 'completed' || o.payment_status === 'delivered')
+    .reduce((sum, o) => sum + (o.amount ?? 0), 0);
+
+  return { successfulTrades, openTrades, disputedTrades, totalOrders: orders.length, totalRevenue };
+}
+
 // ── Seller helpers ────────────────────────────────────────────────────────────
 
 export async function getSellerListings(sellerId: string): Promise<Listing[]> {
@@ -789,14 +823,14 @@ export async function submitAdInquiry(inquiry: {
   phone?: string;
   message: string;
 }): Promise<boolean> {
-  const { error } = await supabase
-    .from('ad_inquiries')
-    .insert({
-      name: inquiry.name.trim(),
-      company: inquiry.company?.trim() || null,
-      email: inquiry.email.trim(),
-      phone: inquiry.phone?.trim() || null,
-      message: inquiry.message.trim(),
+  try {
+    const res = await fetch('/api/ad-inquiry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(inquiry),
     });
-  return !error;
+    return res.ok;
+  } catch {
+    return false;
+  }
 }

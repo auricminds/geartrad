@@ -87,14 +87,17 @@ export function Footer() {
           <p className="text-xs text-muted">
             © {new Date().getFullYear()} GearTrad. {t('rights')}
           </p>
-          <div className="flex items-center gap-4">
-            <p className="text-xs text-muted/50">
-              Built by AuricMinds Group
-            </p>
-            <Link href={`/${locale}/mod/sign-in`} className="text-xs text-muted/60 hover:text-white transition-colors">
-              Admin
-            </Link>
-          </div>
+          <p className="text-xs text-muted/50">
+            Built by{' '}
+            <a
+              href="https://auricminds.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors"
+            >
+              AuricMinds Group
+            </a>
+          </p>
         </div>
       </div>
     </footer>
