@@ -8,7 +8,7 @@ import type { Listing, User, ListingType, AccountRank, BoostType } from '@/types
 
 // ── Type Conversion ──────────────────────────────────────────────────────────
 
-const PROFILE_COLS = 'id, username, account_type, role, avatar_url, rating, total_sales, is_verified, created_at';
+const PROFILE_COLS = 'id, username, account_type, role, avatar_url, rating, total_sales, is_verified, is_banned, banned_until, created_at';
 const PAYMENT_COLS = 'instapay_id, vodafone_number, orange_number, paypal_email, crypto_wallet_usdt, crypto_wallet_btc, crypto_wallet_eth';
 const LISTING_COLS = `
   id, seller_id, title, title_ar, description, description_ar,
@@ -374,7 +374,7 @@ export async function ensureProfile(
 export async function getProfile(userId: string): Promise<DbProfile | null> {
   const { data } = await supabase
     .from('profiles')
-    .select(`${PROFILE_COLS}, ${PAYMENT_COLS}`)
+    .select(`${PROFILE_COLS}, ${PAYMENT_COLS}, full_name, phone, country, gender, date_of_birth`)
     .eq('id', userId)
     .single();
   return data as DbProfile | null;
@@ -603,16 +603,19 @@ export async function uploadListingImage(file: File, userId: string): Promise<st
 
 // ── Verifications ─────────────────────────────────────────────────────────────
 
-export async function submitVerification(userId: string, idFrontFile: File, selfieFile: File): Promise<boolean> {
-  const idUrl = await uploadListingImage(idFrontFile, `verif/${userId}`);
-  const selfieUrl = await uploadListingImage(selfieFile, `verif/${userId}`);
-  if (!idUrl || !selfieUrl) return false;
-  const { error } = await supabase.from('verifications').insert({
-    user_id: userId,
-    id_front_url: idUrl,
-    selfie_url: selfieUrl,
+export async function submitVerification(userId: string, idFrontFile: File, selfieFile?: File): Promise<boolean> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const form = new FormData();
+  form.append('user_id', userId);
+  form.append('id_doc_type', 'national_id');
+  form.append('id_doc', idFrontFile);
+  const res = await fetch('/api/auth/upload-id', {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
   });
-  return !error;
+  return res.ok;
 }
 
 export async function getMyVerification(userId: string) {
@@ -760,7 +763,7 @@ export async function getAllOrders() {
 export async function getAllUsers() {
   const { data } = await supabase
     .from('profiles')
-    .select('id, username, account_type, role, rating, total_sales, is_verified, created_at, is_banned')
+    .select('id, username, account_type, role, rating, total_sales, is_verified, created_at, is_banned, banned_until, full_name, phone, country, gender, date_of_birth')
     .order('created_at', { ascending: false });
   return data ?? [];
 }

@@ -14,7 +14,7 @@ export default function TermsPage() {
         },
         {
           title: '2. Eligibility',
-          body: 'You must be at least 16 years old to use GearTrad. Users between 16 and 18 must have parental or guardian consent. By registering, you represent and warrant that you meet this requirement and that all information you provide is accurate and complete.',
+          body: 'You must be at least 13 years old to use GearTrad. Users under 18 must have parental or guardian consent. By registering, you represent and warrant that you meet this requirement and that all information you provide is accurate and complete.',
         },
         {
           title: '3. Account Security',

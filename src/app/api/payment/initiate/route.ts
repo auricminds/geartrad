@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     const admin = getAdmin();
 
-    // 1. Fetch listing — must be available
+    // 1. Fetch listing details
     const { data: listing, error: listingErr } = await admin
       .from('listings')
       .select('id, price, is_available, seller_id, title')
@@ -44,11 +44,20 @@ export async function POST(req: NextRequest) {
     if (listingErr || !listing) {
       return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
     }
-    if (!listing.is_available) {
-      return NextResponse.json({ error: 'Listing is no longer available' }, { status: 409 });
-    }
     if (listing.seller_id === buyerId) {
       return NextResponse.json({ error: 'You cannot buy your own listing' }, { status: 400 });
+    }
+
+    // 2. Atomically lock listing — prevents two buyers racing to buy the same item
+    const { data: locked } = await admin
+      .from('listings')
+      .update({ is_available: false })
+      .eq('id', listingId)
+      .eq('is_available', true)
+      .select('id');
+
+    if (!locked || locked.length === 0) {
+      return NextResponse.json({ error: 'Listing is no longer available' }, { status: 409 });
     }
 
     // 2. Fetch seller's payment details for the chosen method
@@ -98,13 +107,12 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (orderErr || !order) {
+      // Unlock the listing so other buyers can try
+      await admin.from('listings').update({ is_available: true }).eq('id', listingId);
       return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
     }
 
-    // 4. Lock listing
-    await admin.from('listings').update({ is_available: false }).eq('id', listingId);
-
-    // 5. Notify seller of new pending order
+    // 4. Notify seller of new pending order
     await admin.from('notifications').insert({
       user_id: listing.seller_id,
       type: 'sale',

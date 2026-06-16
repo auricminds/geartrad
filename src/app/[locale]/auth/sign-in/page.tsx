@@ -121,26 +121,6 @@ export default function SignInPage() {
             </Button>
           </form>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="px-3 bg-surface text-xs text-muted">{t('orContinue')}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {['Google', 'Discord'].map((provider) => (
-              <button
-                key={provider}
-                type="button"
-                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm text-muted hover:text-white hover:border-purple/40 transition-all"
-              >
-                {provider}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
     </div>
