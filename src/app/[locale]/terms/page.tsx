@@ -50,7 +50,7 @@ export default function TermsPage() {
         },
         {
           title: '11. Limitation of Liability',
-          body: 'GearTrad is a marketplace platform and is not a party to transactions between buyers and sellers. To the maximum extent permitted by law, GearTrad is not liable for any direct, indirect, incidental, special, or consequential damages arising from use of the platform, including but not limited to loss of account value, game publisher bans, or fraudulent conduct by third parties. Our total liability to you for any claim shall not exceed the total fees paid to GearTrad in the 30 days preceding the claim.',
+          body: 'GearTrad is a marketplace platform and is not a party to transactions between buyers and sellers. To the maximum extent permitted by law, GearTrad is not liable for any direct, indirect, incidental, special, or consequential damages arising from use of the platform, including but not limited to loss of account value, game publisher bans, or fraudulent conduct by third parties.',
         },
         {
           title: '12. Intellectual Property',

@@ -17,8 +17,8 @@ const FAQS = [
   {
     q: { en: 'How does payment work?', ar: 'كيف تعمل المدفوعات؟' },
     a: {
-      en: 'We support Credit/Debit cards, Vodafone Cash, InstaPay, Bitcoin (BTC), USDT, and Ethereum. All payments are processed securely. A 5% platform fee is deducted from the seller\'s earnings.',
-      ar: 'ندعم بطاقات الائتمان/الخصم، فودافون كاش، إنستاباي، بيتكوين، USDT، والإيثريوم. رسوم المنصة 5% تُخصم من البائع.',
+      en: 'We support Vodafone Cash, InstaPay, Bitcoin (BTC), USDT, and Ethereum. All payments go directly from buyer to seller — GearTrad charges no platform fees.',
+      ar: 'ندعم فودافون كاش، إنستاباي، بيتكوين، USDT، والإيثريوم. تذهب المدفوعات مباشرة من المشتري إلى البائع — لا رسوم على المنصة.',
     },
   },
   {
@@ -57,10 +57,10 @@ const FAQS = [
     },
   },
   {
-    q: { en: 'Is there a fee for buyers?', ar: 'هل هناك رسوم على المشترين؟' },
+    q: { en: 'Are there any fees?', ar: 'هل هناك أي رسوم؟' },
     a: {
-      en: 'No. Buyers pay the listed price with no hidden fees. The 5% platform fee comes out of the seller\'s payout.',
-      ar: 'لا. المشترون يدفعون السعر المعلن فقط بدون رسوم مخفية. رسوم المنصة 5% تُخصم من مبلغ البائع.',
+      en: 'No fees at all — for buyers or sellers. You pay or receive exactly the listed price. 100% of every sale goes to the seller.',
+      ar: 'لا رسوم إطلاقاً — لا للمشترين ولا للبائعين. تدفع أو تستلم السعر المعلن بالضبط. 100% من كل عملية بيع تذهب للبائع.',
     },
   },
 ];

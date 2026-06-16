@@ -85,7 +85,7 @@ export type DbOrder = {
   buyer_id: string;
   seller_id: string;
   amount: number;
-  platform_fee: number; // kept in DB, always 0 — no fee charged
+  platform_fee: number; // always 0 — no fees charged
   payment_method: string;
   status: 'pending' | 'completed' | 'disputed' | 'refunded' | 'cancelled';
   payment_status: 'pending' | 'proof_submitted' | 'paid' | 'delivered' | 'refunded' | 'failed' | 'cancelled';
