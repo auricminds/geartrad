@@ -2,8 +2,8 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useRef, useState, useEffect } from 'react';
 import { Gamepad2, Mail, Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,8 +17,10 @@ export default function SignInPage() {
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
-  const searchParams = useSearchParams();
-  const confirmed = searchParams.get('confirmed') === '1';
+  const [confirmed, setConfirmed] = useState(false);
+  useEffect(() => {
+    setConfirmed(new URLSearchParams(window.location.search).get('confirmed') === '1');
+  }, []);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
