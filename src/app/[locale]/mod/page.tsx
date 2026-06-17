@@ -63,8 +63,8 @@ type TicketRow = {
   chat_id: string | null;
 };
 type VerifRow = {
-  id: string; status: string; submitted_at: string; notes: string | null;
-  id_doc_type: string | null; id_front_url: string;
+  id: string; user_id: string; status: string; submitted_at: string; notes: string | null;
+  id_doc_type: string | null; id_number: string | null; id_front_url: string;
   user: { id: string; username: string; avatar_url: string | null } | null;
 };
 
@@ -491,6 +491,46 @@ export default function ModPage() {
                             </div>
                           ))}
                         </div>
+
+                        {/* ID Verification info */}
+                        {(() => {
+                          const verif = verifs.find((v) => v.user_id === u.id);
+                          if (!verif) return null;
+                          return (
+                            <div className="rounded-xl border border-border bg-white/5 p-3 space-y-2">
+                              <p className="text-[10px] text-muted uppercase tracking-wider font-medium">Identity Document</p>
+                              <div className="flex flex-wrap items-center gap-2">
+                                {verif.id_doc_type && (
+                                  <span className="px-2 py-1 rounded-lg bg-purple/10 border border-purple/20 text-purple text-[11px] capitalize">
+                                    {verif.id_doc_type.replace(/_/g, ' ')}
+                                  </span>
+                                )}
+                                {verif.id_number && (
+                                  <span className="text-xs text-white font-mono bg-white/5 px-2 py-1 rounded-lg border border-border">
+                                    {verif.id_number}
+                                  </span>
+                                )}
+                                <Badge status={verif.status} />
+                                {verif.id_front_url && (
+                                  <button
+                                    onClick={async () => {
+                                      const token = await getToken();
+                                      const res = await fetch(`/api/mod/view-id?path=${encodeURIComponent(verif.id_front_url)}`, {
+                                        headers: token ? { Authorization: `Bearer ${token}` } : {},
+                                      });
+                                      const data = await res.json();
+                                      if (data.url) window.open(data.url, '_blank');
+                                    }}
+                                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-500/15 border border-blue-500/20 text-blue-300 text-xs font-medium hover:bg-blue-500/25 transition-all"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    View Photo
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* Actions */}
                         <div className="flex flex-wrap gap-2">
