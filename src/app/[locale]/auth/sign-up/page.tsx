@@ -109,6 +109,7 @@ export default function SignUpPage() {
 
   // Step 3 — ID + credentials
   const [idDocType, setIdDocType] = useState<IdDocType | ''>('');
+  const [idNumber,  setIdNumber]  = useState('');
   const [idFile,    setIdFile]    = useState<File | null>(null);
   const [idPreview, setIdPreview] = useState<string | null>(null);
   const [email,     setEmail]     = useState('');
@@ -147,6 +148,7 @@ export default function SignUpPage() {
 
   function validateStep3(): string {
     if (!idDocType)        return isAr ? 'يرجى تحديد نوع المستند' : 'Please select your ID document type';
+    if (!idNumber.trim())  return isAr ? 'يرجى إدخال رقم المستند' : 'Please enter your document number';
     if (!idFile)           return isAr ? 'يرجى رفع صورة المستند' : 'Please upload your ID document';
     if (!email.trim())     return isAr ? 'البريد الإلكتروني مطلوب' : 'Email is required';
     if (!email.includes('@')) return isAr ? 'بريد إلكتروني غير صالح' : 'Invalid email address';
@@ -186,7 +188,7 @@ export default function SignUpPage() {
         email:    email.trim(),
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/${locale}/auth/sign-in`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             username:      username.trim(),
             account_type:  accountType,
@@ -220,6 +222,7 @@ export default function SignUpPage() {
       const form = new FormData();
       form.append('user_id',    userId);
       form.append('id_doc_type', idDocType);
+      form.append('id_number',   idNumber.trim());
       form.append('id_doc',      idFile!);
 
       const uploadRes = await fetch('/api/auth/upload-id', { method: 'POST', body: form });
@@ -371,6 +374,7 @@ export default function SignUpPage() {
                     isAr={isAr}
                     dob={dob}
                     idDocType={idDocType}   setIdDocType={setIdDocType}
+                    idNumber={idNumber}     setIdNumber={setIdNumber}
                     idFile={idFile}
                     idPreview={idPreview}
                     onFilePick={onFilePick}
@@ -571,7 +575,7 @@ function Step2({ isAr, fullName, setFullName, username, setUsername, dob, setDob
 
       {/* Gender */}
       <div>
-        <label className="block text-xs text-muted mb-1.5">{isAr ? 'الجنس' : 'Gender'}</label>
+        <label className="block text-xs text-muted mb-1.5">{isAr ? 'النوع الاجتماعي' : 'Gender'}</label>
         <div className="grid grid-cols-3 gap-2">
           {([
             { val: 'male',             en: 'Male',              ar: 'ذكر' },
@@ -643,12 +647,14 @@ function Step2({ isAr, fullName, setFullName, username, setUsername, dob, setDob
 }
 
 // ─── Step 3: ID + Credentials ─────────────────────────────────────────────────
-function Step3({ isAr, dob, idDocType, setIdDocType, idFile, idPreview, onFilePick,
+function Step3({ isAr, dob, idDocType, setIdDocType, idNumber, setIdNumber,
+  idFile, idPreview, onFilePick,
   clearFile, fileRef, email, setEmail, password, setPassword, confirm, setConfirm,
   showPw, setShowPw, showCf, setShowCf, agreed, setAgreed,
   locale, onBack, onSubmit, loading, accountType }: {
   isAr: boolean; dob: string;
   idDocType: IdDocType | ''; setIdDocType: (v: IdDocType) => void;
+  idNumber: string; setIdNumber: (v: string) => void;
   idFile: File | null; idPreview: string | null;
   onFilePick: (f: File) => void; clearFile: () => void;
   fileRef: React.RefObject<HTMLInputElement | null>;
@@ -712,6 +718,29 @@ function Step3({ isAr, dob, idDocType, setIdDocType, idFile, idPreview, onFilePi
           </p>
         )}
       </div>
+
+      {/* ID number */}
+      {idDocType && (
+        <div>
+          <label className="block text-xs text-muted mb-1.5">
+            {idDocType === 'national_id'
+              ? isAr ? 'الرقم القومي' : 'National ID Number'
+              : idDocType === 'passport'
+              ? isAr ? 'رقم جواز السفر' : 'Passport Number'
+              : isAr ? 'رقم شهادة الميلاد' : 'Birth Certificate No.'}
+            <span className="text-red-400 ms-0.5">*</span>
+          </label>
+          <div className="relative">
+            <IdCard className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+            <input
+              value={idNumber}
+              onChange={(e) => setIdNumber(e.target.value)}
+              placeholder={idDocType === 'national_id' ? (isAr ? 'مثال: 30001011234567' : 'e.g. 30001011234567') : (isAr ? 'أدخل رقم المستند' : 'Enter document number')}
+              className="w-full ps-10 pe-4 py-2.5 rounded-xl bg-white/5 border border-border text-sm text-white placeholder:text-muted/50 focus:outline-none focus:border-purple/50 transition-colors"
+            />
+          </div>
+        </div>
+      )}
 
       {/* File upload */}
       <div>

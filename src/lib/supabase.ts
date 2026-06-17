@@ -113,6 +113,8 @@ export type DbVerification = {
   user_id: string;
   id_front_url: string;
   selfie_url: string;
+  id_doc_type: string | null;
+  id_number: string | null;
   status: 'pending' | 'approved' | 'rejected';
   submitted_at: string;
   reviewed_at: string | null;

@@ -2,9 +2,9 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useRef, useState } from 'react';
-import { Gamepad2, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Gamepad2, Mail, Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase';
@@ -16,6 +16,9 @@ export default function SignInPage() {
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+
+  const searchParams = useSearchParams();
+  const confirmed = searchParams.get('confirmed') === '1';
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -81,6 +84,14 @@ export default function SignInPage() {
               {t('signUp')}
             </Link>
           </p>
+
+          {/* Email confirmed banner */}
+          {confirmed && (
+            <div className="flex items-start gap-2.5 mb-5 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{locale === 'ar' ? 'تم تأكيد بريدك الإلكتروني! يمكنك الآن تسجيل الدخول.' : 'Email confirmed! You can now sign in.'}</span>
+            </div>
+          )}
 
           {/* Error */}
           {error && (
