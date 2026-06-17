@@ -119,31 +119,6 @@ export default async function HomePage() {
         <HowItWorks />
       </FadeUp>
 
-      {/* Latest listings */}
-      {top.length > 0 && (
-        <FadeUp className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-white">{t('featured.title')}</h2>
-              <p className="text-sm text-muted mt-0.5">
-                {locale === 'ar' ? 'أحدث الإعلانات هذا الأسبوع' : 'Latest listings this week'}
-              </p>
-            </div>
-            <Link href={`/${locale}/browse`} className="flex items-center gap-1 text-sm text-purple hover:text-purple-light transition-colors">
-              <span>{t('featured.viewAll')}</span>
-              <ArrowRight className={`w-4 h-4 ${locale === 'ar' ? 'rotate-180' : ''}`} />
-            </Link>
-          </div>
-          <StaggerList className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {top.map((listing) => (
-              <StaggerItem key={listing.id}>
-                <ListingCard listing={listing} />
-              </StaggerItem>
-            ))}
-          </StaggerList>
-        </FadeUp>
-      )}
-
       {top.length === 0 && (
         <FadeUp className="mb-12 text-center py-16">
           <p className="text-muted text-lg mb-4">
