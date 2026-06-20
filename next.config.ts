@@ -65,13 +65,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  async rewrites() {
-    return [
-      // Map standard crawler paths to our dynamic API routes
-      { source: '/sitemap.xml', destination: '/api/sitemap' },
-      { source: '/robots.txt', destination: '/api/robots' },
-    ];
-  },
 };
 
 export default withNextIntl(nextConfig);
