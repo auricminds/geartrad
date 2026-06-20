@@ -47,6 +47,7 @@ export type DbListing = {
   game: string;
   type: string;
   cover_image: string;
+  images: string[] | null;
   rank: string | null;
   likes: number;
   is_boosted: boolean;

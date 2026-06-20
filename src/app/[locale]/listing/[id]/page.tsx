@@ -106,23 +106,36 @@ export default async function ListingPage({ params }: ListingPageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left: Image + Info */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="relative rounded-2xl overflow-hidden aspect-video">
-            <img src={listing.coverImage} alt={displayTitle} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
+          <div className="space-y-2">
+            <div className="relative rounded-2xl overflow-hidden aspect-video">
+              <img src={listing.coverImage} alt={displayTitle} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
 
-            <div className="absolute top-4 start-4 flex gap-2 flex-wrap">
-              {listing.isBoosted && (
-                <Badge variant="purple"><Zap className="w-3 h-3" />{t('adBoosted')}</Badge>
-              )}
-              {listing.seller.isVerified && (
-                <Badge variant="green"><Shield className="w-3 h-3" />{t('verified')}</Badge>
+              <div className="absolute top-4 start-4 flex gap-2 flex-wrap">
+                {listing.isBoosted && (
+                  <Badge variant="purple"><Zap className="w-3 h-3" />{t('adBoosted')}</Badge>
+                )}
+                {listing.seller.isVerified && (
+                  <Badge variant="green"><Shield className="w-3 h-3" />{t('verified')}</Badge>
+                )}
+              </div>
+
+              {listing.rank && (
+                <div className="absolute bottom-4 start-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/60">
+                  <Trophy className="w-4 h-4 text-gold" />
+                  <span className="text-sm font-bold text-gold">{listing.rank}</span>
+                </div>
               )}
             </div>
 
-            {listing.rank && (
-              <div className="absolute bottom-4 start-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/60">
-                <Trophy className="w-4 h-4 text-gold" />
-                <span className="text-sm font-bold text-gold">{listing.rank}</span>
+            {/* Additional images gallery */}
+            {listing.images && listing.images.length > 0 && (
+              <div className="grid grid-cols-4 gap-2">
+                {listing.images.map((img, idx) => (
+                  <div key={idx} className="relative rounded-xl overflow-hidden aspect-square border border-border">
+                    <img src={img} alt={`${displayTitle} photo ${idx + 2}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
               </div>
             )}
           </div>

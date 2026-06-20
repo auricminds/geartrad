@@ -14,12 +14,33 @@ function CallbackHandler() {
     handled.current = true;
 
     const code = params.get('code');
+    const token_hash = params.get('token_hash');
+    const type = params.get('type') ?? 'signup';
 
     async function exchange() {
-      if (code) {
-        await supabase.auth.exchangeCodeForSession(code);
+      try {
+        if (token_hash) {
+          // OTP / email link flow (Supabase email confirmation links)
+          const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as 'signup' | 'recovery' | 'invite' | 'email_change' | 'email' });
+          if (error) {
+            router.replace('/en/auth/sign-in?error=link_expired');
+            return;
+          }
+        } else if (code) {
+          // PKCE flow (OAuth, magic links with PKCE)
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            router.replace('/en/auth/sign-in?error=link_expired');
+            return;
+          }
+        } else {
+          router.replace('/en/auth/sign-in?error=link_expired');
+          return;
+        }
+        router.replace('/en/auth/sign-in?confirmed=1');
+      } catch {
+        router.replace('/en/auth/sign-in?error=link_expired');
       }
-      router.replace('/en/auth/sign-in?confirmed=1');
     }
 
     exchange();

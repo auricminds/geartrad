@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
       account_email: payload.account_email || null,
       account_password: payload.account_password || null,
       account_extra_info: payload.account_extra_info || null,
+      images: Array.isArray(payload.images) ? payload.images.filter(Boolean) : [],
       is_available: true,
       likes: 0,
     })

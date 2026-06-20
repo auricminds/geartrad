@@ -18,8 +18,11 @@ export default function SignInPage() {
   const passwordRef = useRef<HTMLInputElement>(null);
 
   const [confirmed, setConfirmed] = useState(false);
+  const [linkExpired, setLinkExpired] = useState(false);
   useEffect(() => {
-    setConfirmed(new URLSearchParams(window.location.search).get('confirmed') === '1');
+    const sp = new URLSearchParams(window.location.search);
+    setConfirmed(sp.get('confirmed') === '1');
+    setLinkExpired(sp.get('error') === 'link_expired');
   }, []);
 
   const [loading, setLoading] = useState(false);
@@ -92,6 +95,18 @@ export default function SignInPage() {
             <div className="flex items-start gap-2.5 mb-5 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
               <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{locale === 'ar' ? 'تم تأكيد بريدك الإلكتروني! يمكنك الآن تسجيل الدخول.' : 'Email confirmed! You can now sign in.'}</span>
+            </div>
+          )}
+
+          {/* Link expired banner */}
+          {linkExpired && (
+            <div className="flex items-start gap-2.5 mb-5 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                {locale === 'ar'
+                  ? 'رابط التأكيد انتهت صلاحيته. تحقق من بريدك للرسالة الأحدث، أو اتصل بالدعم.'
+                  : 'Confirmation link has expired. Check your inbox for a newer email, or contact support.'}
+              </span>
             </div>
           )}
 

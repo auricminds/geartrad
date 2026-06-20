@@ -12,7 +12,7 @@ const PROFILE_COLS = 'id, username, account_type, role, avatar_url, rating, tota
 const PAYMENT_COLS = 'instapay_id, vodafone_number, orange_number, paypal_email, crypto_wallet_usdt, crypto_wallet_btc, crypto_wallet_eth';
 const LISTING_COLS = `
   id, seller_id, title, title_ar, description, description_ar,
-  price, game, type, cover_image, rank, likes,
+  price, game, type, cover_image, images, rank, likes,
   is_boosted, boost_type, boost_expires_at, is_available,
   level, hours_played, win_rate, achievements, created_at,
   seller:profiles!listings_seller_id_fkey(${PROFILE_COLS}, ${PAYMENT_COLS})
@@ -55,6 +55,7 @@ export function dbListingToListing(row: DbListing): Listing {
     game: row.game,
     type: row.type as ListingType,
     coverImage: row.cover_image,
+    images: row.images?.filter(Boolean) ?? [],
     rank: (row.rank as AccountRank) ?? undefined,
     seller: row.seller
       ? dbProfileToUser(row.seller)
@@ -162,6 +163,7 @@ export async function createListing(payload: {
   game: string;
   type: string;
   cover_image: string;
+  images?: string[];
   rank?: string;
   boost_type?: string;
   level?: number | null;
@@ -171,28 +173,22 @@ export async function createListing(payload: {
   account_email?: string;
   account_password?: string;
   account_extra_info?: string;
-}, sellerId: string): Promise<{ id: string } | null> {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    const res = await fetch('/api/listings/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ payload, sellerId }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      console.error('createListing error:', err);
-      return null;
-    }
-    return await res.json();
-  } catch (e) {
-    console.error('createListing error:', e);
-    return null;
+}, sellerId: string): Promise<{ id: string }> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const res = await fetch('/api/listings/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ payload, sellerId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to publish listing');
   }
+  return await res.json();
 }
 
 // ── Wishlist ──────────────────────────────────────────────────────────────────

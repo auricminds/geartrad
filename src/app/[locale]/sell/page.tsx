@@ -71,8 +71,8 @@ export default function SellPage() {
   const [price, setPrice]               = useState('');
   const [description, setDescription]   = useState('');
   const [descriptionAr, setDescriptionAr] = useState('');
-  const [imageFile, setImageFile]       = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState('');
+  const [imageFiles, setImageFiles]     = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [level, setLevel]               = useState('');
   const [hoursPlayed, setHoursPlayed]   = useState('');
   const [winRate, setWinRate]           = useState('');
@@ -122,9 +122,19 @@ export default function SellPage() {
     setCustomGame('');
   };
 
-  const handleImageFile = (file: File) => {
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+  const MAX_IMAGES = 5;
+
+  const handleImageFiles = (newFiles: FileList | null) => {
+    if (!newFiles) return;
+    const toAdd = Array.from(newFiles).slice(0, MAX_IMAGES - imageFiles.length);
+    if (toAdd.length === 0) return;
+    setImageFiles((prev) => [...prev, ...toAdd]);
+    setImagePreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
+  };
+
+  const removeImage = (idx: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== idx));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== idx));
   };
 
   if (authLoading) return null;
@@ -239,14 +249,17 @@ export default function SellPage() {
       }
       await updateSellerPaymentDetails(user.id, paymentUpdate);
 
-      // Upload image if a file was chosen
-      let coverImageUrl = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&q=80';
-      if (imageFile) {
-        const uploaded = await uploadListingImage(imageFile, user.id);
-        if (uploaded) coverImageUrl = uploaded;
+      // Upload images (first = cover, rest = gallery)
+      const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&q=80';
+      const uploadedUrls: string[] = [];
+      for (const file of imageFiles) {
+        const url = await uploadListingImage(file, user.id);
+        if (url) uploadedUrls.push(url);
       }
+      const coverImageUrl = uploadedUrls[0] ?? DEFAULT_IMAGE;
+      const extraImages = uploadedUrls.slice(1);
 
-      const result = await createListing(
+      await createListing(
         {
           title: title.trim(),
           title_ar: titleAr.trim() || undefined,
@@ -256,6 +269,7 @@ export default function SellPage() {
           game: finalGame,
           type,
           cover_image: coverImageUrl,
+          images: extraImages.length > 0 ? extraImages : undefined,
           rank: rank || undefined,
           boost_type: boostType,
           level: level ? parseInt(level, 10) : null,
@@ -269,15 +283,10 @@ export default function SellPage() {
         user.id
       );
 
-      if (!result) {
-        setError(locale === 'ar' ? 'حدث خطأ أثناء النشر، حاول مرة أخرى' : 'Failed to publish listing. Try again.');
-        return;
-      }
-
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch {
-      setError(locale === 'ar' ? 'خطأ في الشبكة، تحقق من اتصالك وحاول مرة أخرى' : 'Network error. Check your connection and try again.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : (locale === 'ar' ? 'خطأ في الشبكة، تحقق من اتصالك وحاول مرة أخرى' : 'Network error. Check your connection and try again.'));
     } finally {
       setLoading(false);
     }
@@ -513,40 +522,56 @@ export default function SellPage() {
           </div>
         )}
 
-          <Field label={locale === 'ar' ? 'صورة الغلاف (اختياري)' : 'Cover Image (optional)'}>
+          <Field label={locale === 'ar' ? `صور الإعلان — حتى ${MAX_IMAGES} صور (اختياري)` : `Listing Photos — up to ${MAX_IMAGES} (optional)`}>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple
               className="hidden"
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleImageFile(file);
+                handleImageFiles(e.target.files);
+                if (fileInputRef.current) fileInputRef.current.value = '';
               }}
             />
-            {imagePreview ? (
-              <div className="relative w-full h-40 rounded-xl overflow-hidden border border-border">
-                <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
+            <div className="grid grid-cols-3 gap-2">
+              {imagePreviews.map((preview, idx) => (
+                <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-border">
+                  <img src={preview} alt={`photo ${idx + 1}`} className="w-full h-full object-cover" />
+                  {idx === 0 && (
+                    <span className="absolute bottom-1 start-1 text-[10px] px-1.5 py-0.5 rounded bg-black/70 text-white">
+                      {locale === 'ar' ? 'غلاف' : 'Cover'}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(idx)}
+                    className="absolute top-1 end-1 w-6 h-6 rounded-full bg-black/70 flex items-center justify-center text-white hover:bg-black transition-all"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              {imagePreviews.length < MAX_IMAGES && (
                 <button
                   type="button"
-                  onClick={() => { setImageFile(null); setImagePreview(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                  className="absolute top-2 end-2 w-7 h-7 rounded-full bg-black/70 flex items-center justify-center text-white hover:bg-black transition-all"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="aspect-square rounded-xl border-2 border-dashed border-border hover:border-purple/50 hover:bg-purple/5 flex flex-col items-center justify-center gap-1.5 text-muted hover:text-white transition-all"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <Upload className="w-5 h-5" />
+                  <span className="text-xs text-center leading-tight px-1">
+                    {imagePreviews.length === 0
+                      ? (locale === 'ar' ? 'أضف صور' : 'Add photos')
+                      : (locale === 'ar' ? 'أضف المزيد' : 'Add more')}
+                  </span>
                 </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full h-32 rounded-xl border-2 border-dashed border-border hover:border-purple/50 hover:bg-purple/5 flex flex-col items-center justify-center gap-2 text-muted hover:text-white transition-all"
-              >
-                <Upload className="w-6 h-6" />
-                <span className="text-sm">{locale === 'ar' ? 'انقر لاختيار صورة من جهازك' : 'Click to choose an image from your device'}</span>
-                <span className="text-xs text-muted/50">JPG, PNG, WEBP — max 5MB</span>
-              </button>
-            )}
-            <p className="text-[11px] text-muted">{locale === 'ar' ? 'اتركه فارغاً لاستخدام صورة افتراضية' : 'Leave empty to use a default image'}</p>
+              )}
+            </div>
+            <p className="text-[11px] text-muted">
+              {locale === 'ar'
+                ? 'الصورة الأولى ستكون صورة الغلاف. اتركه فارغاً لاستخدام صورة افتراضية.'
+                : 'First photo will be the cover image. Leave empty to use a default image.'}
+            </p>
           </Field>
         </div>
 
