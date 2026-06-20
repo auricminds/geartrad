@@ -46,8 +46,11 @@ const orgJsonLd = {
   '@type': 'Organization',
   name: 'GearTrad',
   url: BASE,
-  logo: `${BASE}/logo.png`,
+  logo: { '@type': 'ImageObject', url: `${BASE}/logo.png`, width: 200, height: 60 },
   description: 'The #1 marketplace for buying and selling game accounts, skins, and in-game items in Egypt and the Middle East.',
+  foundingDate: '2024',
+  areaServed: ['EG', 'SA', 'AE', 'KW', 'QA', 'BH', 'JO', 'LB', 'IQ', 'MA', 'TN', 'DZ'],
+  knowsAbout: ['Gaming accounts', 'Game skins', 'Valorant', 'Fortnite', 'CS2', 'PUBG Mobile', 'FIFA', 'League of Legends'],
   sameAs: [],
 };
 
@@ -56,11 +59,60 @@ const websiteJsonLd = {
   '@type': 'WebSite',
   name: 'GearTrad',
   url: BASE,
+  description: 'Buy and sell gaming accounts, skins, weapons and bundles safely in Egypt and MENA.',
+  inLanguage: ['en', 'ar'],
   potentialAction: {
     '@type': 'SearchAction',
     target: { '@type': 'EntryPoint', urlTemplate: `${BASE}/en/browse?q={search_term_string}` },
     'query-input': 'required name=search_term_string',
   },
+};
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Is GearTrad safe to use?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Yes. Every transaction is protected by escrow — your money is held by GearTrad and only released to the seller after you confirm receipt. You are never at risk of paying and getting nothing.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'How does payment work on GearTrad?',
+      acceptedAnswer: { '@type': 'Answer', text: 'We support Vodafone Cash, InstaPay, Bitcoin (BTC), USDT, and Ethereum. All payments go directly from buyer to seller — GearTrad charges no platform fees.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'What happens if the seller does not deliver?',
+      acceptedAnswer: { '@type': 'Answer', text: 'If the seller does not deliver, do NOT confirm delivery. Open a support ticket or contact a moderator. Our team investigates and issues a full refund if the seller is at fault.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'What games are supported on GearTrad?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Valorant, Fortnite, CS2, League of Legends, PUBG Mobile, Apex Legends, FIFA, Call of Duty, Brawl Stars, and more. Any game works — just choose "Other" when posting.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'Can I sell any type of gaming account?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Yes — accounts, skins, weapons, bundles, and tickets are all supported. You must own the item and accurately describe it. False listings result in an immediate ban.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'Are there any fees for buying or selling?',
+      acceptedAnswer: { '@type': 'Answer', text: 'No fees at all — for buyers or sellers. You pay or receive exactly the listed price. 100% of every sale goes to the seller.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'How do I get a Verified badge?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Go to your profile and click Get Verified. Upload a photo of your government ID. Our moderators review within 24–48 hours.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'How long does delivery usually take?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Most sellers deliver within a few hours after payment. You can chat directly with the seller to coordinate. Always confirm delivery only after testing the account.' },
+    },
+  ],
 };
 
 export default async function HomePage() {
@@ -80,6 +132,7 @@ export default async function HomePage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
       {/* Hero — no entrance delay, it's above the fold */}
       <HeroBanner banners={adBanners} />

@@ -20,7 +20,52 @@ export const metadata: Metadata = {
     template: '%s | GearTrad',
   },
   description: 'Buy and sell gaming accounts, skins, weapons and bundles safely in Egypt, Saudi Arabia, UAE, and across the Gulf. Escrow protection, instant delivery. Valorant, Fortnite, CS2, FIFA and more.',
-  keywords: ['gaming marketplace Egypt', 'gaming marketplace Gulf', 'buy gaming accounts Egypt', 'sell gaming accounts Saudi Arabia', 'gaming skins UAE', 'Egypt gaming', 'Gulf gaming', 'MENA gaming', 'Valorant accounts', 'Fortnite skins', 'CS2 accounts', 'FIFA accounts Arab'],
+  keywords: [
+    // Core marketplace terms
+    'gaming marketplace', 'gaming marketplace Egypt', 'gaming marketplace MENA', 'gaming marketplace Gulf',
+    'buy gaming accounts', 'sell gaming accounts', 'gaming accounts for sale', 'gaming account store',
+    'buy game accounts online', 'sell game accounts', 'game account trading', 'game accounts marketplace',
+    // Account selling by region
+    'buy gaming accounts Egypt', 'sell gaming accounts Egypt', 'gaming accounts Cairo',
+    'buy gaming accounts Saudi Arabia', 'sell gaming accounts KSA', 'gaming marketplace Riyadh',
+    'buy gaming accounts UAE', 'gaming accounts Dubai', 'gaming marketplace Abu Dhabi',
+    'gaming accounts Kuwait', 'gaming accounts Qatar', 'gaming accounts Jordan',
+    'gaming accounts Morocco', 'gaming accounts Tunisia', 'gaming accounts Algeria',
+    // Item types
+    'buy gaming skins', 'sell gaming skins', 'gaming skins marketplace',
+    'buy game weapons', 'sell game weapons', 'game weapon skins',
+    'gaming bundles for sale', 'gaming tickets', 'in-game items marketplace',
+    // Game-specific - Valorant
+    'Valorant account for sale', 'buy Valorant account', 'sell Valorant account',
+    'Valorant Radiant account', 'Valorant Immortal account', 'Valorant skins bundle',
+    'cheap Valorant account', 'Valorant account Egypt', 'Valorant account Arabic',
+    // Fortnite
+    'Fortnite account for sale', 'buy Fortnite account', 'sell Fortnite skins',
+    'Fortnite OG account', 'Fortnite battle pass account', 'Fortnite skins',
+    // CS2 / CS:GO
+    'CS2 account for sale', 'buy CS2 account', 'CS2 Global Elite account',
+    'Counter-Strike account', 'CS2 skins marketplace', 'buy CS2 skins',
+    // League of Legends
+    'League of Legends account for sale', 'buy LoL account', 'LoL Challenger account',
+    'sell League of Legends account', 'LoL Arab server account',
+    // PUBG
+    'PUBG Mobile account for sale', 'buy PUBG account', 'PUBG Conqueror account',
+    'PUBG skins for sale', 'PUBG Mobile Egypt',
+    // FIFA
+    'FIFA account for sale', 'buy FIFA account', 'FC account for sale',
+    // COD
+    'Call of Duty account for sale', 'buy COD account', 'Warzone account',
+    // Other games
+    'Apex Legends account', 'Brawl Stars account', 'gaming account buy sell',
+    // Arabic SEO terms
+    'سوق ألعاب', 'شراء حسابات ألعاب', 'بيع حسابات ألعاب', 'حسابات فالورانت',
+    'حسابات فورتنايت', 'سوق الألعاب مصر', 'بيع وشراء الألعاب', 'متجر الألعاب',
+    // Trust & safety terms
+    'safe gaming marketplace', 'escrow game accounts', 'verified game sellers',
+    'secure game account trading', 'trusted gaming marketplace',
+    // General
+    'GearTrad', 'geartrad.com', 'gaming accounts MENA', 'Arab gaming marketplace',
+  ],
   authors: [{ name: 'GearTrad', url: SITE_URL }],
   creator: 'GearTrad',
   openGraph: {

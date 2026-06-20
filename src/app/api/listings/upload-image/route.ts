@@ -42,17 +42,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const db = getServiceClient();
-  const ext = file.name.split('.').pop() ?? 'jpg';
-  const path = `${userId}/${Date.now()}.${ext}`;
+  // ── File validation ──────────────────────────────────────────────────────
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+  const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 
+  if (file.size > MAX_FILE_SIZE) {
+    return NextResponse.json({ error: 'File too large. Maximum size is 5 MB.' }, { status: 413 });
+  }
+
+  if (!ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
+    return NextResponse.json({ error: 'Invalid file type. Only JPEG, PNG, WEBP and GIF images are allowed.' }, { status: 415 });
+  }
+
+  const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase();
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    return NextResponse.json({ error: 'Invalid file extension.' }, { status: 415 });
+  }
+
+  // Sanitise path — strip anything that isn't alphanumeric/dash/underscore
+  const safeUserId = userId.replace(/[^a-zA-Z0-9_\-\/]/g, '');
+  const path = `${safeUserId}/${Date.now()}.${ext}`;
+
+  const db = getServiceClient();
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
   const { error } = await db.storage
     .from('listing-images')
     .upload(path, buffer, {
-      contentType: file.type || 'image/jpeg',
+      contentType: file.type,
       upsert: false,
     });
 

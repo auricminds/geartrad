@@ -16,21 +16,25 @@ const securityHeaders = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
   // DNS prefetch control
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
+  // Legacy XSS protection for older browsers
+  { key: 'X-XSS-Protection', value: '1; mode=block' },
   {
     key: 'Content-Security-Policy',
     value: [
       // Default: only same-origin
       "default-src 'self'",
-      // Scripts: Next.js inline scripts + self
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      // Scripts: Next.js requires unsafe-inline for RSC hydration; eval removed
+      "script-src 'self' 'unsafe-inline'",
       // Styles: inline needed for Tailwind + Framer Motion
       "style-src 'self' 'unsafe-inline'",
-      // Images: self, data URIs, Supabase storage, Unsplash, DiceBear
+      // Images: self, data URIs, blob (previews), Supabase storage, Unsplash, DiceBear
       "img-src 'self' data: blob: https://images.unsplash.com https://api.dicebear.com https://*.supabase.co",
       // Connections: Supabase API + Realtime, blockchain APIs for crypto verification
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://blockstream.info https://apilist.tronscanapi.com https://api.etherscan.io",
-      // No iframes needed
+      // No iframes — prevents clickjacking at CSP level too
       "frame-src 'none'",
+      // No web workers from external sources
+      "worker-src 'self' blob:",
       // Fonts: self only
       "font-src 'self'",
       // No plugins ever
@@ -39,6 +43,8 @@ const securityHeaders = [
       "base-uri 'self'",
       // Forms only post to same origin
       "form-action 'self'",
+      // Only load media from trusted sources
+      "media-src 'self' blob: https://*.supabase.co",
     ].join('; '),
   },
 ];
@@ -57,6 +63,13 @@ const nextConfig: NextConfig = {
         source: '/(.*)',
         headers: securityHeaders,
       },
+    ];
+  },
+  async rewrites() {
+    return [
+      // Map standard crawler paths to our dynamic API routes
+      { source: '/sitemap.xml', destination: '/api/sitemap' },
+      { source: '/robots.txt', destination: '/api/robots' },
     ];
   },
 };

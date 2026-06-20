@@ -17,6 +17,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Guard against oversized payloads (middleware catches >10MB; this catches abuse of the JSON body)
+  const contentLength = parseInt(req.headers.get('content-length') ?? '0', 10);
+  if (contentLength > 64 * 1024) { // 64 KB is more than enough for a listing JSON
+    return NextResponse.json({ error: 'Payload too large.' }, { status: 413 });
+  }
+
   const body = await req.json();
   const { payload, sellerId } = body;
 

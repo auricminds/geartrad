@@ -65,6 +65,17 @@ export default async function ListingPage({ params }: ListingPageProps) {
 
   const isTrusted = listing.seller.rating >= 4.5 && listing.seller.totalSales >= 5;
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/${locale}` },
+      { '@type': 'ListItem', position: 2, name: locale === 'ar' ? 'تصفح الإعلانات' : 'Browse', item: `${SITE_URL}/${locale}/browse` },
+      { '@type': 'ListItem', position: 3, name: listing.game, item: `${SITE_URL}/${locale}/browse?game=${encodeURIComponent(listing.game)}` },
+      { '@type': 'ListItem', position: 4, name: displayTitle, item: `${SITE_URL}/${locale}/listing/${id}` },
+    ],
+  };
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -96,6 +107,7 @@ export default async function ListingPage({ params }: ListingPageProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-28 lg:pb-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
