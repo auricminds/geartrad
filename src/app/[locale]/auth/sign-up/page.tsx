@@ -6,7 +6,7 @@ import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2, Mail, Lock, User, ShoppingBag, Store, Zap, AlertCircle,
-  CheckCircle2, Phone, Globe, Upload, ChevronLeft, ChevronRight,
+  CheckCircle2, Phone, Upload, ChevronLeft, ChevronRight,
   IdCard, FileText, X, Eye, EyeOff, UserCheck,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -19,40 +19,60 @@ type Gender      = 'male' | 'female' | 'prefer_not_to_say';
 type IdDocType   = 'national_id' | 'passport' | 'birth_certificate';
 
 // ─── Country list (MENA first) ───────────────────────────────────────────────
-const MENA_CODES = new Set(['EG','SA','AE','KW','QA','BH','OM','JO','LB','IQ','MA','TN','DZ','LY','SD','YE','SY','PS']);
-
 const COUNTRIES = [
-  // MENA
-  { code: 'EG', en: 'Egypt', ar: 'مصر' },
-  { code: 'SA', en: 'Saudi Arabia', ar: 'السعودية' },
-  { code: 'AE', en: 'UAE', ar: 'الإمارات' },
-  { code: 'KW', en: 'Kuwait', ar: 'الكويت' },
-  { code: 'QA', en: 'Qatar', ar: 'قطر' },
-  { code: 'BH', en: 'Bahrain', ar: 'البحرين' },
-  { code: 'OM', en: 'Oman', ar: 'عُمان' },
-  { code: 'JO', en: 'Jordan', ar: 'الأردن' },
-  { code: 'LB', en: 'Lebanon', ar: 'لبنان' },
-  { code: 'IQ', en: 'Iraq', ar: 'العراق' },
-  { code: 'MA', en: 'Morocco', ar: 'المغرب' },
-  { code: 'TN', en: 'Tunisia', ar: 'تونس' },
-  { code: 'DZ', en: 'Algeria', ar: 'الجزائر' },
-  { code: 'LY', en: 'Libya', ar: 'ليبيا' },
-  { code: 'SD', en: 'Sudan', ar: 'السودان' },
-  { code: 'YE', en: 'Yemen', ar: 'اليمن' },
-  { code: 'SY', en: 'Syria', ar: 'سوريا' },
-  { code: 'PS', en: 'Palestine', ar: 'فلسطين' },
-  // Global
-  { code: 'US', en: 'United States', ar: 'الولايات المتحدة' },
-  { code: 'GB', en: 'United Kingdom', ar: 'المملكة المتحدة' },
-  { code: 'CA', en: 'Canada', ar: 'كندا' },
-  { code: 'AU', en: 'Australia', ar: 'أستراليا' },
-  { code: 'DE', en: 'Germany', ar: 'ألمانيا' },
-  { code: 'FR', en: 'France', ar: 'فرنسا' },
-  { code: 'TR', en: 'Turkey', ar: 'تركيا' },
-  { code: 'PK', en: 'Pakistan', ar: 'باكستان' },
-  { code: 'IN', en: 'India', ar: 'الهند' },
-  { code: 'NG', en: 'Nigeria', ar: 'نيجيريا' },
+  { code: 'EG', en: 'Egypt',          ar: 'مصر',               flag: '🇪🇬' },
+  { code: 'SA', en: 'Saudi Arabia',   ar: 'السعودية',           flag: '🇸🇦' },
+  { code: 'AE', en: 'UAE',            ar: 'الإمارات',           flag: '🇦🇪' },
+  { code: 'KW', en: 'Kuwait',         ar: 'الكويت',             flag: '🇰🇼' },
+  { code: 'QA', en: 'Qatar',          ar: 'قطر',                flag: '🇶🇦' },
+  { code: 'BH', en: 'Bahrain',        ar: 'البحرين',            flag: '🇧🇭' },
+  { code: 'OM', en: 'Oman',           ar: 'عُمان',              flag: '🇴🇲' },
+  { code: 'JO', en: 'Jordan',         ar: 'الأردن',             flag: '🇯🇴' },
+  { code: 'LB', en: 'Lebanon',        ar: 'لبنان',              flag: '🇱🇧' },
+  { code: 'IQ', en: 'Iraq',           ar: 'العراق',             flag: '🇮🇶' },
+  { code: 'MA', en: 'Morocco',        ar: 'المغرب',             flag: '🇲🇦' },
+  { code: 'TN', en: 'Tunisia',        ar: 'تونس',               flag: '🇹🇳' },
+  { code: 'DZ', en: 'Algeria',        ar: 'الجزائر',            flag: '🇩🇿' },
+  { code: 'LY', en: 'Libya',          ar: 'ليبيا',              flag: '🇱🇾' },
+  { code: 'SD', en: 'Sudan',          ar: 'السودان',            flag: '🇸🇩' },
+  { code: 'YE', en: 'Yemen',          ar: 'اليمن',              flag: '🇾🇪' },
+  { code: 'SY', en: 'Syria',          ar: 'سوريا',              flag: '🇸🇾' },
+  { code: 'PS', en: 'Palestine',      ar: 'فلسطين',             flag: '🇵🇸' },
+  { code: 'US', en: 'United States',  ar: 'الولايات المتحدة',   flag: '🇺🇸' },
+  { code: 'GB', en: 'United Kingdom', ar: 'المملكة المتحدة',    flag: '🇬🇧' },
+  { code: 'CA', en: 'Canada',         ar: 'كندا',               flag: '🇨🇦' },
+  { code: 'AU', en: 'Australia',      ar: 'أستراليا',           flag: '🇦🇺' },
+  { code: 'DE', en: 'Germany',        ar: 'ألمانيا',            flag: '🇩🇪' },
+  { code: 'FR', en: 'France',         ar: 'فرنسا',              flag: '🇫🇷' },
+  { code: 'TR', en: 'Turkey',         ar: 'تركيا',              flag: '🇹🇷' },
+  { code: 'PK', en: 'Pakistan',       ar: 'باكستان',            flag: '🇵🇰' },
+  { code: 'IN', en: 'India',          ar: 'الهند',              flag: '🇮🇳' },
+  { code: 'NG', en: 'Nigeria',        ar: 'نيجيريا',            flag: '🇳🇬' },
 ];
+
+// ─── ID digit rules per country per doc type ─────────────────────────────────
+// null = no strict digit count (passport/birth cert vary internationally)
+const NATIONAL_ID_DIGITS: Record<string, number> = {
+  EG: 14, SA: 10, AE: 15, KW: 12, QA: 11, BH: 9,
+  OM: 8,  JO: 10, LB: 12, IQ: 12, MA: 8,  TN: 8,
+  DZ: 9,  LY: 12, SD: 9,  YE: 9,  PS: 9,  SY: 11,
+};
+
+function getIdRule(docType: IdDocType | '', country: string): { digits: number | null; hint: string } {
+  if (docType === 'national_id') {
+    const d = NATIONAL_ID_DIGITS[country] ?? null;
+    return d
+      ? { digits: d, hint: `Exactly ${d} digits` }
+      : { digits: null, hint: 'Enter your national ID number' };
+  }
+  if (docType === 'passport') {
+    return { digits: null, hint: '6–9 alphanumeric characters' };
+  }
+  if (docType === 'birth_certificate') {
+    return { digits: null, hint: 'Enter the certificate number' };
+  }
+  return { digits: null, hint: '' };
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function calcAge(dob: string): number {
@@ -149,6 +169,14 @@ export default function SignUpPage() {
   function validateStep3(): string {
     if (!idDocType)        return isAr ? 'يرجى تحديد نوع المستند' : 'Please select your ID document type';
     if (!idNumber.trim())  return isAr ? 'يرجى إدخال رقم المستند' : 'Please enter your document number';
+    const rule = getIdRule(idDocType, country);
+    if (rule.digits !== null) {
+      const digits = idNumber.trim().replace(/\D/g, '');
+      if (digits.length !== rule.digits)
+        return isAr
+          ? `رقم المستند يجب أن يكون ${rule.digits} رقماً بالضبط`
+          : `${idDocType === 'national_id' ? 'National ID' : 'Document'} must be exactly ${rule.digits} digits`;
+    }
     if (!idFile)           return isAr ? 'يرجى رفع صورة المستند' : 'Please upload your ID document';
     if (!email.trim())     return isAr ? 'البريد الإلكتروني مطلوب' : 'Email is required';
     if (!email.includes('@')) return isAr ? 'بريد إلكتروني غير صالح' : 'Invalid email address';
@@ -373,6 +401,7 @@ export default function SignUpPage() {
                   <Step3
                     isAr={isAr}
                     dob={dob}
+                    country={country}
                     idDocType={idDocType}   setIdDocType={setIdDocType}
                     idNumber={idNumber}     setIdNumber={setIdNumber}
                     idFile={idFile}
@@ -593,26 +622,32 @@ function Step2({ isAr, fullName, setFullName, username, setUsername, dob, setDob
         </div>
       </div>
 
-      {/* Country */}
+      {/* Country — horizontal chip slider */}
       <div>
         <label className="block text-xs text-muted mb-1.5">{isAr ? 'الدولة' : 'Country'}</label>
-        <div className="relative">
-          <Globe className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-          <select value={country} onChange={(e) => setCountry(e.target.value)}
-            className="w-full ps-10 pe-4 py-2.5 rounded-xl bg-white/5 border border-border text-sm text-white focus:outline-none focus:border-purple/50 transition-colors appearance-none [color-scheme:dark]">
-            <option value="" disabled>{isAr ? 'اختر دولتك' : 'Select your country'}</option>
-            <optgroup label={isAr ? 'الشرق الأوسط وشمال أفريقيا' : 'Middle East & North Africa'}>
-              {COUNTRIES.filter((c) => MENA_CODES.has(c.code)).map((c) => (
-                <option key={c.code} value={c.code}>{isAr ? c.ar : c.en}</option>
-              ))}
-            </optgroup>
-            <optgroup label={isAr ? 'دول أخرى' : 'Other Countries'}>
-              {COUNTRIES.filter((c) => !MENA_CODES.has(c.code)).map((c) => (
-                <option key={c.code} value={c.code}>{isAr ? c.ar : c.en}</option>
-              ))}
-            </optgroup>
-          </select>
+        <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-hide -mx-1 px-1">
+          {COUNTRIES.map((c) => (
+            <button
+              key={c.code}
+              type="button"
+              onClick={() => setCountry(c.code)}
+              className={cn(
+                'flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl border text-center shrink-0 transition-all',
+                country === c.code
+                  ? 'bg-purple/15 border-purple text-purple'
+                  : 'border-border text-muted hover:border-white/20 hover:text-white'
+              )}
+            >
+              <span className="text-lg leading-none">{c.flag}</span>
+              <span className="text-[10px] font-medium whitespace-nowrap">{isAr ? c.ar : c.en}</span>
+            </button>
+          ))}
         </div>
+        {country && (
+          <p className="text-[11px] text-purple mt-1 ms-1">
+            {COUNTRIES.find((c) => c.code === country)?.[isAr ? 'ar' : 'en']} ✓
+          </p>
+        )}
       </div>
 
       {/* Phone */}
@@ -647,12 +682,12 @@ function Step2({ isAr, fullName, setFullName, username, setUsername, dob, setDob
 }
 
 // ─── Step 3: ID + Credentials ─────────────────────────────────────────────────
-function Step3({ isAr, dob, idDocType, setIdDocType, idNumber, setIdNumber,
+function Step3({ isAr, dob, country, idDocType, setIdDocType, idNumber, setIdNumber,
   idFile, idPreview, onFilePick,
   clearFile, fileRef, email, setEmail, password, setPassword, confirm, setConfirm,
   showPw, setShowPw, showCf, setShowCf, agreed, setAgreed,
   locale, onBack, onSubmit, loading, accountType }: {
-  isAr: boolean; dob: string;
+  isAr: boolean; dob: string; country: string;
   idDocType: IdDocType | ''; setIdDocType: (v: IdDocType) => void;
   idNumber: string; setIdNumber: (v: string) => void;
   idFile: File | null; idPreview: string | null;
@@ -719,26 +754,60 @@ function Step3({ isAr, dob, idDocType, setIdDocType, idNumber, setIdNumber,
         )}
       </div>
 
-      {/* ID number */}
+      {/* ID number — with country-aware digit validation */}
       {idDocType && (
         <div>
-          <label className="block text-xs text-muted mb-1.5">
-            {idDocType === 'national_id'
+          {(() => {
+            const rule = getIdRule(idDocType, country);
+            const digitCount = idNumber.trim().replace(/\D/g, '').length;
+            const isValid = rule.digits !== null ? digitCount === rule.digits : idNumber.trim().length >= 4;
+            const label = idDocType === 'national_id'
               ? isAr ? 'الرقم القومي' : 'National ID Number'
               : idDocType === 'passport'
               ? isAr ? 'رقم جواز السفر' : 'Passport Number'
-              : isAr ? 'رقم شهادة الميلاد' : 'Birth Certificate No.'}
-            <span className="text-red-400 ms-0.5">*</span>
-          </label>
-          <div className="relative">
-            <IdCard className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-            <input
-              value={idNumber}
-              onChange={(e) => setIdNumber(e.target.value)}
-              placeholder={idDocType === 'national_id' ? (isAr ? 'مثال: 30001011234567' : 'e.g. 30001011234567') : (isAr ? 'أدخل رقم المستند' : 'Enter document number')}
-              className="w-full ps-10 pe-4 py-2.5 rounded-xl bg-white/5 border border-border text-sm text-white placeholder:text-muted/50 focus:outline-none focus:border-purple/50 transition-colors"
-            />
-          </div>
+              : isAr ? 'رقم شهادة الميلاد' : 'Birth Certificate No.';
+            return (
+              <>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs text-muted">
+                    {label}<span className="text-red-400 ms-0.5">*</span>
+                  </label>
+                  {rule.digits !== null && idNumber.trim() && (
+                    <span className={cn(
+                      'text-[11px] font-mono font-medium',
+                      isValid ? 'text-emerald-400' : 'text-amber-400'
+                    )}>
+                      {digitCount}/{rule.digits}
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <IdCard className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+                  <input
+                    value={idNumber}
+                    onChange={(e) => {
+                      // For national ID with digit count: only allow digits
+                      const val = rule.digits !== null
+                        ? e.target.value.replace(/\D/g, '').slice(0, rule.digits)
+                        : e.target.value;
+                      setIdNumber(val);
+                    }}
+                    inputMode={rule.digits !== null ? 'numeric' : 'text'}
+                    placeholder={
+                      rule.digits !== null
+                        ? (isAr ? `${rule.digits} أرقام بالضبط` : `Exactly ${rule.digits} digits`)
+                        : (isAr ? 'أدخل رقم المستند' : 'Enter document number')
+                    }
+                    className={cn(
+                      'w-full ps-10 pe-4 py-2.5 rounded-xl bg-white/5 border text-sm text-white placeholder:text-muted/50 focus:outline-none transition-colors',
+                      idNumber && (isValid ? 'border-emerald-500/50 focus:border-emerald-500/70' : 'border-border focus:border-purple/50')
+                    )}
+                  />
+                </div>
+                <p className="text-[10px] text-muted/60 mt-1">{rule.hint}</p>
+              </>
+            );
+          })()}
         </div>
       )}
 
