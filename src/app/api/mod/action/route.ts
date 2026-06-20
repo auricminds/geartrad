@@ -122,6 +122,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   }
 
+  // ── Confirm email — admin only ───────────────────────────────
+  if (type === 'confirm-email') {
+    if (requesterRole !== 'admin') {
+      return NextResponse.json({ error: 'Only admins can force-confirm emails' }, { status: 403 });
+    }
+    const { userId } = body;
+    const { error } = await db.auth.admin.updateUserById(userId, { email_confirm: true });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  }
+
   // ── Delete user — admin only ─────────────────────────────────
   if (type === 'delete-user') {
     if (requesterRole !== 'admin') {

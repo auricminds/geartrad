@@ -101,7 +101,7 @@ export default function ModPage() {
 
   const [orders,    setOrders]    = useState<OrderRow[]>([]);
   const [users,     setUsers]     = useState<UserRow[]>([]);
-  const [emailMap,  setEmailMap]  = useState<Record<string, string>>({});
+  const [emailMap,  setEmailMap]  = useState<Record<string, { email: string; confirmed: boolean }>>({});
   const [listings,  setListings]  = useState<ListingRow[]>([]);
   const [tickets,   setTickets]   = useState<TicketRow[]>([]);
   const [verifs,    setVerifs]    = useState<VerifRow[]>([]);
@@ -138,7 +138,7 @@ export default function ModPage() {
       setListings(l as ListingRow[]);
       setTickets(t as TicketRow[]);
       setVerifs(v as VerifRow[]);
-      setEmailMap(emails as Record<string, string>);
+      setEmailMap(emails as Record<string, { email: string; confirmed: boolean }>);
     }).finally(() => setLoading(false));
   }, [isMod]);
 
@@ -452,6 +452,11 @@ export default function ModPage() {
                               {u.banned_until ? `timeout until ${new Date(u.banned_until).toLocaleDateString()}` : 'banned'}
                             </span>
                           )}
+                          {emailMap[u.id] && !emailMap[u.id].confirmed && (
+                            <span className="text-[10px] text-amber-400 font-medium border border-amber-500/30 px-1.5 py-0.5 rounded-full">
+                              unconfirmed
+                            </span>
+                          )}
                         </div>
                         <p className="text-muted text-xs mt-0.5">
                           {u.account_type} · {u.role} · {u.total_sales} sales · ★{u.rating.toFixed(1)}
@@ -469,7 +474,7 @@ export default function ModPage() {
                         {/* Account info */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           {[
-                            { label: 'Email',        value: emailMap[u.id] || '—' },
+                            { label: 'Email',        value: emailMap[u.id]?.email || '—' },
                             { label: 'Full Name',    value: u.full_name || '—' },
                             { label: 'Phone',        value: u.phone || '—' },
                             { label: 'Country',      value: u.country || '—' },
@@ -491,6 +496,25 @@ export default function ModPage() {
                             </div>
                           ))}
                         </div>
+
+                        {/* Email not confirmed warning */}
+                        {emailMap[u.id] && !emailMap[u.id].confirmed && userRole === 'admin' && (
+                          <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+                            <div className="flex items-center gap-2">
+                              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                              <p className="text-xs text-amber-300 font-medium">Email not confirmed — user cannot sign in</p>
+                            </div>
+                            <button
+                              onClick={async () => {
+                                const ok = await modAction({ type: 'confirm-email', requesterId: user.id, userId: u.id });
+                                if (ok) setEmailMap((prev) => ({ ...prev, [u.id]: { ...prev[u.id], confirmed: true } }));
+                              }}
+                              className="shrink-0 px-2.5 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-200 text-xs font-medium hover:bg-amber-500/30 transition-all"
+                            >
+                              Force Confirm
+                            </button>
+                          </div>
+                        )}
 
                         {/* ID Verification info */}
                         {(() => {

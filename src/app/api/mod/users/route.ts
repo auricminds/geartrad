@@ -38,10 +38,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Return id → email map
-  const emailMap: Record<string, string> = {};
+  // Return id → { email, confirmed } map
+  const emailMap: Record<string, { email: string; confirmed: boolean }> = {};
   for (const user of data.users) {
-    emailMap[user.id] = user.email ?? '';
+    emailMap[user.id] = {
+      email: user.email ?? '',
+      confirmed: !!user.email_confirmed_at,
+    };
   }
 
   return NextResponse.json(emailMap);
