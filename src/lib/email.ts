@@ -81,7 +81,7 @@ export async function emailAdInquiry(inquiry: {
   message: string;
 }) {
   const adminEmail = process.env.ADMIN_EMAIL ?? 'ads@geartrad.com';
-  await send(adminEmail, `New Ad Inquiry from ${inquiry.name} — GearTrad`, layout(`
+  await send(adminEmail, `New Ad Inquiry / استفسار إعلان جديد — ${inquiry.name}`, layout(`
 <div class="header"><h1>📢 New Ad Inquiry</h1><p>Someone wants to advertise on GearTrad</p></div>
 <div class="body">
   <div class="box">
@@ -102,7 +102,7 @@ export async function emailAdInquiry(inquiry: {
 export async function emailNewOrder(sellerId: string, listingTitle: string, amount: number, paymentMethod: string) {
   const email = await getUserEmail(sellerId);
   if (!email) return;
-  await send(email, 'New Order Received — GearTrad', layout(`
+  await send(email, 'New Order Received / طلب جديد — GearTrad', layout(`
 <div class="header"><h1>💰 New Order</h1><p>A buyer wants your listing</p></div>
 <div class="body">
   <p>Someone just placed an order for your listing. Go to your dashboard to review the payment proof once they submit it.</p>
@@ -120,7 +120,7 @@ export async function emailNewOrder(sellerId: string, listingTitle: string, amou
 export async function emailProofSubmitted(sellerId: string, listingTitle: string, reference: string | null, proofUrl: string | null) {
   const email = await getUserEmail(sellerId);
   if (!email) return;
-  await send(email, 'Payment Proof Submitted — Action Required', layout(`
+  await send(email, 'Payment Proof Submitted / إثبات دفع مُرسَل — Action Required', layout(`
 <div class="header"><h1>⚡ Proof Submitted</h1><p>Buyer needs your confirmation</p></div>
 <div class="body">
   <p>The buyer has submitted payment proof for <strong>${listingTitle}</strong>. Please verify the payment arrived in your account, then confirm.</p>
@@ -135,7 +135,7 @@ export async function emailProofSubmitted(sellerId: string, listingTitle: string
 export async function emailCredentialsAvailable(buyerId: string, listingTitle: string) {
   const email = await getUserEmail(buyerId);
   if (!email) return;
-  await send(email, 'Credentials Available — Your Purchase is Ready', layout(`
+  await send(email, 'Credentials Available / بيانات الدخول متاحة — Your Purchase is Ready', layout(`
 <div class="header"><h1>🔓 Credentials Unlocked</h1><p>Your account is ready</p></div>
 <div class="body">
   <p>The seller has confirmed receipt of your payment for <strong>${listingTitle}</strong>. Your account credentials are now available.</p>
@@ -157,7 +157,7 @@ export async function emailCredentialsAvailable(buyerId: string, listingTitle: s
 export async function emailDeliveryConfirmed(sellerId: string, listingTitle: string, amount: number) {
   const email = await getUserEmail(sellerId);
   if (!email) return;
-  await send(email, 'Trade Complete — Buyer Confirmed Delivery', layout(`
+  await send(email, 'Trade Complete / الصفقة مكتملة — Buyer Confirmed Delivery', layout(`
 <div class="header"><h1>✅ Trade Complete</h1><p>The buyer confirmed delivery</p></div>
 <div class="body">
   <p>The buyer has confirmed they received and tested the account for <strong>${listingTitle}</strong>. The trade is fully complete.</p>
@@ -172,7 +172,7 @@ export async function emailDeliveryConfirmed(sellerId: string, listingTitle: str
 export async function emailOrderCancelled(userId: string, listingTitle: string, isBuyer: boolean) {
   const email = await getUserEmail(userId);
   if (!email) return;
-  await send(email, 'Order Cancelled — GearTrad', layout(`
+  await send(email, 'Order Cancelled / تم إلغاء الطلب — GearTrad', layout(`
 <div class="header"><h1>❌ Order Cancelled</h1><p>The trade did not complete</p></div>
 <div class="body">
   <p>${isBuyer ? 'Your order' : 'An order for your listing'} <strong>${listingTitle}</strong> has been cancelled. ${isBuyer ? 'The listing is available again if you wish to try again.' : 'Your listing is now active again and available for other buyers.'}</p>

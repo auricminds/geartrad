@@ -46,7 +46,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
         {locale === 'ar' ? 'إتمام الشراء' : 'Checkout'}
       </h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
         <div className="lg:col-span-3">
           <CheckoutClient
             locale={locale}

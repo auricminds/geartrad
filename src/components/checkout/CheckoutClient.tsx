@@ -198,6 +198,10 @@ export function CheckoutClient({ locale, listingId, sellerId, total, sellerMetho
           return;
         }
         const { data: urlData } = supabase.storage.from('listing-images').getPublicUrl(path);
+        if (!urlData?.publicUrl) {
+          setError(isAr ? 'فشل الحصول على رابط الصورة، حاول مرة أخرى' : 'Failed to get image URL. Try again.');
+          return;
+        }
         proofUrl = urlData.publicUrl;
       }
 
@@ -230,11 +234,14 @@ export function CheckoutClient({ locale, listingId, sellerId, total, sellerMetho
   const handleCancel = async () => {
     if (!user || !orderId) { setStep('method'); return; }
     const headers = await getAuthHeaders();
-    await fetch('/api/payment/cancel', {
+    const res = await fetch('/api/payment/cancel', {
       method: 'POST',
       headers,
       body: JSON.stringify({ orderId, userId: user.id }),
     });
+    if (!res.ok) {
+      console.warn('[checkout] cancel request failed:', res.status, res.statusText);
+    }
     setOrderId('');
     setPaymentAddress('');
     setStep('method');

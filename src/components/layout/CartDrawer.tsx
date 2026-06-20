@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '@/components/providers/StoreProvider';
 import { useLocale } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { X, ShoppingCart, Trash2 } from 'lucide-react';
 import { formatPrice, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -14,12 +14,17 @@ export function CartDrawer() {
   const { cartItems, removeFromCart, cartOpen, setCartOpen } = useStore();
   const locale = useLocale();
   const router = useRouter();
+  const pathname = usePathname();
   const isRTL = locale === 'ar';
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    setCartOpen(false);
+  }, [pathname, setCartOpen]);
 
   const total = cartItems.reduce((sum, item) => sum + item.listing.price, 0);
 

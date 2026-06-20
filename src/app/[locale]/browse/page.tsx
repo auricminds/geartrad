@@ -139,7 +139,7 @@ export default function BrowsePage() {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar — desktop */}
         <aside className="hidden lg:block lg:w-64 shrink-0">
-          <div className="sticky top-24 bg-surface border border-border rounded-2xl p-5 space-y-6">
+          <div className="sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto bg-surface border border-border rounded-2xl p-5 space-y-6">
             <h3 className="font-semibold text-white flex items-center gap-2">
               <SlidersHorizontal className="w-4 h-4 text-purple" />
               {t('filters.title')}

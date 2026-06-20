@@ -14,10 +14,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         ar: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com'}/ar`,
       },
     },
-    ...(isAr && {
-      title: 'جيرتراد — سوق الألعاب الأول في مصر والشرق الأوسط',
-      description: 'اشتر وبع حسابات الألعاب والسكنات والأسلحة بأمان. حماية الضمان، توصيل فوري.',
-    }),
+    title: isAr
+      ? 'جيرتراد — سوق الألعاب الأول في مصر والشرق الأوسط'
+      : 'GearTrad — #1 Gaming Marketplace in Egypt & MENA',
+    description: isAr
+      ? 'اشتر وبع حسابات الألعاب والسكنات والأسلحة بأمان. حماية الضمان، توصيل فوري.'
+      : 'Buy and sell gaming accounts, skins, and weapons safely. Escrow protection, instant delivery.',
   };
 }
 import { HeroBanner } from '@/components/home/HeroBanner';
