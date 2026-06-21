@@ -43,7 +43,11 @@ const BLOCKED_PATH_PATTERNS = [
 // ── Blocked user-agents (automated scanners / vulnerability tools) ────────────
 const BLOCKED_UA_PATTERN = /sqlmap|nikto|nmap|masscan|nuclei|zgrab|dirbuster|gobuster|havij|acunetix|nessus|openvas|w3af|skipfish|wapiti|grabber|burpsuite|zaproxy/i;
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com';
+// Always use the canonical production domain — never the Vercel preview URL
+const BASE = (() => {
+  const env = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+  return env.includes('geartrad.com') ? env : 'https://geartrad.com';
+})();
 
 // ── Inline sitemap (Edge-safe, no DB) — /api/sitemap has the full version ────
 const SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>

@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // rebuild hourly
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://geartrad.com';
+const _envBase = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+const BASE = _envBase.includes('geartrad.com') ? _envBase : 'https://geartrad.com';
 
 interface SitemapUrl {
   loc: string;
