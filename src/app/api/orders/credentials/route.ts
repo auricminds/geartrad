@@ -26,24 +26,20 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = req.nextUrl;
   const orderId = searchParams.get('orderId');
-  const buyerId = searchParams.get('buyerId');
 
-  if (!orderId || !buyerId) {
-    return NextResponse.json({ error: 'Missing params' }, { status: 400 });
-  }
-
-  if (sessionUserId !== buyerId) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!orderId) {
+    return NextResponse.json({ error: 'Missing orderId' }, { status: 400 });
   }
 
   const admin = getAdmin();
 
-  // Verify order belongs to this buyer AND payment is confirmed
+  // Verify order belongs to the authenticated buyer AND payment is confirmed.
+  // Use sessionUserId directly — never trust a buyerId param from the request.
   const { data: order, error } = await admin
     .from('orders')
     .select('id, buyer_id, payment_status, status, listing_id')
     .eq('id', orderId)
-    .eq('buyer_id', buyerId)
+    .eq('buyer_id', sessionUserId)
     .single();
 
   if (error || !order) {
