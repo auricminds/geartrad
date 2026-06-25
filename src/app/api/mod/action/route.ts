@@ -17,6 +17,22 @@ async function verifyMod(userId: string): Promise<string | null> {
   return data?.role ?? null;
 }
 
+// Fire-and-forget audit log — never lets a logging failure block the action.
+function logModAction(
+  db: ReturnType<typeof getServiceClient>,
+  actorId: string,
+  actionType: string,
+  targetId: string | null,
+  metadata?: Record<string, unknown>,
+) {
+  void db.from('mod_audit_log').insert({
+    actor_id:    actorId,
+    action_type: actionType,
+    target_id:   targetId ?? null,
+    metadata:    metadata ?? null,
+  });
+}
+
 export async function POST(req: NextRequest) {
   const requesterId = await getSessionUserId(req);
   if (!requesterId) {
@@ -40,6 +56,7 @@ export async function POST(req: NextRequest) {
       .update({ is_banned: banned, banned_until: null })
       .eq('id', userId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    logModAction(db, requesterId, 'ban', userId, { banned });
     return NextResponse.json({ success: true });
   }
 
@@ -51,6 +68,7 @@ export async function POST(req: NextRequest) {
       .update({ is_banned: true, banned_until: bannedUntil })
       .eq('id', userId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    logModAction(db, requesterId, 'timeout', userId, { hours, banned_until: bannedUntil });
     return NextResponse.json({ success: true });
   }
 
@@ -65,6 +83,7 @@ export async function POST(req: NextRequest) {
     }
     const { error } = await db.from('profiles').update({ role }).eq('id', userId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    logModAction(db, requesterId, 'role_change', userId, { new_role: role });
     return NextResponse.json({ success: true });
   }
 
@@ -78,12 +97,13 @@ export async function POST(req: NextRequest) {
     if (listingId) {
       await db.from('listings').update({ is_available: true }).eq('id', listingId);
     }
+    logModAction(db, requesterId, 'cancel_order', orderId, { listing_id: listingId });
     return NextResponse.json({ success: true });
   }
 
   // ── Resolve order ────────────────────────────────────────────
   if (type === 'resolve-order') {
-    const { orderId, resolution } = body; // resolution: 'complete' | 'refund' | 'dispute'
+    const { orderId, resolution } = body;
     const update = resolution === 'complete'
       ? { status: 'completed', payment_status: 'paid' }
       : resolution === 'dispute'
@@ -91,6 +111,7 @@ export async function POST(req: NextRequest) {
         : { status: 'refunded', payment_status: 'refunded' };
     const { error } = await db.from('orders').update(update).eq('id', orderId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    logModAction(db, requesterId, 'resolve_order', orderId, { resolution });
     return NextResponse.json({ success: true });
   }
 
@@ -99,6 +120,7 @@ export async function POST(req: NextRequest) {
     const { listingId } = body;
     const { error } = await db.from('listings').update({ is_available: false }).eq('id', listingId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    logModAction(db, requesterId, 'takedown_listing', listingId);
     return NextResponse.json({ success: true });
   }
 
@@ -109,6 +131,7 @@ export async function POST(req: NextRequest) {
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', ticketId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    logModAction(db, requesterId, 'ticket_status', ticketId, { status });
     return NextResponse.json({ success: true });
   }
 
@@ -119,6 +142,7 @@ export async function POST(req: NextRequest) {
       .update({ status, reviewed_by: requesterId, reviewed_at: new Date().toISOString(), notes: notes ?? null })
       .eq('id', verifId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    logModAction(db, requesterId, 'review_verification', verifId, { status, notes });
     return NextResponse.json({ success: true });
   }
 
@@ -130,6 +154,7 @@ export async function POST(req: NextRequest) {
     const { userId } = body;
     const { error } = await db.auth.admin.updateUserById(userId, { email_confirm: true });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    logModAction(db, requesterId, 'confirm_email', userId);
     return NextResponse.json({ success: true });
   }
 
@@ -142,11 +167,10 @@ export async function POST(req: NextRequest) {
     if (!userId || userId === requesterId) {
       return NextResponse.json({ error: 'Cannot delete yourself' }, { status: 400 });
     }
-    // Delete from Supabase Auth (cascades to profile via FK if set, otherwise clean up manually)
     const { error: authErr } = await db.auth.admin.deleteUser(userId);
     if (authErr) return NextResponse.json({ error: authErr.message }, { status: 500 });
-    // Ensure profile row is removed even without cascade
     await db.from('profiles').delete().eq('id', userId);
+    logModAction(db, requesterId, 'delete_user', userId);
     return NextResponse.json({ success: true });
   }
 

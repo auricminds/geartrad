@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getSessionUserId } from '@/lib/auth-server';
+import { safeDecrypt } from '@/lib/crypto';
 
 function getAdmin() {
   return createClient(
@@ -74,8 +75,8 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({
-    account_email:      listing.account_email,
-    account_password:   listing.account_password,
-    account_extra_info: listing.account_extra_info,
+    account_email:      safeDecrypt(listing.account_email),
+    account_password:   safeDecrypt(listing.account_password),
+    account_extra_info: safeDecrypt(listing.account_extra_info),
   });
 }

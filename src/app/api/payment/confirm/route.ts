@@ -16,6 +16,9 @@ function getAdmin() {
  * Two flows:
  * 1. Seller confirms payment received (proof_submitted → paid) — pass sellerId
  * 2. Buyer confirms delivery / account works (paid → delivered) — pass buyerId
+ *
+ * Race-condition-safe: uses a single conditional UPDATE...WHERE instead of
+ * SELECT-then-UPDATE, so two simultaneous requests cannot both "win".
  */
 export async function POST(req: NextRequest) {
   try {
@@ -40,25 +43,21 @@ export async function POST(req: NextRequest) {
     const admin = getAdmin();
 
     // ── Seller confirms payment received ─────────────────────────────────────
+    // Single atomic UPDATE — only succeeds if payment_status is still 'proof_submitted'.
+    // Eliminates the SELECT → UPDATE race window.
     if (sellerId) {
       const { data: order, error } = await admin
         .from('orders')
-        .select('id, seller_id, buyer_id, payment_status, listing_id')
+        .update({ payment_status: 'paid', status: 'completed' })
         .eq('id', orderId)
         .eq('seller_id', sellerId)
+        .eq('payment_status', 'proof_submitted')
+        .select('id, buyer_id, listing_id')
         .single();
 
       if (error || !order) {
-        return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+        return NextResponse.json({ error: 'Order not found or already processed' }, { status: 409 });
       }
-      if (order.payment_status !== 'proof_submitted') {
-        return NextResponse.json({ error: 'Order is not in proof_submitted state' }, { status: 409 });
-      }
-
-      await admin.from('orders').update({
-        payment_status: 'paid',
-        status: 'completed',
-      }).eq('id', orderId);
 
       const { data: profile } = await admin
         .from('profiles').select('total_sales').eq('id', sellerId).single();
@@ -84,40 +83,30 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Buyer confirms delivery ───────────────────────────────────────────────
+    // Single atomic UPDATE — only succeeds if payment_status is 'paid' or 'delivered'.
     if (buyerId) {
       const { data: order, error } = await admin
         .from('orders')
-        .select('id, buyer_id, seller_id, payment_status, listing_id')
+        .update({ payment_status: 'delivered', status: 'completed' })
         .eq('id', orderId)
         .eq('buyer_id', buyerId)
+        .in('payment_status', ['paid', 'delivered'])
+        .select('id, seller_id, listing_id')
         .single();
 
       if (error || !order) {
-        return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-      }
-      if (!['paid', 'delivered'].includes(order.payment_status)) {
-        return NextResponse.json({ error: 'Credentials must be released before confirming delivery' }, { status: 409 });
+        return NextResponse.json({ error: 'Order not found or not yet released' }, { status: 409 });
       }
 
-      await admin.from('orders').update({
-        payment_status: 'delivered',
-        status: 'completed',
-      }).eq('id', orderId);
-
-      // Increment seller's total_sales (in case seller never confirmed from dashboard)
-      const { data: sellerProfile } = await admin
-        .from('profiles').select('total_sales').eq('id', order.seller_id).single();
-      // Count the actual completed orders to keep total_sales accurate
+      // Re-count completed orders for accuracy
       const { count: completedCount } = await admin
         .from('orders')
         .select('id', { count: 'exact', head: true })
         .eq('seller_id', order.seller_id)
         .in('payment_status', ['paid', 'delivered']);
-      if (sellerProfile !== null) {
-        await admin.from('profiles')
-          .update({ total_sales: completedCount ?? (sellerProfile.total_sales ?? 0) })
-          .eq('id', order.seller_id);
-      }
+      await admin.from('profiles')
+        .update({ total_sales: completedCount ?? 0 })
+        .eq('id', order.seller_id);
 
       const { data: listing } = await admin
         .from('listings').select('title').eq('id', order.listing_id).single();

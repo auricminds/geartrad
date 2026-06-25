@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getSessionUserId } from '@/lib/auth-server';
+import { encryptCredential } from '@/lib/crypto';
 
 function getServiceClient() {
   return createClient(
@@ -88,9 +89,9 @@ export async function POST(req: NextRequest) {
       hours_played: payload.hours_played || null,
       win_rate: payload.win_rate || null,
       achievements: payload.achievements || null,
-      account_email: payload.account_email || null,
-      account_password: payload.account_password || null,
-      account_extra_info: payload.account_extra_info || null,
+      account_email:      payload.account_email      ? encryptCredential(payload.account_email)      : null,
+      account_password:   payload.account_password   ? encryptCredential(payload.account_password)   : null,
+      account_extra_info: payload.account_extra_info ? encryptCredential(payload.account_extra_info) : null,
       images: Array.isArray(payload.images) ? payload.images.filter(Boolean) : [],
       is_available: true,
       likes: 0,

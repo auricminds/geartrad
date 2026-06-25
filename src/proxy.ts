@@ -208,8 +208,36 @@ export default function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // ── next-intl locale routing for page routes ─────────────────────────────
-  return intlMiddleware(req);
+  // ── CSP nonce + next-intl locale routing for page routes ────────────────
+  // A fresh nonce per request lets us replace 'unsafe-inline' with 'nonce-{n}'
+  // in script-src. Next.js automatically applies it to framework hydration scripts.
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+  const isDev = process.env.NODE_ENV === 'development';
+
+  const csp = [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https://images.unsplash.com https://api.dicebear.com https://*.supabase.co",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://blockstream.info https://apilist.tronscanapi.com https://api.etherscan.io",
+    "frame-src 'none'",
+    "worker-src 'self' blob:",
+    "font-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "media-src 'self' blob: https://*.supabase.co",
+  ].join('; ');
+
+  // Inject nonce into request headers so Server Components can read it via headers()
+  const reqHeaders = new Headers(req.headers);
+  reqHeaders.set('x-nonce', nonce);
+  const mutatedReq = new NextRequest(req.url, { headers: reqHeaders, method: req.method, body: req.body });
+
+  const res = intlMiddleware(mutatedReq);
+  res.headers.set('Content-Security-Policy', csp);
+  res.headers.set('x-nonce', nonce);
+  return res;
 }
 
 export const config = {
