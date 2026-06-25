@@ -78,6 +78,7 @@ export default function SellPage() {
   const [winRate, setWinRate]           = useState('');
   const [achievements, setAchievements] = useState('');
   const fileInputRef                    = useRef<HTMLInputElement>(null);
+  const paymentSectionRef               = useRef<HTMLDivElement>(null);
 
   // Account credentials — required when type === 'Account'
   const [credEmail, setCredEmail]       = useState('');
@@ -87,10 +88,12 @@ export default function SellPage() {
   // Payment methods
   const [selectedMethods, setSelectedMethods] = useState<Set<string>>(new Set());
   const [paymentValues, setPaymentValues]     = useState<Record<string, string>>({});
+  const [paymentLoaded, setPaymentLoaded]     = useState(false);
 
   useEffect(() => {
     if (!user) return;
     getSellerPaymentDetails(user.id).then((details) => {
+      setPaymentLoaded(true);
       if (!details) return;
       const pre: Record<string, string> = {};
       const active = new Set<string>();
@@ -100,7 +103,7 @@ export default function SellPage() {
       }
       setPaymentValues(pre);
       setSelectedMethods(active);
-    });
+    }).catch(() => setPaymentLoaded(true));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
@@ -224,12 +227,14 @@ export default function SellPage() {
     }
 
     if (selectedMethods.size === 0) {
-      setError(locale === 'ar' ? 'يجب اختيار طريقة دفع واحدة على الأقل' : 'Please select at least one payment method');
+      setError(locale === 'ar' ? 'يجب اختيار طريقة دفع واحدة على الأقل لكي يعرف المشتري كيف يدفع لك' : 'Please select at least one payment method so buyers know how to pay you — scroll down to the payment section below');
+      paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     for (const m of PAYMENT_METHODS) {
       if (selectedMethods.has(m.id) && !paymentValues[m.id]?.trim()) {
         setError(locale === 'ar' ? `يرجى إدخال بيانات ${m.labelAr}` : `Please enter your ${m.label} details`);
+        paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
     }
@@ -636,7 +641,7 @@ export default function SellPage() {
         </div>
 
         {/* Payment Methods */}
-        <div className="space-y-4">
+        <div ref={paymentSectionRef} className="space-y-4">
           <div className="flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-purple" />
             <h3 className="text-sm font-semibold text-white">
@@ -648,6 +653,17 @@ export default function SellPage() {
               ? 'اختر طريقة دفع واحدة أو أكثر وأدخل بياناتك — ستظهر للمشترين على ملفك وإعلاناتك'
               : 'Select one or more methods and enter your details — buyers will see these on your profile and listings'}
           </p>
+
+          {paymentLoaded && selectedMethods.size === 0 && (
+            <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                {locale === 'ar'
+                  ? 'لم تُضف طريقة دفع بعد — يجب إضافة واحدة على الأقل قبل نشر الإعلان'
+                  : 'No payment method set up yet — you must add at least one before publishing'}
+              </span>
+            </div>
+          )}
 
           <div className="space-y-2">
             {PAYMENT_METHODS.map((m) => {
