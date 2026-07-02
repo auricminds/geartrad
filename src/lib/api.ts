@@ -417,27 +417,15 @@ export type SellerStats = {
 };
 
 export async function getSellerStats(sellerId: string): Promise<SellerStats> {
-  const { data: orders } = await supabase
-    .from('orders')
-    .select('status, payment_status, amount')
-    .eq('seller_id', sellerId);
-
-  if (!orders) return { successfulTrades: 0, openTrades: 0, disputedTrades: 0, totalOrders: 0, totalRevenue: 0 };
-
-  const successfulTrades = orders.filter(
-    (o) => o.status === 'completed' || o.payment_status === 'delivered' || o.payment_status === 'paid'
-  ).length;
-  const openTrades = orders.filter(
-    (o) => o.payment_status === 'pending' || o.payment_status === 'proof_submitted'
-  ).length;
-  const disputedTrades = orders.filter(
-    (o) => o.status === 'disputed'
-  ).length;
-  const totalRevenue = orders
-    .filter((o) => o.status === 'completed' || o.payment_status === 'delivered')
-    .reduce((sum, o) => sum + (o.amount ?? 0), 0);
-
-  return { successfulTrades, openTrades, disputedTrades, totalOrders: orders.length, totalRevenue };
+  const { data } = await supabase.rpc('get_seller_stats', { p_seller_id: sellerId });
+  if (!data) return { successfulTrades: 0, openTrades: 0, disputedTrades: 0, totalOrders: 0, totalRevenue: 0 };
+  return {
+    successfulTrades: data.successfulTrades ?? 0,
+    openTrades:       data.openTrades       ?? 0,
+    disputedTrades:   data.disputedTrades   ?? 0,
+    totalOrders:      data.totalOrders      ?? 0,
+    totalRevenue:     data.totalRevenue     ?? 0,
+  };
 }
 
 // ── Seller helpers ────────────────────────────────────────────────────────────
