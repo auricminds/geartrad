@@ -20,8 +20,9 @@ export type DbProfile = {
   is_banned: boolean;
   banned_until: string | null;
   created_at: string;
-  // Personal info (collected at registration)
+  // Personal info
   full_name: string | null;
+  bio: string | null;
   phone: string | null;
   country: string | null;
   gender: 'male' | 'female' | 'prefer_not_to_say' | null;

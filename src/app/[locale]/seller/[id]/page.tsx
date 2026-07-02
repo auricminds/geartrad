@@ -120,7 +120,10 @@ export default async function SellerProfilePage({ params }: Props) {
               ))}
             </div>
             <p className="text-white font-bold text-lg">{Number(profile.rating).toFixed(1)}</p>
-            <p className="text-muted text-xs mb-4">{isAr ? 'التقييم' : 'Rating'}</p>
+            <p className="text-muted text-xs mb-1">{isAr ? 'التقييم' : 'Rating'}</p>
+            {profile.bio && (
+              <p className="text-xs text-muted/70 text-center leading-relaxed max-w-[200px] mb-3">{profile.bio}</p>
+            )}
 
             {/* Stats grid */}
             <div className="grid grid-cols-2 gap-2 mb-4">

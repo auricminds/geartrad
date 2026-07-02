@@ -8,7 +8,7 @@ import type { Listing, User, ListingType, AccountRank, BoostType } from '@/types
 
 // ── Type Conversion ──────────────────────────────────────────────────────────
 
-const PROFILE_COLS = 'id, username, account_type, role, avatar_url, rating, total_sales, is_verified, is_banned, banned_until, created_at';
+const PROFILE_COLS = 'id, username, account_type, role, avatar_url, bio, rating, total_sales, is_verified, is_banned, banned_until, created_at';
 const PAYMENT_COLS = 'instapay_id, vodafone_number, orange_number, paypal_email, crypto_wallet_usdt, crypto_wallet_btc, crypto_wallet_eth';
 const LISTING_COLS = `
   id, seller_id, title, title_ar, description, description_ar,
@@ -379,10 +379,31 @@ export async function ensureProfile(
 export async function getProfile(userId: string): Promise<DbProfile | null> {
   const { data } = await supabase
     .from('profiles')
-    .select(`${PROFILE_COLS}, ${PAYMENT_COLS}, full_name, phone, country, gender, date_of_birth`)
+    .select(`${PROFILE_COLS}, ${PAYMENT_COLS}, full_name, bio, phone, country, gender, date_of_birth`)
     .eq('id', userId)
     .single();
   return data as DbProfile | null;
+}
+
+export async function isUsernameTaken(username: string, excludeUserId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .neq('id', excludeUserId)
+    .maybeSingle();
+  return !!data;
+}
+
+export async function updateProfile(
+  userId: string,
+  fields: { username?: string; full_name?: string | null; bio?: string | null }
+): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from('profiles')
+    .update(fields)
+    .eq('id', userId);
+  return { error: error?.message ?? null };
 }
 
 // ── Seller Stats ──────────────────────────────────────────────────────────────

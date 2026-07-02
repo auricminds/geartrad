@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useStore } from '@/components/providers/StoreProvider';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -10,9 +10,262 @@ import {
   ShoppingBag, LayoutDashboard, Store, LogOut,
   ChevronRight, CheckCircle2, ShoppingCart, Star, Calendar,
   RefreshCw, X, ArrowRight, AlertTriangle, CreditCard, Camera,
+  Pencil, Save, FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
+import { getProfile, isUsernameTaken, updateProfile } from '@/lib/api';
+
+// ── Edit Profile Modal ────────────────────────────────────────────────────────
+function EditProfileModal({
+  userId,
+  locale,
+  currentAvatarUrl,
+  onClose,
+  onSaved,
+}: {
+  userId: string;
+  locale: string;
+  currentAvatarUrl: string | null;
+  onClose: () => void;
+  onSaved: (data: { username: string; fullName: string | null; bio: string | null; avatarUrl: string | null }) => void;
+}) {
+  const isRTL = locale === 'ar';
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [username, setUsername]   = useState('');
+  const [fullName, setFullName]   = useState('');
+  const [bio, setBio]             = useState('');
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(currentAvatarUrl);
+  const [avatarFile, setAvatarFile]       = useState<File | null>(null);
+
+  const [loading, setLoading]     = useState(true);
+  const [saving, setSaving]       = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [error, setError]         = useState('');
+  const [usernameError, setUsernameError] = useState('');
+
+  // Load current profile
+  useEffect(() => {
+    getProfile(userId).then((p) => {
+      if (!p) return;
+      setUsername(p.username ?? '');
+      setFullName(p.full_name ?? '');
+      setBio(p.bio ?? '');
+    }).finally(() => setLoading(false));
+  }, [userId]);
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setError(isRTL ? 'يُسمح بالصور فقط' : 'Images only'); return; }
+    if (file.size > 2 * 1024 * 1024) { setError(isRTL ? 'الحد الأقصى 2 ميجابايت' : 'Max 2 MB'); return; }
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    setError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const validateUsername = (v: string) => {
+    if (!v.trim()) return isRTL ? 'اسم المستخدم مطلوب' : 'Username is required';
+    if (v.length < 3) return isRTL ? 'يجب أن يكون 3 أحرف على الأقل' : 'At least 3 characters';
+    if (v.length > 24) return isRTL ? 'الحد الأقصى 24 حرفاً' : 'Max 24 characters';
+    if (!/^[a-zA-Z0-9_]+$/.test(v)) return isRTL ? 'أحرف إنجليزية وأرقام وشرطة سفلية فقط' : 'Letters, numbers and underscores only';
+    return '';
+  };
+
+  const handleSave = async () => {
+    const uErr = validateUsername(username);
+    if (uErr) { setUsernameError(uErr); return; }
+    setUsernameError('');
+    setError('');
+    setSaving(true);
+    try {
+      // Check username uniqueness only if it changed
+      const taken = await isUsernameTaken(username.trim(), userId);
+      if (taken) { setUsernameError(isRTL ? 'اسم المستخدم مأخوذ بالفعل' : 'Username already taken'); setSaving(false); return; }
+
+      // Upload new photo if selected
+      let finalAvatarUrl = currentAvatarUrl;
+      if (avatarFile) {
+        setUploadingPhoto(true);
+        const ext = avatarFile.name.split('.').pop() ?? 'jpg';
+        const path = `${userId}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('avatars').upload(path, avatarFile, { upsert: true, contentType: avatarFile.type });
+        setUploadingPhoto(false);
+        if (upErr) { setError(isRTL ? 'فشل رفع الصورة' : 'Photo upload failed'); setSaving(false); return; }
+        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+        finalAvatarUrl = publicUrl;
+        // Update avatar_url in profile
+        await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', userId);
+      }
+
+      // Save profile fields
+      const { error: saveErr } = await updateProfile(userId, {
+        username: username.trim(),
+        full_name: fullName.trim() || null,
+        bio: bio.trim() || null,
+      });
+      if (saveErr) { setError(saveErr); setSaving(false); return; }
+
+      // Keep auth metadata username in sync
+      await supabase.auth.updateUser({ data: { username: username.trim() } }).catch(() => {});
+
+      onSaved({ username: username.trim(), fullName: fullName.trim() || null, bio: bio.trim() || null, avatarUrl: finalAvatarUrl });
+    } catch {
+      setError(isRTL ? 'حدث خطأ، حاول مجدداً' : 'Something went wrong. Try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="w-full max-w-md bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-purple/15 flex items-center justify-center">
+              <Pencil className="w-4 h-4 text-purple" />
+            </div>
+            <h2 className="text-base font-bold text-white">
+              {isRTL ? 'تعديل الملف الشخصي' : 'Edit Profile'}
+            </h2>
+          </div>
+          <button type="button" onClick={onClose} className="text-muted hover:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <span className="w-6 h-6 border-2 border-purple border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <div className="px-5 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+            {/* Avatar */}
+            <div className="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="group relative w-20 h-20 rounded-full overflow-hidden shadow-lg shadow-purple/20 focus:outline-none"
+              >
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-purple to-purple-light flex items-center justify-center text-white text-2xl font-bold">
+                    {username.charAt(0).toUpperCase() || '?'}
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  {uploadingPhoto
+                    ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    : <Camera className="w-5 h-5 text-white" />}
+                </div>
+              </button>
+              <p className="text-xs text-muted">{isRTL ? 'انقر لتغيير الصورة' : 'Click to change photo'}</p>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSelect} />
+            </div>
+
+            {/* Full name / nickname */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted uppercase tracking-wider">
+                {isRTL ? 'الاسم الكامل (اختياري)' : 'Full Name (optional)'}
+              </label>
+              <div className="relative">
+                <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  maxLength={50}
+                  placeholder={isRTL ? 'اسمك الحقيقي أو اللقب' : 'Your real name or nickname'}
+                  className="w-full bg-background border border-border rounded-xl ps-10 pe-4 py-2.5 text-sm text-white placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-purple/40 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Username */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted uppercase tracking-wider">
+                {isRTL ? 'اسم المستخدم' : 'Username'}
+              </label>
+              <div className="relative">
+                <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted text-sm select-none">@</span>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => { setUsername(e.target.value); setUsernameError(''); }}
+                  maxLength={24}
+                  placeholder="username"
+                  className={cn(
+                    'w-full bg-background border rounded-xl ps-8 pe-4 py-2.5 text-sm text-white placeholder:text-muted focus:outline-none focus:ring-2 transition-all',
+                    usernameError ? 'border-red-500/60 focus:ring-red-500/30' : 'border-border focus:ring-purple/40'
+                  )}
+                />
+              </div>
+              {usernameError && <p className="text-xs text-red-400">{usernameError}</p>}
+              <p className="text-[11px] text-muted/60">{isRTL ? 'أحرف إنجليزية وأرقام وشرطة سفلية فقط' : 'Letters, numbers and underscores only'}</p>
+            </div>
+
+            {/* Bio */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted uppercase tracking-wider">
+                {isRTL ? 'نبذة عنك (اختياري)' : 'Bio (optional)'}
+              </label>
+              <div className="relative">
+                <FileText className="absolute start-3 top-3 w-4 h-4 text-muted pointer-events-none" />
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  maxLength={160}
+                  rows={3}
+                  placeholder={isRTL ? 'أخبر الآخرين شيئاً عنك...' : 'Tell others a bit about yourself...'}
+                  className="w-full bg-background border border-border rounded-xl ps-10 pe-4 py-2.5 text-sm text-white placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-purple/40 transition-all resize-none"
+                />
+              </div>
+              <p className="text-[11px] text-muted/60 text-end">{bio.length}/160</p>
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                {error}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Footer */}
+        {!loading && (
+          <div className="px-5 pb-5 pt-3 flex gap-3 border-t border-border">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted hover:text-white transition-all"
+            >
+              {isRTL ? 'إلغاء' : 'Cancel'}
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-purple hover:bg-purple-light text-white text-sm font-semibold transition-all shadow-lg shadow-purple/25 disabled:opacity-60"
+            >
+              {saving
+                ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                : <Save className="w-4 h-4" />}
+              {isRTL ? 'حفظ التغييرات' : 'Save Changes'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ── Switch Account Modal ──────────────────────────────────────────────────────
 function SwitchModal({
@@ -199,7 +452,10 @@ export default function ProfilePage() {
   const isRTL = locale === 'ar';
 
   const [showSwitch, setShowSwitch] = useState(false);
+  const [showEdit, setShowEdit]     = useState(false);
   const [switchedTo, setSwitchedTo] = useState<'buyer' | 'seller' | null>(null);
+  const [profileUsername, setProfileUsername] = useState<string | null>(null);
+  const [profileBio, setProfileBio] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -313,11 +569,21 @@ export default function ProfilePage() {
   }
 
   // ── Logged in ────────────────────────────────────────
+  // Load bio on mount so it's visible immediately
+  useEffect(() => {
+    if (!user) return;
+    getProfile(user.id).then((p) => {
+      if (!p) return;
+      if (p.bio) setProfileBio(p.bio);
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   // Use switchedTo state (immediate feedback) or fall back to metadata
   const effectiveType = switchedTo ?? (user.user_metadata?.account_type as 'buyer' | 'seller' | undefined) ?? 'buyer';
   const isSeller = effectiveType === 'seller';
 
-  const displayName = user.user_metadata?.username ?? user.email?.split('@')[0] ?? 'User';
+  const displayName = profileUsername ?? user.user_metadata?.username ?? user.email?.split('@')[0] ?? 'User';
   const initials = displayName.slice(0, 2).toUpperCase();
 
   const memberSince = user.created_at
@@ -390,6 +656,20 @@ export default function ProfilePage() {
 
   return (
     <>
+      {showEdit && user && (
+        <EditProfileModal
+          userId={user.id}
+          locale={locale}
+          currentAvatarUrl={avatarUrl}
+          onClose={() => setShowEdit(false)}
+          onSaved={({ username, fullName, bio, avatarUrl: newUrl }) => {
+            setProfileUsername(username);
+            setProfileBio(bio);
+            if (newUrl) setAvatarUrl(newUrl);
+            setShowEdit(false);
+          }}
+        />
+      )}
       {showSwitch && (
         <SwitchModal
           currentType={effectiveType}
@@ -482,6 +762,21 @@ export default function ProfilePage() {
               {isRTL ? `عضو منذ ${memberSince}` : `Member since ${memberSince}`}
             </div>
           )}
+
+          {/* Bio */}
+          {profileBio && (
+            <p className="text-xs text-muted/80 text-center leading-relaxed max-w-[240px]">{profileBio}</p>
+          )}
+
+          {/* Edit Profile button */}
+          <button
+            type="button"
+            onClick={() => setShowEdit(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-xs font-medium text-muted hover:text-white hover:border-purple/40 hover:bg-purple/5 transition-all"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            {isRTL ? 'تعديل الملف الشخصي' : 'Edit Profile'}
+          </button>
         </div>
 
         {/* Stats row */}
