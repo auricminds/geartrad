@@ -459,6 +459,16 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Load bio when user is available — must be before any early returns (Rules of Hooks)
+  useEffect(() => {
+    if (!user) return;
+    getProfile(user.id).then((p) => {
+      if (!p) return;
+      if (p.bio) setProfileBio(p.bio);
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -569,16 +579,6 @@ export default function ProfilePage() {
   }
 
   // ── Logged in ────────────────────────────────────────
-  // Load bio on mount so it's visible immediately
-  useEffect(() => {
-    if (!user) return;
-    getProfile(user.id).then((p) => {
-      if (!p) return;
-      if (p.bio) setProfileBio(p.bio);
-    }).catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
-
   // Use switchedTo state (immediate feedback) or fall back to metadata
   const effectiveType = switchedTo ?? (user.user_metadata?.account_type as 'buyer' | 'seller' | undefined) ?? 'buyer';
   const isSeller = effectiveType === 'seller';
