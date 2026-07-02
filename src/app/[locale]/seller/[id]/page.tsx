@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Star, Shield, BadgeCheck, Package, ArrowLeft, CreditCard, CheckCircle2, Clock, AlertCircle, TrendingUp } from 'lucide-react';
-import { getProfile, getSellerListings, getSellerStats } from '@/lib/api';
+import { Star, Shield, BadgeCheck, Package, ArrowLeft, CreditCard, CheckCircle2, Clock, AlertCircle, TrendingUp, MessageSquare } from 'lucide-react';
+import { getProfile, getSellerListings, getSellerStats, getSellerReviews } from '@/lib/api';
 import { ListingCard } from '@/components/listing/ListingCard';
 import { SellerAnalytics } from '@/components/listing/SellerAnalytics';
 import { cn } from '@/lib/utils';
@@ -34,10 +34,11 @@ export default async function SellerProfilePage({ params }: Props) {
   const { id, locale } = await params;
   const isAr = locale === 'ar';
 
-  const [profile, listings, stats] = await Promise.all([
+  const [profile, listings, stats, reviews] = await Promise.all([
     getProfile(id),
     getSellerListings(id),
     getSellerStats(id),
+    getSellerReviews(id),
   ]);
 
   if (!profile) notFound();
@@ -237,6 +238,49 @@ export default async function SellerProfilePage({ params }: Props) {
             <p className="text-center text-muted text-xs mt-6">
               +{listings.length - activeListings.length} {isAr ? 'إعلانات تم بيعها' : 'listings already sold'}
             </p>
+          )}
+
+          {/* Buyer reviews */}
+          {reviews.length > 0 && (
+            <div className="mt-10">
+              <div className="flex items-center gap-2 mb-5">
+                <MessageSquare className="w-4 h-4 text-muted" />
+                <h2 className="text-lg font-bold text-white">
+                  {isAr ? 'تقييمات المشترين' : 'Buyer Reviews'}
+                  <span className="text-muted font-normal text-sm ms-2">({reviews.length})</span>
+                </h2>
+              </div>
+              <div className="space-y-3">
+                {reviews.map((review) => (
+                  <div key={review.id} className="bg-surface border border-border rounded-2xl p-4">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-purple/20 flex items-center justify-center text-purple text-xs font-bold shrink-0">
+                          {review.buyer?.username?.slice(0, 2).toUpperCase() ?? '??'}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">{review.buyer?.username ?? 'Anonymous'}</p>
+                          {review.listing?.title && (
+                            <p className="text-[11px] text-muted truncate max-w-[200px]">{review.listing.title}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} className={cn('w-3.5 h-3.5', i < review.buyer_rating ? 'fill-gold text-gold' : 'text-muted/30')} />
+                        ))}
+                      </div>
+                    </div>
+                    {review.buyer_comment && (
+                      <p className="text-sm text-white/70 leading-relaxed">{review.buyer_comment}</p>
+                    )}
+                    <p className="text-[10px] text-muted mt-2">
+                      {new Date(review.created_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>

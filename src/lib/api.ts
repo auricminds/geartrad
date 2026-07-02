@@ -482,6 +482,7 @@ export async function getBuyerOrders(buyerId: string): Promise<OrderRow[]> {
       id, listing_id, buyer_id, seller_id, amount, platform_fee,
       payment_method, status, payment_status,
       payment_proof_url, payment_reference, proof_submitted_at,
+      buyer_rating, buyer_comment,
       created_at,
       listing:listings(title, cover_image, game),
       seller:profiles!orders_seller_id_fkey(username)
@@ -490,6 +491,31 @@ export async function getBuyerOrders(buyerId: string): Promise<OrderRow[]> {
     .order('created_at', { ascending: false });
 
   return (data as OrderRow[] | null) ?? [];
+}
+
+export type SellerReview = {
+  id: string;
+  buyer_rating: number;
+  buyer_comment: string | null;
+  created_at: string;
+  buyer: { username: string } | null;
+  listing: { title: string } | null;
+};
+
+export async function getSellerReviews(sellerId: string): Promise<SellerReview[]> {
+  const { data } = await supabase
+    .from('orders')
+    .select(`
+      id, buyer_rating, buyer_comment, created_at,
+      buyer:profiles!orders_buyer_id_fkey(username),
+      listing:listings(title)
+    `)
+    .eq('seller_id', sellerId)
+    .not('buyer_rating', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  return (data as SellerReview[] | null) ?? [];
 }
 
 export async function getSellerPaymentDetails(sellerId: string): Promise<{

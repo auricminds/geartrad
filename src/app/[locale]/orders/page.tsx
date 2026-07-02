@@ -58,6 +58,8 @@ export default function OrdersPage() {
     setLoading(true);
     const data = await getBuyerOrders(uid);
     setOrders(data);
+    // Initialize ratedIds from DB so rating button persists across refreshes
+    setRatedIds(new Set(data.filter(o => o.buyer_rating !== null).map(o => o.id)));
     setLoading(false);
   }, []);
 
@@ -79,7 +81,7 @@ export default function OrdersPage() {
     }
 
     const token = await getToken();
-    const res = await fetch(`/api/orders/credentials?orderId=${order.id}&buyerId=${user.id}`, {
+    const res = await fetch(`/api/orders/credentials?orderId=${order.id}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     const data = await res.json();
@@ -124,11 +126,16 @@ export default function OrdersPage() {
     setSubmittingRating(true);
     try {
       const token = await getToken();
-      await fetch('/api/orders/rate', {
+      const res = await fetch('/api/orders/rate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ orderId, buyerId: user.id, rating: pendingRating, comment: ratingComment }),
       });
+      if (!res.ok) {
+        const { error } = await res.json();
+        alert(error ?? 'Failed to submit rating. Please try again.');
+        return;
+      }
       setRatedIds((prev) => { const s = new Set(prev); s.add(orderId); return s; });
       setRatingFor(null);
     } finally {
@@ -355,7 +362,19 @@ export default function OrdersPage() {
                     </div>
                   )}
 
-                  {/* Rating prompt — shown immediately after delivery is confirmed */}
+                  {/* Persistent rate button for completed unrated orders */}
+                  {alreadyConfirmed && !ratedIds.has(order.id) && !isRefunded && ratingFor !== order.id && (
+                    <button
+                      type="button"
+                      onClick={() => { setRatingFor(order.id); setPendingRating(5); setRatingComment(''); }}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-all text-sm font-medium"
+                    >
+                      <Star className="w-4 h-4 fill-gold" />
+                      {isAr ? 'قيّم هذا البائع' : 'Rate this Seller'}
+                    </button>
+                  )}
+
+                  {/* Rating form */}
                   {ratingFor === order.id && !ratedIds.has(order.id) && (
                     <div className="rounded-xl border border-gold/30 bg-gold/5 p-4 space-y-3">
                       <p className="text-sm font-semibold text-gold">

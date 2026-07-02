@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Monitor, Star, TrendingUp, Mail, Phone, Building2, User, MessageSquare, Send, AlertCircle } from 'lucide-react';
 import { submitAdInquiry } from '@/lib/api';
 
@@ -11,6 +11,9 @@ export default function AdvertisePage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+  const formRef = useRef<HTMLDivElement>(null);
+
+  const scrollToForm = () => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const packages = [
     {
@@ -58,9 +61,11 @@ export default function AdvertisePage() {
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {packages.map((pkg) => (
-            <div
+            <button
               key={pkg.key}
-              className={`p-6 rounded-2xl bg-gradient-to-b ${pkg.color} to-surface border transition-all hover:-translate-y-1 duration-200`}
+              type="button"
+              onClick={scrollToForm}
+              className={`p-6 rounded-2xl bg-gradient-to-b ${pkg.color} to-surface border transition-all hover:-translate-y-1 duration-200 text-start cursor-pointer w-full`}
             >
               <div
                 className={`w-12 h-12 rounded-2xl ${pkg.iconBg} flex items-center justify-center mb-4`}
@@ -74,7 +79,7 @@ export default function AdvertisePage() {
               <p className={`text-xs font-medium ${pkg.iconColor} opacity-80`}>
                 {locale === 'ar' ? 'السعر حسب الطلب' : 'Pricing on request'}
               </p>
-            </div>
+            </button>
           ))}
         </div>
       </section>
@@ -106,7 +111,7 @@ export default function AdvertisePage() {
       </div>
 
       {/* Contact Form */}
-      <div className="bg-surface border border-border rounded-2xl p-5 sm:p-8">
+      <div ref={formRef} className="bg-surface border border-border rounded-2xl p-5 sm:p-8">
         <h2 className="text-xl font-bold text-white mb-2">{t('submit')}</h2>
         <p className="text-muted text-sm mb-6">
           {locale === 'ar'

@@ -56,7 +56,7 @@ function AboutContent() {
 
       <h2 className="text-xl font-bold text-white mb-3">Built by AuricMinds Group</h2>
       <p className="text-muted text-sm leading-relaxed">
-        GearTrad is developed and operated by AuricMinds Group — a team passionate about gaming and
+        GearTrad is developed and operated by AuricMinds Group, a team passionate about gaming and
         technology in the Arab world.
       </p>
     </div>
