@@ -77,14 +77,20 @@ export function BestsellerStrip({ sellers }: BestsellerStripProps) {
 
                 {/* Avatar */}
                 <motion.div
-                  className={cn(
-                    'w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold mb-2',
-                    i === 0 ? 'bg-gold/20 text-gold' : 'bg-purple/20 text-purple'
-                  )}
+                  className="w-12 h-12 rounded-2xl mb-2 overflow-hidden"
                   whileHover={{ scale: 1.1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                 >
-                  {seller.username.charAt(0)}
+                  {seller.avatar ? (
+                    <img src={seller.avatar} alt={seller.username} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className={cn(
+                      'w-full h-full flex items-center justify-center text-lg font-bold',
+                      i === 0 ? 'bg-gold/20 text-gold' : 'bg-purple/20 text-purple'
+                    )}>
+                      {seller.username.charAt(0)}
+                    </div>
+                  )}
                 </motion.div>
 
                 <p className="text-sm font-semibold text-white truncate group-hover:text-purple transition-colors">

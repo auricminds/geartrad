@@ -147,6 +147,7 @@ export async function getTopSellers(limit = 8): Promise<User[]> {
     .from('profiles')
     .select(PROFILE_COLS)
     .eq('account_type', 'seller')
+    .order('rating', { ascending: false })
     .order('total_sales', { ascending: false })
     .limit(limit);
 
