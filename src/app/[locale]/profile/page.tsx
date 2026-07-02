@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useStore } from '@/components/providers/StoreProvider';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -9,7 +9,7 @@ import {
   User, Mail, Shield, Heart, MessageCircle, Gamepad2,
   ShoppingBag, LayoutDashboard, Store, LogOut,
   ChevronRight, CheckCircle2, ShoppingCart, Star, Calendar,
-  RefreshCw, X, ArrowRight, AlertTriangle, CreditCard,
+  RefreshCw, X, ArrowRight, AlertTriangle, CreditCard, Camera,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
@@ -193,13 +193,45 @@ function SwitchModal({
 
 // ── Main Profile Page ─────────────────────────────────────────────────────────
 export default function ProfilePage() {
-  const { user, authLoading, likedIds, signOut } = useStore();
+  const { user, authLoading, likedIds, signOut, avatarUrl, setAvatarUrl } = useStore();
   const locale = useLocale();
   const router = useRouter();
   const isRTL = locale === 'ar';
 
   const [showSwitch, setShowSwitch] = useState(false);
   const [switchedTo, setSwitchedTo] = useState<'buyer' | 'seller' | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith('image/')) {
+      alert(isRTL ? 'يُسمح بالصور فقط' : 'Images only');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert(isRTL ? 'الحد الأقصى لحجم الصورة 2 ميجابايت' : 'Max image size is 2 MB');
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg';
+      const path = `${user.id}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (uploadErr) throw uploadErr;
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+      setAvatarUrl(publicUrl);
+    } catch {
+      alert(isRTL ? 'فشل رفع الصورة، حاول مجدداً' : 'Upload failed, please try again');
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   // ── Loading skeleton ────────────────────────────────
   if (authLoading) {
@@ -372,9 +404,26 @@ export default function ProfilePage() {
         {/* Avatar + info card */}
         <div className="bg-surface border border-border rounded-2xl p-6 mb-4 flex flex-col items-center text-center gap-3">
           <div className="relative">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple to-purple-light flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-purple/30">
-              {initials}
-            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="group relative w-20 h-20 rounded-full overflow-hidden shadow-lg shadow-purple/30 focus:outline-none"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-purple to-purple-light flex items-center justify-center text-white text-2xl font-bold">
+                  {initials}
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                {uploadingAvatar
+                  ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  : <Camera className="w-5 h-5 text-white" />}
+              </div>
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
             {isSeller && (
               <span className="absolute -bottom-1 -end-1 flex items-center gap-1 px-1.5 py-0.5 bg-gold rounded-full text-background text-[9px] font-bold leading-none">
                 <CheckCircle2 className="w-2.5 h-2.5" />

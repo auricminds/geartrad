@@ -77,9 +77,17 @@ export default async function SellerProfilePage({ params }: Props) {
           <div className="bg-surface border border-border rounded-2xl p-6 text-center">
             {/* Avatar */}
             <div className="relative inline-block mb-4">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple to-purple-light flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-purple/30 mx-auto">
-                {initials}
-              </div>
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.username}
+                  className="w-20 h-20 rounded-2xl object-cover shadow-lg shadow-purple/30 mx-auto"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple to-purple-light flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-purple/30 mx-auto">
+                  {initials}
+                </div>
+              )}
               {profile.is_verified && (
                 <span className="absolute -bottom-1 -end-1 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-background">
                   <Shield className="w-3 h-3 text-white" />

@@ -355,6 +355,15 @@ export async function markMessagesRead(chatId: string, userId: string): Promise<
     .eq('is_read', false);
 }
 
+export async function markNotificationsReadByChatId(chatId: string): Promise<void> {
+  await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('type', 'message')
+    .eq('related_id', chatId)
+    .eq('is_read', false);
+}
+
 // ── Profile helpers ───────────────────────────────────────────────────────────
 
 export async function ensureProfile(

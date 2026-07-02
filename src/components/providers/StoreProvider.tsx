@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { getWishlistIds, addToWishlist, removeFromWishlist, ensureProfile, getNotifications, markNotificationRead, markAllNotificationsRead, getMyRole } from '@/lib/api';
+import { getWishlistIds, addToWishlist, removeFromWishlist, ensureProfile, getNotifications, markNotificationRead, markAllNotificationsRead, getMyRole, getProfile, markNotificationsReadByChatId } from '@/lib/api';
 import { Listing, CartItem } from '@/types';
 
 export interface Notification {
@@ -22,6 +22,8 @@ interface StoreContextType {
   userRole: string;
   authLoading: boolean;
   signOut: () => Promise<void>;
+  avatarUrl: string | null;
+  setAvatarUrl: (url: string | null) => void;
   // Cart
   cartItems: CartItem[];
   addToCart: (listing: Listing) => void;
@@ -39,6 +41,7 @@ interface StoreContextType {
   setNotifOpen: (open: boolean) => void;
   markOneRead: (id: string) => void;
   markAllRead: () => void;
+  markChatRead: (chatId: string) => void;
   unreadCount: number;
 }
 
@@ -110,6 +113,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) { setUserRole('user'); return; }
     getMyRole(user.id).then(setUserRole).catch(() => {});
+  }, [user]);
+
+  // ── Avatar ──────────────────────────────────────────────
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) { setAvatarUrl(null); return; }
+    getProfile(user.id).then((p) => setAvatarUrl(p?.avatar_url ?? null)).catch(() => {});
   }, [user]);
 
   const signOut = async () => {
@@ -221,14 +232,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     if (user) markAllNotificationsRead(user.id).catch(() => {});
   };
+  const markChatRead = (chatId: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => n.type === 'message' && n.related_id === chatId ? { ...n, read: true } : n)
+    );
+    markNotificationsReadByChatId(chatId).catch(() => {});
+  };
   const unreadCount  = notifications.filter((n) => !n.read).length;
 
   return (
     <StoreContext.Provider value={{
-      user, userRole, authLoading, signOut,
+      user, userRole, authLoading, signOut, avatarUrl, setAvatarUrl,
       cartItems, addToCart, removeFromCart, isInCart, cartOpen, setCartOpen,
       likedIds, toggleLike, isLiked,
-      notifications, notifOpen, setNotifOpen, markOneRead, markAllRead, unreadCount,
+      notifications, notifOpen, setNotifOpen, markOneRead, markAllRead, markChatRead, unreadCount,
     }}>
       {children}
     </StoreContext.Provider>

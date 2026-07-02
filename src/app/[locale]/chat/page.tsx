@@ -31,6 +31,7 @@ interface ConvDisplay {
   listingGame: string;
   otherUserId: string;
   otherUsername: string;
+  otherAvatarUrl: string | null;
   otherRating: number;
   otherVerified: boolean;
   lastMessage: string;
@@ -53,7 +54,7 @@ function ChatApp() {
   const locale      = useLocale();
   const router      = useRouter();
   const searchParams = useSearchParams();
-  const { user, authLoading } = useStore();
+  const { user, authLoading, markChatRead } = useStore();
   const isRTL = locale === 'ar';
 
   const [convs, setConvs]         = useState<ConvDisplay[]>([]);
@@ -86,10 +87,11 @@ function ChatApp() {
           listingImage:  row.listing?.cover_image ?? '',
           listingPrice:  row.listing?.price ?? 0,
           listingGame:   row.listing?.game ?? '',
-          otherUserId:   other?.id ?? '',
-          otherUsername: other?.username ?? 'Unknown',
-          otherRating:   Number(other?.rating) ?? 0,
-          otherVerified: other?.is_verified ?? false,
+          otherUserId:    other?.id ?? '',
+          otherUsername:  other?.username ?? 'Unknown',
+          otherAvatarUrl: other?.avatar_url ?? null,
+          otherRating:    Number(other?.rating) ?? 0,
+          otherVerified:  other?.is_verified ?? false,
           lastMessage:   lastMsg?.content ?? '',
           lastTime:      lastMsg ? timeAgo(lastMsg.created_at) : timeAgo(row.created_at),
           unread,
@@ -133,10 +135,11 @@ function ChatApp() {
         listingImage:  listing.coverImage,
         listingPrice:  listing.price,
         listingGame:   listing.game,
-        otherUserId:   listing.seller.id,
-        otherUsername: listing.seller.username,
-        otherRating:   listing.seller.rating,
-        otherVerified: listing.seller.isVerified,
+        otherUserId:    listing.seller.id,
+        otherUsername:  listing.seller.username,
+        otherAvatarUrl: listing.seller.avatar ?? null,
+        otherRating:    listing.seller.rating,
+        otherVerified:  listing.seller.isVerified,
         lastMessage:   '',
         lastTime:      'Just now',
         unread:        0,
@@ -153,8 +156,9 @@ function ChatApp() {
     if (subRef.current) { supabase.removeChannel(subRef.current); subRef.current = null; }
     if (!activeId || !user) return;
 
-    // Mark existing as read
+    // Mark chat messages and any message-type notifications as read
     markMessagesRead(activeId, user.id).catch(() => {});
+    markChatRead(activeId);
 
     const channel = supabase
       .channel(`chat:${activeId}`)
@@ -324,9 +328,13 @@ function ChatApp() {
                     c.chatId === activeId ? 'bg-purple/10 border-s-2 border-s-purple' : 'hover:bg-white/5'
                   )}
                 >
-                  <div className="w-9 h-9 rounded-xl bg-purple/20 flex items-center justify-center text-sm font-bold text-purple shrink-0">
-                    {c.otherUsername.charAt(0)}
-                  </div>
+                  {c.otherAvatarUrl ? (
+                    <img src={c.otherAvatarUrl} alt={c.otherUsername} className="w-9 h-9 rounded-xl object-cover shrink-0" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-xl bg-purple/20 flex items-center justify-center text-sm font-bold text-purple shrink-0">
+                      {c.otherUsername.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1 mb-0.5">
                       <p className="text-sm font-semibold text-white truncate">{c.otherUsername}</p>

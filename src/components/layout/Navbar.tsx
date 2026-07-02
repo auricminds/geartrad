@@ -20,7 +20,7 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const { cartItems, cartOpen, setCartOpen, notifOpen, setNotifOpen, unreadCount, likedIds, user, userRole, authLoading, signOut } = useStore();
+  const { cartItems, cartOpen, setCartOpen, notifOpen, setNotifOpen, unreadCount, likedIds, user, userRole, authLoading, signOut, avatarUrl } = useStore();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -206,9 +206,13 @@ export function Navbar() {
                     userMenuOpen ? 'bg-purple/10 border-purple' : 'border-border hover:border-purple/40 hover:bg-white/5'
                   )}
                 >
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple to-purple-light flex items-center justify-center text-white text-xs font-bold">
-                    {initials}
-                  </div>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={displayName} className="w-7 h-7 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple to-purple-light flex items-center justify-center text-white text-xs font-bold">
+                      {initials}
+                    </div>
+                  )}
                   <span className="hidden sm:block text-sm font-medium text-white max-w-[100px] truncate">{displayName}</span>
                 </button>
 
