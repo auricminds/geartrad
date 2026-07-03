@@ -8,16 +8,13 @@ async function fetchStats() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    const [listingsRes, usersRes, tradesRes] = await Promise.all([
-      db.from('listings').select('*', { count: 'exact', head: true }).eq('is_available', true),
-      db.from('profiles').select('*', { count: 'exact', head: true }),
-      db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
-    ]);
+    const { data } = await db.rpc('get_platform_stats');
+    if (!data) return { listings: 0, sellers: 0, trades: 0 };
 
     return {
-      listings: listingsRes.count ?? 0,
-      sellers: usersRes.count ?? 0,
-      trades: tradesRes.count ?? 0,
+      listings: data.activeListings   ?? 0,
+      sellers:  data.totalUsers       ?? 0,
+      trades:   data.successfulTrades ?? 0,
     };
   } catch {
     return { listings: 0, sellers: 0, trades: 0 };
