@@ -42,10 +42,14 @@ export function HeroBanner({ banners }: HeroBannerProps) {
   }
 
   return (
-    <section className="w-full px-1">
+    <section className="w-full px-1 relative">
+      {/* ── Ambient orbs ─── */}
+      <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full bg-purple/20 blur-[90px] pointer-events-none animate-orb" />
+      <div className="absolute -bottom-8 -right-8 w-56 h-56 rounded-full bg-gold/15 blur-[80px] pointer-events-none animate-orb-reverse" />
+
       {/* ── Banner carousel ─── */}
       {/* Outer wrapper: floating card feel */}
-      <div className="relative rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.6)] ring-1 ring-white/8">
+      <div className="relative rounded-3xl shadow-[0_8px_60px_rgba(0,0,0,0.7),0_0_0_1px_rgba(124,58,237,0.12)] ring-1 ring-white/8">
         {/* Carousel viewport */}
         <div className="relative w-full overflow-hidden rounded-3xl aspect-[16/9] sm:aspect-[16/7] bg-black">
           {banners.map((banner, i) => (
@@ -182,13 +186,13 @@ export function HeroBanner({ banners }: HeroBannerProps) {
         >
           <Link
             href={`/${locale}/browse`}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium rounded-xl bg-purple hover:bg-purple-light text-white shadow-lg shadow-purple/30 transition-colors duration-200"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium rounded-xl bg-purple hover:bg-purple-light text-white shadow-lg shadow-purple/40 hover:shadow-purple/60 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
           >
             {t('cta')}
           </Link>
           <Link
             href={user ? `/${locale}/sell` : `/${locale}/auth/sign-up?type=seller`}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl bg-gold hover:bg-gold-light text-black shadow-md shadow-gold/25 transition-colors duration-200"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl bg-gold hover:bg-gold-light text-black shadow-md shadow-gold/30 hover:shadow-gold/50 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
           >
             {t('ctaSell')}
           </Link>

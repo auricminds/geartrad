@@ -195,20 +195,26 @@ export default async function HomePage() {
 
       {/* Advertise CTA */}
       <FadeUp>
-        <section className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-purple/20 to-gold/10 border border-purple/20 p-5 sm:p-8 text-center mb-12">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.15),transparent_70%)]" />
+        <section className="relative rounded-2xl overflow-hidden border border-purple/25 p-5 sm:p-8 text-center mb-12">
+          {/* Layered background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple/15 via-surface to-gold/8" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.2),transparent_65%)]" />
+          {/* Ambient corner orbs */}
+          <div className="absolute -top-8 -left-8 w-40 h-40 bg-purple/20 rounded-full blur-[60px] pointer-events-none" />
+          <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-gold/15 rounded-full blur-[50px] pointer-events-none" />
+
           <div className="relative z-10">
             <h2 className="text-2xl font-bold text-white mb-2">
               {locale === 'ar' ? 'أعلن مع GearTrad' : 'Advertise with GearTrad'}
             </h2>
-            <p className="text-muted mb-5 max-w-md mx-auto">
+            <p className="text-muted mb-5 max-w-md mx-auto text-sm">
               {locale === 'ar'
                 ? 'تواصل مع آلاف الجيمرز النشطين في مصر والشرق الأوسط.'
                 : 'Reach thousands of active gamers across Egypt and MENA.'}
             </p>
             <Link
               href={`/${locale}/advertise`}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gold hover:bg-gold-light text-black font-semibold transition-all shadow-lg shadow-gold/30"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gold hover:bg-gold-light text-black font-semibold transition-all shadow-lg shadow-gold/30 hover:shadow-gold/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
             >
               {locale === 'ar' ? 'ابدأ الآن' : 'Get Started'}
               <ArrowRight className="w-4 h-4" />

@@ -24,8 +24,15 @@ export function Navbar() {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notifRef   = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const otherLocale = locale === 'en' ? 'ar' : 'en';
   const otherLocalePath = pathname.replace(`/${locale}`, `/${otherLocale}`);
@@ -81,7 +88,12 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-background border-b border-border/50">
+      <header className={cn(
+        'sticky top-0 z-50 w-full border-b transition-all duration-300',
+        scrolled
+          ? 'bg-background/80 backdrop-blur-xl border-border/60 shadow-[0_1px_24px_rgba(0,0,0,0.4)]'
+          : 'bg-background border-border/50'
+      )}>
         <nav className="relative max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
           {/* Logo */}

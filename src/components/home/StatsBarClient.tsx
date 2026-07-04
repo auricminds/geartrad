@@ -33,9 +33,36 @@ export function StatsBarClient({ listings, sellers, trades }: Props) {
   const t = useTranslations('home.hero.stats');
 
   const stats = [
-    { icon: TrendingUp,  value: listings, label: t('listings'), color: 'text-purple',      bg: 'bg-purple/10',      border: 'border-purple/20'      },
-    { icon: Users,       value: sellers,  label: t('sellers'),  color: 'text-gold',        bg: 'bg-gold/10',        border: 'border-gold/20'        },
-    { icon: ShieldCheck, value: trades,   label: t('trades'),   color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+    {
+      icon: TrendingUp,
+      value: listings,
+      label: t('listings'),
+      color: 'text-purple',
+      iconBg: 'bg-purple/15',
+      glow: 'rgba(124,58,237,0.5)',
+      border: 'border-purple/15 hover:border-purple/35',
+      shadow: 'hover:shadow-purple/10',
+    },
+    {
+      icon: Users,
+      value: sellers,
+      label: t('sellers'),
+      color: 'text-gold',
+      iconBg: 'bg-gold/15',
+      glow: 'rgba(212,175,55,0.5)',
+      border: 'border-gold/15 hover:border-gold/35',
+      shadow: 'hover:shadow-gold/10',
+    },
+    {
+      icon: ShieldCheck,
+      value: trades,
+      label: t('trades'),
+      color: 'text-emerald-400',
+      iconBg: 'bg-emerald-500/15',
+      glow: 'rgba(52,211,153,0.5)',
+      border: 'border-emerald-500/15 hover:border-emerald-500/35',
+      shadow: 'hover:shadow-emerald-500/10',
+    },
   ];
 
   return (
@@ -46,14 +73,29 @@ export function StatsBarClient({ listings, sellers, trades }: Props) {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 }}
-          className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border ${stat.border} hover:border-opacity-60 transition-colors`}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 }}
+          whileHover={{ y: -3, transition: { type: 'spring', stiffness: 400, damping: 20 } }}
+          className={`relative flex flex-col items-center gap-1.5 sm:gap-2.5 p-3 sm:p-5 rounded-xl sm:rounded-2xl
+            bg-surface/60 backdrop-blur-sm border ${stat.border} ${stat.shadow}
+            hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-default`}
         >
-          <div className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl ${stat.bg} ${stat.color}`}>
+          {/* Subtle bg glow on hover */}
+          <div
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+            style={{ background: `radial-gradient(ellipse at center, ${stat.glow.replace('0.5', '0.06')}, transparent 70%)` }}
+          />
+
+          <div className={`relative p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl ${stat.iconBg} ${stat.color} transition-transform duration-300 group-hover:scale-110`}>
             <stat.icon className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+            {/* Icon inner glow */}
+            <div
+              className="absolute inset-0 rounded-lg sm:rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              style={{ boxShadow: `0 0 12px ${stat.glow}` }}
+            />
           </div>
-          <div className="text-center">
-            <p className="text-sm sm:text-2xl font-bold text-white leading-tight">
+
+          <div className="relative text-center">
+            <p className="text-sm sm:text-2xl font-bold text-white leading-tight tabular-nums">
               <CountUp to={stat.value} />
             </p>
             <p className="text-[9px] sm:text-xs text-muted mt-0.5 leading-tight">{stat.label}</p>

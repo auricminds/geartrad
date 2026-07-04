@@ -75,24 +75,39 @@ function FAQItem({ q, a, isOpen, onToggle }: {
   const isAr = locale === 'ar';
 
   return (
-    <div className={cn(
-      'rounded-2xl border transition-colors duration-200 overflow-hidden',
-      isOpen ? 'border-purple/40 bg-purple/5' : 'border-border bg-surface/40 hover:border-border/80'
-    )}>
+    <motion.div
+      layout
+      className={cn(
+        'rounded-2xl border transition-all duration-300 overflow-hidden relative',
+        isOpen
+          ? 'border-purple/40 bg-gradient-to-b from-purple/8 to-surface/80 shadow-lg shadow-purple/10'
+          : 'border-border bg-surface/40 hover:border-purple/20 hover:bg-surface/60'
+      )}
+    >
+      {/* Purple left accent bar */}
+      {isOpen && (
+        <motion.div
+          initial={{ scaleY: 0 }}
+          animate={{ scaleY: 1 }}
+          exit={{ scaleY: 0 }}
+          className="absolute start-0 top-0 bottom-0 w-0.5 bg-purple rounded-full origin-top"
+        />
+      )}
+
       <button
         type="button"
         onClick={onToggle}
         className="w-full flex items-center justify-between gap-4 px-5 py-4 text-start"
       >
-        <span className={cn('text-sm font-semibold transition-colors', isOpen ? 'text-white' : 'text-white/80')}>
+        <span className={cn('text-sm font-semibold transition-colors duration-200', isOpen ? 'text-white' : 'text-white/80')}>
           {isAr ? q.ar : q.en}
         </span>
         <motion.div
           animate={{ rotate: isOpen ? 45 : 0 }}
-          transition={{ duration: 0.2, ease: 'easeInOut' }}
-          className="shrink-0"
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          className={cn('shrink-0 p-0.5 rounded-full transition-colors duration-200', isOpen ? 'text-purple' : 'text-muted')}
         >
-          <Plus className={cn('w-4 h-4 transition-colors', isOpen ? 'text-purple' : 'text-muted')} />
+          <Plus className="w-4 h-4" />
         </motion.div>
       </button>
 
@@ -102,15 +117,15 @@ function FAQItem({ q, a, isOpen, onToggle }: {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="px-5 pb-4">
+            <div className="px-5 pb-5">
               <p className="text-sm text-muted leading-relaxed">{isAr ? a.ar : a.en}</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
 

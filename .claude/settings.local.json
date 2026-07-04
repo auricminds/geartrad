@@ -28,7 +28,18 @@
       "Bash(git commit -m ':*)",
       "Bash(git push:*)",
       "Bash(git commit:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "mcp__claude_ai_Supabase__get_logs",
+      "Bash(ls /Users/osamahussein/Desktop/Work/Products/GearTrad/src/app/sitemap* /Users/osamahussein/Desktop/Work/Products/GearTrad/src/app/robots*)",
+      "WebFetch(domain:geartrad.com)",
+      "Bash(vercel ls:*)",
+      "Bash(xargs ls:*)",
+      "Bash(git rm:*)",
+      "Bash(grep \"SUPABASE_URL\" /Users/osamahussein/Desktop/Work/Products/GearTrad/.env*)",
+      "Bash(python3 -c \" import json, sys data = json.load\\(sys.stdin\\) text = data[0]['text'] obj = json.loads\\(text\\) logs = obj['result']['result'] for log in logs: msg = log.get\\('event_message', ''\\) if 'listing' in msg.lower\\(\\) and \\('POST' in msg or '4' in msg or '5' in msg\\): print\\(msg\\) \")",
+      "Bash(python3 -c \" import json, sys data = json.load\\(sys.stdin\\) text = data[0]['text'] obj = json.loads\\(text\\) logs = obj['result']['result'] for log in logs: msg = log.get\\('event_message', ''\\) if 'POST' in msg or '40' in msg or '50' in msg: print\\(msg[:200]\\) \")",
+      "Bash(python3 -c \" import json, sys data = json.load\\(sys.stdin\\) text = data[0]['text'] obj = json.loads\\(text\\) logs = obj['result']['result'] for log in logs: msg = log.get\\('event_message', ''\\) if 'node' in msg and 'POST' in msg: print\\(msg[:300]\\) \")",
+      "mcp__claude_ai_Supabase__get_project"
     ]
   }
 }
