@@ -77,13 +77,14 @@ export function HowItWorks() {
         {steps.map((step, i) => (
           <motion.div
             key={step.key}
-            initial={{ opacity: 0, y: 32 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, rotateX: 10, y: 32, scale: 0.96 }}
+            whileInView={{ opacity: 1, rotateX: 0, y: 0, scale: 1 }}
             viewport={{ once: true, margin: '-30px' }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: i * 0.12 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: i * 0.12 }}
             whileHover={{ y: -5, transition: { type: 'spring', stiffness: 400, damping: 22 } }}
+            style={{ transformPerspective: 800 }}
             className={`relative z-10 p-5 rounded-2xl bg-gradient-to-b ${step.gradient} bg-surface/60
-              border ${step.border} transition-all duration-300 group cursor-default
+              border ${step.border} shadow-depth transition-all duration-300 group cursor-default
               hover:shadow-xl overflow-hidden`}
           >
             {/* Hover glow layer */}

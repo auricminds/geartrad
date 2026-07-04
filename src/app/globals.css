@@ -274,6 +274,47 @@ body {
   animation: connector-pulse 2s ease-in-out infinite;
 }
 
+/* ─── 3D Depth shadows (multi-layer for real depth illusion) ─── */
+.shadow-depth {
+  box-shadow:
+    0 1px 2px  rgba(0, 0, 0, 0.50),
+    0 4px 8px  rgba(0, 0, 0, 0.40),
+    0 12px 24px rgba(0, 0, 0, 0.30),
+    0 32px 56px rgba(0, 0, 0, 0.18);
+}
+
+.shadow-depth-purple {
+  box-shadow:
+    0 1px 2px  rgba(0, 0, 0, 0.50),
+    0 4px 8px  rgba(0, 0, 0, 0.40),
+    0 12px 24px rgba(124, 58, 237, 0.20),
+    0 32px 56px rgba(124, 58, 237, 0.12);
+}
+
+.shadow-depth-gold {
+  box-shadow:
+    0 1px 2px  rgba(0, 0, 0, 0.50),
+    0 4px 8px  rgba(0, 0, 0, 0.40),
+    0 12px 24px rgba(212, 175, 55, 0.20),
+    0 32px 56px rgba(212, 175, 55, 0.10);
+}
+
+/* ─── 3D card entrance (perspective tilt in from below) ─── */
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: perspective(800px) rotateX(12deg) translateY(28px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(800px) rotateX(0deg) translateY(0) scale(1);
+  }
+}
+
+.animate-card-rise {
+  animation: card-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* ─── Noise texture overlay ─── */
 .noise::before {
   content: '';

@@ -70,13 +70,14 @@ export function StatsBarClient({ listings, sellers, trades }: Props) {
       {stats.map((stat, i) => (
         <motion.div
           key={stat.label}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, rotateX: 8, y: 20 }}
+          whileInView={{ opacity: 1, rotateX: 0, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 }}
-          whileHover={{ y: -3, transition: { type: 'spring', stiffness: 400, damping: 20 } }}
-          className={`relative flex flex-col items-center gap-1.5 sm:gap-2.5 p-3 sm:p-5 rounded-xl sm:rounded-2xl
-            bg-surface/60 backdrop-blur-sm border ${stat.border} ${stat.shadow}
+          whileHover={{ y: -4, transition: { type: 'spring', stiffness: 400, damping: 20 } }}
+          style={{ transformPerspective: 700 }}
+          className={`relative flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-5 rounded-xl sm:rounded-2xl
+            bg-surface/60 backdrop-blur-sm border shadow-depth ${stat.border} ${stat.shadow}
             hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-default`}
         >
           {/* Subtle bg glow on hover */}
@@ -85,8 +86,8 @@ export function StatsBarClient({ listings, sellers, trades }: Props) {
             style={{ background: `radial-gradient(ellipse at center, ${stat.glow.replace('0.5', '0.06')}, transparent 70%)` }}
           />
 
-          <div className={`relative p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl ${stat.iconBg} ${stat.color} transition-transform duration-300 group-hover:scale-110`}>
-            <stat.icon className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+          <div className={`relative p-2 sm:p-2.5 rounded-lg sm:rounded-xl ${stat.iconBg} ${stat.color} transition-transform duration-300 group-hover:scale-110`}>
+            <stat.icon className="w-4 h-4 sm:w-5 sm:h-5" />
             {/* Icon inner glow */}
             <div
               className="absolute inset-0 rounded-lg sm:rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -95,10 +96,10 @@ export function StatsBarClient({ listings, sellers, trades }: Props) {
           </div>
 
           <div className="relative text-center">
-            <p className="text-sm sm:text-2xl font-bold text-white leading-tight tabular-nums">
+            <p className="text-base sm:text-2xl font-bold text-white leading-tight tabular-nums">
               <CountUp to={stat.value} />
             </p>
-            <p className="text-[9px] sm:text-xs text-muted mt-0.5 leading-tight">{stat.label}</p>
+            <p className="text-[10px] sm:text-xs text-muted mt-0.5 leading-tight">{stat.label}</p>
           </div>
         </motion.div>
       ))}

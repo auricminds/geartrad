@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Star, Shield, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { User } from '@/types';
+import { TiltCard } from '@/components/ui/TiltCard';
 import { cn } from '@/lib/utils';
 
 interface BestsellerStripProps {
@@ -75,11 +76,13 @@ export function BestsellerStrip({ sellers }: BestsellerStripProps) {
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: '-30px' }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 }}
-              whileHover={{ y: -6, transition: { type: 'spring', stiffness: 350, damping: 20 } }}
             >
               <Link href={`/${locale}/seller/${seller.id}`}>
-                <div className={cn(
+                <TiltCard
+                  max={7}
+                  className={cn(
                   'group relative p-4 rounded-2xl bg-surface border transition-all duration-300 cursor-pointer overflow-hidden',
+                  i === 0 ? 'shadow-depth-gold' : 'shadow-depth',
                   style.border,
                   style.glow,
                   i === 0 && 'bg-gradient-to-b from-gold/8 to-surface',
@@ -132,7 +135,7 @@ export function BestsellerStrip({ sellers }: BestsellerStripProps) {
                     <span className="text-xs text-white font-medium">{seller.rating}</span>
                     <span className="text-xs text-muted ms-1">({seller.totalSales})</span>
                   </div>
-                </div>
+                </TiltCard>
               </Link>
             </motion.div>
           );

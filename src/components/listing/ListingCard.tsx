@@ -7,6 +7,7 @@ import { Heart, ShoppingCart, Star, Shield, Zap, Trophy, Check, Timer, BadgeChec
 import { motion } from 'framer-motion';
 import { Listing } from '@/types';
 import { Badge } from '@/components/ui/badge';
+import { TiltCard } from '@/components/ui/TiltCard';
 import { useStore } from '@/components/providers/StoreProvider';
 import { formatPrice, cn } from '@/lib/utils';
 import { trackGameActivity } from '@/components/home/RecommendationsSection';
@@ -87,16 +88,16 @@ export function ListingCard({ listing, size = 'md' }: ListingCardProps) {
 
   return (
     <Link href={`/${locale}/listing/${listing.id}`} onClick={handleClick}>
-      <div
+      <TiltCard
+        max={6}
         className={cn(
           'group relative bg-surface border rounded-2xl overflow-hidden card-scan',
-          'hover:-translate-y-1 hover:shadow-xl',
-          'transition-all duration-200 ease-out',
+          'transition-all duration-300 ease-out',
           listing.seller.role === 'admin'
-            ? 'border-gold/40 hover:border-gold/70 shadow-gold/10'
-            : 'border-border hover:border-purple/40',
-          listing.rank && rankGlows[listing.rank] && `hover:shadow-${rankGlows[listing.rank]}`,
-          listing.isBoosted && 'neon-border border-purple/30'
+            ? 'border-gold/40 hover:border-gold/60 shadow-depth-gold'
+            : listing.isBoosted
+              ? 'neon-border border-purple/30 shadow-depth-purple'
+              : 'border-border hover:border-purple/40 shadow-depth',
         )}
       >
         {/* Cover Image */}
@@ -104,9 +105,12 @@ export function ListingCard({ listing, size = 'md' }: ListingCardProps) {
           <img
             src={listing.coverImage}
             alt={displayTitle}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-107"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent opacity-80" />
+          {/* Depth gradient — stronger bottom vignette for 3D depth feel */}
+          <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/20 to-transparent" />
+          {/* Top edge shadow for depth */}
+          <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-black/30 to-transparent" />
 
           {/* Top badges */}
           <div className="absolute top-3 start-3 flex items-center gap-1.5 flex-wrap">
@@ -286,7 +290,7 @@ export function ListingCard({ listing, size = 'md' }: ListingCardProps) {
             </motion.button>
           </div>
         </div>
-      </div>
+      </TiltCard>
     </Link>
   );
 }
