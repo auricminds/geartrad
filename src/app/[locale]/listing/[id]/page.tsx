@@ -207,8 +207,8 @@ export default async function ListingPage({ params }: ListingPageProps) {
         </div>
 
         {/* Right: Purchase Card + Seller */}
-        <div className="space-y-4">
-          <div className="hidden lg:block sticky top-24 bg-surface border border-border rounded-2xl p-6 space-y-4">
+        <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <div className="hidden lg:block bg-surface border border-border rounded-2xl p-6 space-y-4">
             <div>
               <p className="text-sm text-muted mb-1">{t('price')}</p>
               <p className="text-3xl font-bold text-white">{formatPrice(listing.price, locale)}</p>
